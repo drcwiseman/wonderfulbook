@@ -1,0 +1,115 @@
+import { sql } from 'drizzle-orm';
+import {
+  index,
+  jsonb,
+  pgTable,
+  timestamp,
+  varchar,
+  text,
+  integer,
+  decimal,
+  boolean,
+} from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table for Replit Auth
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  subscriptionTier: varchar("subscription_tier").default("free"),
+  subscriptionStatus: varchar("subscription_status").default("inactive"),
+  booksReadThisMonth: integer("books_read_this_month").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Books table
+export const books = pgTable("books", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  author: text("author").notNull(),
+  description: text("description"),
+  coverImageUrl: text("cover_image_url"),
+  pdfUrl: text("pdf_url"),
+  category: varchar("category").notNull(),
+  rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),
+  totalRatings: integer("total_ratings").default(0),
+  isFeatured: boolean("is_featured").default(false),
+  requiredTier: varchar("required_tier").default("free"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User reading progress
+export const readingProgress = pgTable("reading_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  currentPage: integer("current_page").default(0),
+  totalPages: integer("total_pages").default(0),
+  progressPercentage: decimal("progress_percentage", { precision: 5, scale: 2 }).default("0.00"),
+  lastReadAt: timestamp("last_read_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User bookmarks
+export const bookmarks = pgTable("bookmarks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  page: integer("page").notNull(),
+  note: text("note"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Schemas for validation
+export const upsertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBookSchema = createInsertSchema(books).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertReadingProgressSchema = createInsertSchema(readingProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBookmarkSchema = createInsertSchema(bookmarks).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types
+export type UpsertUser = z.infer<typeof upsertUserSchema>;
+export type User = typeof users.$inferSelect;
+export type InsertBook = z.infer<typeof insertBookSchema>;
+export type Book = typeof books.$inferSelect;
+export type InsertReadingProgress = z.infer<typeof insertReadingProgressSchema>;
+export type ReadingProgress = typeof readingProgress.$inferSelect;
+export type InsertBookmark = z.infer<typeof insertBookmarkSchema>;
+export type Bookmark = typeof bookmarks.$inferSelect;

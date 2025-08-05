@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+
+  /* Netflix-style colors */
+  --netflix-red: hsl(355, 83%, 45%);
+  --netflix-black: hsl(0, 0%, 0%);
+  --netflix-gray: hsl(0, 0%, 13%);
+  --premium-gold: hsl(51, 100%, 50%);
+  --basic-purple: hsl(249, 70%, 65%);
+  --trial-gray: hsl(220, 9%, 46%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Netflix-style utility classes */
+.bg-netflix-red {
+  background-color: var(--netflix-red);
+}
+
+.bg-netflix-black {
+  background-color: var(--netflix-black);
+}
+
+.bg-netflix-gray {
+  background-color: var(--netflix-gray);
+}
+
+.bg-premium-gold {
+  background-color: var(--premium-gold);
+}
+
+.bg-basic-purple {
+  background-color: var(--basic-purple);
+}
+
+.bg-trial-gray {
+  background-color: var(--trial-gray);
+}
+
+.text-netflix-red {
+  color: var(--netflix-red);
+}
+
+.text-netflix-black {
+  color: var(--netflix-black);
+}
+
+.text-netflix-gray {
+  color: var(--netflix-gray);
+}
+
+.text-premium-gold {
+  color: var(--premium-gold);
+}
+
+.text-basic-purple {
+  color: var(--basic-purple);
+}
+
+.text-trial-gray {
+  color: var(--trial-gray);
+}
+
+.border-netflix-red {
+  border-color: var(--netflix-red);
+}
+
+.border-premium-gold {
+  border-color: var(--premium-gold);
+}
+
+.border-basic-purple {
+  border-color: var(--basic-purple);
+}
+
+.border-trial-gray {
+  border-color: var(--trial-gray);
+}
+
+/* Scrollbar hiding */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hover effects */
+.hover\:bg-netflix-red:hover {
+  background-color: var(--netflix-red);
+}
+
+.hover\:text-netflix-red:hover {
+  color: var(--netflix-red);
+}
+
+.hover\:border-netflix-red:hover {
+  border-color: var(--netflix-red);
+}

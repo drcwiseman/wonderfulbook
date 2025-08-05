@@ -1,0 +1,68 @@
+# Wonderful Books
+
+## Overview
+
+Wonderful Books is a Netflix-style book reading platform that provides unlimited access to a curated collection of self-improvement and educational books. The platform features a subscription-based model with multiple tiers (Free Trial, Basic, Premium) and includes comprehensive reading features like progress tracking, bookmarks, and personalized recommendations.
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+The client-side application is built using React with TypeScript, following a modern component-based architecture:
+
+- **UI Framework**: React with Vite as the build tool for fast development and optimized production builds
+- **Styling**: Tailwind CSS with a custom Netflix-inspired design system using CSS variables for theming
+- **Component Library**: Radix UI components wrapped with shadcn/ui for consistent and accessible UI elements
+- **State Management**: TanStack Query for server state management and caching, with React hooks for local state
+- **Routing**: Wouter for lightweight client-side routing
+- **Form Handling**: React Hook Form with Zod validation for type-safe form management
+
+### Backend Architecture
+The server follows a RESTful API design built on Node.js and Express:
+
+- **Runtime**: Node.js with TypeScript and ESM modules
+- **Framework**: Express.js with middleware for logging, authentication, and error handling
+- **Database**: PostgreSQL with Drizzle ORM for type-safe database operations
+- **Authentication**: Replit OAuth integration with session-based authentication using connect-pg-simple for session storage
+- **API Design**: RESTful endpoints organized by resource (books, users, reading progress, bookmarks, payments)
+
+### Data Storage Solutions
+The application uses PostgreSQL as the primary database with a well-structured schema:
+
+- **User Management**: Users table storing profile information, subscription details, and Stripe customer data
+- **Content Management**: Books table with metadata, categories, ratings, and file URLs
+- **Reading Features**: Separate tables for reading progress tracking and bookmarks with user relationships
+- **Session Storage**: Dedicated sessions table for authentication state management
+- **Database Migrations**: Drizzle Kit for schema management and version control
+
+### Authentication and Authorization
+Security is implemented through Replit's OAuth system:
+
+- **OAuth Provider**: Replit OIDC for user authentication
+- **Session Management**: Server-side sessions stored in PostgreSQL with configurable TTL
+- **Authorization Middleware**: Route protection with user context injection
+- **Security Features**: HTTPS-only cookies, CSRF protection, and secure session handling
+
+## External Dependencies
+
+### Payment Processing
+- **Stripe Integration**: Full payment processing with subscription management using Stripe's latest API version
+- **Subscription Tiers**: Three-tier system (Free Trial, Basic, Premium) with different feature access levels
+- **Webhook Handling**: Stripe webhooks for subscription status updates and payment confirmations
+
+### Database Services
+- **Neon Database**: PostgreSQL hosting with connection pooling via @neondatabase/serverless
+- **Connection Management**: WebSocket-based connections for serverless environments with automatic reconnection
+
+### Development and Hosting
+- **Replit Platform**: Native integration with Replit's development environment and hosting
+- **Vite Plugins**: Development-specific plugins for error overlay and code mapping
+- **Build System**: ESBuild for production builds with Node.js targeting and external package handling
+
+### UI and Design
+- **Radix UI**: Comprehensive set of unstyled, accessible UI primitives
+- **Lucide React**: Icon library for consistent iconography throughout the application
+- **Tailwind CSS**: Utility-first CSS framework with custom configuration for the Netflix-inspired design system
