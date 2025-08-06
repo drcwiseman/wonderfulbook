@@ -229,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get unique book tiers and categories from the database
       const books = await storage.getAllBooks();
-      const tiers = [...new Set(books.map(book => book.requiredTier))];
+      const tiers = Array.from(new Set(books.map(book => book.requiredTier)));
       res.json(tiers);
     } catch (error) {
       console.error("Error fetching categories:", error);
