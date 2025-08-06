@@ -212,20 +212,39 @@ export default function ReaderPage() {
       {/* PDF Reader */}
       <div className="h-[calc(100vh-80px)]">
         {pdfUrl ? (
-          <div className="h-full bg-gray-100">
-            {/* Direct iframe to API endpoint - bypass blob creation */}
-            <iframe
-              src={`/api/stream/${bookId}`}
-              className="w-full h-full"
-              title={`${book.title} - PDF Reader`}
-              onLoad={() => {
-                console.log('PDF iframe loaded successfully from direct API');
-              }}
-              onError={(error) => {
-                console.error('PDF iframe error:', error);
-                setAccessError('Failed to load PDF directly from API.');
-              }}
-            />
+          <div className="h-full bg-gray-100 flex flex-col">
+            <div className="p-4 bg-gray-800 text-white text-center">
+              <h2 className="text-lg font-semibold">{book.title}</h2>
+              <p className="text-sm text-gray-300">by {book.author}</p>
+            </div>
+            <div className="flex-1 relative">
+              {/* Try multiple approaches for maximum compatibility */}
+              <object
+                data={`/api/stream/${bookId}#toolbar=0&navpanes=0&scrollbar=0`}
+                type="application/pdf"
+                className="w-full h-full absolute inset-0"
+              >
+                <iframe
+                  src={`/api/stream/${bookId}#toolbar=0&navpanes=0&scrollbar=0`}
+                  className="w-full h-full absolute inset-0"
+                  title={`${book.title} - PDF Reader`}
+                >
+                  <div className="flex items-center justify-center h-full text-gray-600">
+                    <div className="text-center">
+                      <p className="mb-4">PDF could not be displayed in browser.</p>
+                      <a 
+                        href={`/api/stream/${bookId}`}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Open Book in New Tab
+                      </a>
+                    </div>
+                  </div>
+                </iframe>
+              </object>
+            </div>
           </div>
         ) : !accessError ? (
           <div className="flex items-center justify-center h-full text-white">

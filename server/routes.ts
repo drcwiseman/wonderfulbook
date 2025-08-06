@@ -304,7 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate a proper PDF using pdfkit
       const pdfBuffer = await generateSamplePDF(book);
       
-      // Set security headers
+      // Set security headers that allow iframe display
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
@@ -312,6 +312,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('X-Content-Type-Options', 'nosniff');
       res.setHeader('Content-Disposition', 'inline');
       res.setHeader('Content-Length', pdfBuffer.length.toString());
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      res.setHeader('Content-Security-Policy', 'frame-ancestors \'self\'');
       
       // Stream the PDF buffer
       res.send(pdfBuffer);
