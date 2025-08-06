@@ -119,7 +119,9 @@ export default function ReaderPage() {
 
   // Check if current page is bookmarked
   useEffect(() => {
-    setIsBookmarked(bookmarks.some((bookmark: any) => bookmark.page === currentPage));
+    if (Array.isArray(bookmarks)) {
+      setIsBookmarked(bookmarks.some((bookmark: any) => bookmark.page === currentPage));
+    }
   }, [bookmarks, currentPage]);
 
   // Auto-hide toolbar
@@ -140,7 +142,7 @@ export default function ReaderPage() {
     console.log('PDF loaded:', numPages, 'pages');
     
     // Resume to saved page
-    if (progress && progress.currentPage) {
+    if (progress && typeof progress === 'object' && 'currentPage' in progress) {
       setCurrentPage(progress.currentPage);
     }
   }, [progress]);
@@ -153,7 +155,7 @@ export default function ReaderPage() {
     resetToolbarTimeout();
     
     // Auto-save progress
-    if (book && isAuthenticated && totalPages > 0) {
+    if (book && typeof book === 'object' && 'id' in book && isAuthenticated && totalPages > 0) {
       const progressPercentage = ((page / totalPages) * 100).toFixed(2);
       updateProgressMutation.mutate({
         bookId: book.id,
@@ -292,7 +294,7 @@ export default function ReaderPage() {
                     Back
                   </Button>
                   <h1 className="text-lg font-semibold text-gray-900 dark:text-white truncate max-w-xs">
-                    {book.title}
+                    {book && typeof book === 'object' && 'title' in book ? book.title : 'Loading...'}
                   </h1>
                 </div>
 
@@ -344,7 +346,7 @@ export default function ReaderPage() {
                         <div className="space-y-4">
                           <h3 className="text-sm font-medium">Bookmarks</h3>
                           <div className="space-y-2 max-h-60 overflow-y-auto">
-                            {bookmarks.map((bookmark: any) => (
+                            {Array.isArray(bookmarks) && bookmarks.map((bookmark: any) => (
                               <Button
                                 key={bookmark.id}
                                 variant="ghost"
@@ -358,7 +360,7 @@ export default function ReaderPage() {
                                 </div>
                               </Button>
                             ))}
-                            {bookmarks.length === 0 && (
+                            {(!Array.isArray(bookmarks) || bookmarks.length === 0) && (
                               <p className="text-sm text-gray-500">No bookmarks yet</p>
                             )}
                           </div>
