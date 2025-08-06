@@ -13,10 +13,21 @@ import connectPg from "connect-pg-simple";
 
 // Local authentication middleware
 const isAuthenticated = (req: any, res: any, next: any) => {
-  if (req.session && req.session.user) {
-    return next();
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
-  return res.status(401).json({ message: "Unauthorized" });
+  
+  // Set user object with both session data and claims structure for compatibility
+  req.user = {
+    ...req.session.user,
+    claims: {
+      sub: req.session.user.id,
+      email: req.session.user.email,
+      first_name: req.session.user.firstName,
+      last_name: req.session.user.lastName
+    }
+  };
+  next();
 };
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -1156,9 +1167,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/pdf-token/:bookId", isAuthenticated, async (req: any, res) => {
     try {
       const { bookId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || req.user?.id;
       
-      console.log('PDF token request - User:', userId, 'Book:', bookId);
+      console.log('PDF token request - User object:', req.user);
+      console.log('PDF token request - Session:', req.session?.user);
+      console.log('PDF token request - User ID:', userId, 'Book:', bookId);
       
       if (!userId) {
         console.log('No user ID found in request');
