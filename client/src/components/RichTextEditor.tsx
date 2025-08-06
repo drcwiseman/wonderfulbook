@@ -1,8 +1,11 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { Color } from '@tiptap/extension-color';
+import { TextStyle } from '@tiptap/extension-text-style';
 import { Button } from '@/components/ui/button';
-import { Bold, Italic, List, ListOrdered, Quote, Undo, Redo } from 'lucide-react';
-import { useEffect, useCallback } from 'react';
+import { Bold, Italic, List, ListOrdered, Quote, Undo, Redo, Palette } from 'lucide-react';
+import { useEffect, useCallback, useState } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface RichTextEditorProps {
   content: string;
@@ -12,6 +15,8 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange, placeholder = "Enter text...", className = "" }: RichTextEditorProps) {
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  
   const handleUpdate = useCallback(({ editor }: any) => {
     onChange(editor.getHTML());
   }, [onChange]);
@@ -28,12 +33,16 @@ export function RichTextEditor({ content, onChange, placeholder = "Enter text...
           keepAttributes: false,
         },
       }),
+      TextStyle,
+      Color.configure({
+        types: ['textStyle'],
+      }),
     ],
     content,
     onUpdate: handleUpdate,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[200px] p-4',
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[300px] p-4 max-w-none',
         'data-placeholder': placeholder,
       },
     },
@@ -50,10 +59,18 @@ export function RichTextEditor({ content, onChange, placeholder = "Enter text...
     return null;
   }
 
+  const colorOptions = [
+    '#000000', '#e60000', '#ff9900', '#ffff00', '#008a00', '#0066cc', '#9933ff',
+    '#ffffff', '#facccc', '#ffebcc', '#ffffcc', '#cce8cc', '#cce0f5', '#ebd6ff',
+    '#bbbbbb', '#f06666', '#ffc266', '#ffff66', '#66b266', '#66a3e0', '#c285ff',
+    '#888888', '#a10000', '#b26b00', '#b2b200', '#006100', '#0047b2', '#6b24b2',
+    '#444444', '#5c0000', '#663d00', '#666600', '#003700', '#002966', '#3d1466'
+  ];
+
   return (
     <div className={`border border-gray-200 dark:border-gray-700 rounded-lg ${className}`}>
       {/* Toolbar */}
-      <div className="flex items-center gap-1 p-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-1 p-2 border-b border-gray-200 dark:border-gray-700 flex-wrap">
         <Button
           type="button"
           variant="ghost"
@@ -118,14 +135,64 @@ export function RichTextEditor({ content, onChange, placeholder = "Enter text...
         >
           <Redo className="w-4 h-4" />
         </Button>
+        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
+        
+        {/* Color Picker */}
+        <Popover open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="relative"
+            >
+              <Palette className="w-4 h-4" />
+              <div 
+                className="absolute bottom-0 right-0 w-2 h-2 rounded-full border border-white"
+                style={{ backgroundColor: editor.getAttributes('textStyle').color || '#000000' }}
+              />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-2">
+            <div className="grid grid-cols-7 gap-1">
+              {colorOptions.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className="w-8 h-8 rounded border-2 border-gray-200 hover:border-gray-400 transition-colors"
+                  style={{ backgroundColor: color }}
+                  onClick={() => {
+                    editor.chain().focus().setColor(color).run();
+                    setIsColorPickerOpen(false);
+                  }}
+                  title={color}
+                />
+              ))}
+            </div>
+            <div className="mt-2 pt-2 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  editor.chain().focus().unsetColor().run();
+                  setIsColorPickerOpen(false);
+                }}
+              >
+                Reset Color
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Editor Content */}
-      <div className="min-h-[200px]">
+      <div className="min-h-[300px]">
         <EditorContent 
           editor={editor} 
           placeholder={placeholder}
-          className="prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none"
+          className="prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none max-w-none"
         />
       </div>
     </div>

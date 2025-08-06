@@ -107,6 +107,9 @@ export default function AdminPanel() {
       if (!description || description.length < 10) {
         throw new Error("Description must be at least 10 characters long");
       }
+      if (description.length > 5000) {
+        throw new Error("Description cannot exceed 5000 characters");
+      }
       if (!pdfFile) {
         throw new Error("PDF file is required");
       }
@@ -340,8 +343,15 @@ export default function AdminPanel() {
                       onChange={setDescription}
                       placeholder="Enter book description with rich formatting..."
                     />
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>Rich text formatting with colors available</span>
+                      <span>{description.length}/5000 characters</span>
+                    </div>
                     {description.length < 10 && description.length > 0 && (
                       <p className="text-sm text-red-500">Description must be at least 10 characters</p>
+                    )}
+                    {description.length > 5000 && (
+                      <p className="text-sm text-red-500">Description cannot exceed 5000 characters</p>
                     )}
                   </div>
 
