@@ -517,15 +517,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   });
 
-  // Admin middleware
+  // Admin middleware - works with local authentication
   const isAdmin = (req: any, res: any, next: any) => {
-    const userId = req.user?.claims?.sub;
-    const userEmail = req.user?.claims?.email;
-    
-    if (userId === "45814604" || userEmail === "drcwiseman@gmail.com") {
-      return next();
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
     }
     
+    // For local auth, check role and email directly on user object
+    const userRole = req.user.role;
+    const userEmail = req.user.email;
+    const userId = req.user.id;
+    
+    // Check for admin role or specific admin users
+    if (userRole === "admin" || userEmail === "drcwiseman@gmail.com" || userEmail === "prophetclimate@yahoo.com") {
+      return next();
+    }
     return res.status(403).json({ message: "Admin access required" });
   };
 

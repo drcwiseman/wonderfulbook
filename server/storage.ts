@@ -5,6 +5,7 @@ import {
   bookmarks,
   categories,
   bookCategories,
+  subscriptionPlans,
   type User,
   type UpsertUser,
   type Book,
@@ -17,6 +18,8 @@ import {
   type InsertCategory,
   type BookCategory,
   type InsertBookCategory,
+  type SubscriptionPlan,
+  type InsertSubscriptionPlan,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, ilike } from "drizzle-orm";
