@@ -135,34 +135,60 @@ export default function ReaderPage() {
     }, 3000);
   }, []);
 
-  // Handle PDF load
+  // Enhanced PDF load handler for Step 2 - Resume reading from last page
   const handleDocumentLoad = useCallback((e: any) => {
     const numPages = e.doc.numPages;
     setTotalPages(numPages);
     console.log('PDF loaded:', numPages, 'pages');
     
-    // Resume to saved page
+    // Step 2: Resume reading from last page where user left off
     if (progress && typeof progress === 'object' && 'currentPage' in progress) {
-      setCurrentPage(Number(progress.currentPage));
+      const lastPage = Number(progress.currentPage);
+      if (lastPage > 0 && lastPage <= numPages) {
+        setCurrentPage(lastPage);
+        toast({
+          title: "Welcome back!",
+          description: `Resuming from page ${lastPage}`,
+        });
+      }
     }
-  }, [progress]);
+  }, [progress, toast]);
 
-  // Handle page change
+  // Enhanced page change handler for Step 2 - Track page changes instantly
   const handlePageChange = useCallback((page: number) => {
     if (page < 1 || page > totalPages) return;
     
     setCurrentPage(page);
     resetToolbarTimeout();
     
-    // Auto-save progress
+    // Step 2: Auto-save progress with both endpoints for comprehensive tracking
     if (book && typeof book === 'object' && 'id' in book && isAuthenticated && totalPages > 0) {
       const progressPercentage = ((page / totalPages) * 100).toFixed(2);
+      
+      // Primary progress update
       updateProgressMutation.mutate({
         bookId: String(book.id),
         currentPage: page,
         totalPages,
         progressPercentage,
       });
+      
+      // Step 2 requirement: Also track with page-focused endpoint
+      // This ensures user can resume exactly where they left off
+      setTimeout(() => {
+        if (isAuthenticated) {
+          // Use fetch directly for immediate tracking without interfering with UI
+          fetch('/api/progress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookId: String(book.id),
+              pageNumber: page,
+              totalPages
+            }),
+          }).catch(err => console.warn('Background progress save failed:', err));
+        }
+      }, 100);
     }
   }, [book, isAuthenticated, totalPages, updateProgressMutation, resetToolbarTimeout]);
 
@@ -220,7 +246,6 @@ export default function ReaderPage() {
   // Configure PDF viewer with better font handling
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
     sidebarTabs: () => [], // Remove all sidebar tabs
-    enableSmoothScroll: true,
   });
 
   // Security: Disable context menu and text selection

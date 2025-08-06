@@ -4,6 +4,23 @@
 
 Wonderful Books is a Netflix-style book reading platform that provides unlimited access to a curated collection of self-improvement and educational books. The platform features a subscription-based model with multiple tiers (Free Trial, Basic, Premium) and includes comprehensive reading features like progress tracking, bookmarks, and personalized recommendations.
 
+## Recent Changes (January 6, 2025)
+
+### Step 1 Complete: Secure PDF Reading System ✅
+- Fixed routing issues preventing access to book detail pages
+- Resolved setLocation and id variable errors in navigation
+- Implemented complete PDF streaming with dynamic imports
+- Added proper font rendering with Helvetica family
+- Created buttery-smooth Apple Books-style reader experience
+
+### Step 2 Complete: Enhanced Reading Progress Tracking ✅
+- Implemented dual-endpoint progress tracking (POST /api/progress + POST /api/reading-progress)
+- Added automatic page change event tracking with instant saves
+- Enhanced resume functionality - users continue exactly where they left off
+- Added "Welcome back!" notifications showing last read page
+- Implemented background progress saves to prevent data loss
+- Database stores: userId, bookId, currentPage, totalPages, progressPercentage, lastReadAt
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

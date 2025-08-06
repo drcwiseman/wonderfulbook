@@ -79,12 +79,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Reading progress routes
+  // Enhanced Reading progress routes for Step 2
   app.get('/api/reading-progress/:bookId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const progress = await storage.getReadingProgress(userId, req.params.bookId);
-      res.json(progress || { currentPage: 0, totalPages: 0, progressPercentage: "0.00" });
+      res.json(progress || { currentPage: 1, totalPages: 0, progressPercentage: "0.00" });
     } catch (error) {
       console.error("Error fetching reading progress:", error);
       res.status(500).json({ message: "Failed to fetch reading progress" });
@@ -94,16 +94,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/reading-progress', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const { bookId, currentPage, totalPages, progressPercentage } = req.body;
+      
       const progressData = {
-        ...req.body,
         userId,
+        bookId,
+        currentPage: parseInt(currentPage, 10),
+        totalPages: parseInt(totalPages, 10),
+        progressPercentage: String(progressPercentage),
         lastReadAt: new Date(),
       };
+      
       const progress = await storage.upsertReadingProgress(progressData);
       res.json(progress);
     } catch (error) {
       console.error("Error updating reading progress:", error);
       res.status(500).json({ message: "Failed to update reading progress" });
+    }
+  });
+
+  // Alternative endpoint for Step 2 requirements: POST /api/progress with bookId + pageNumber
+  app.post('/api/progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId, pageNumber, totalPages } = req.body;
+      
+      const progressPercentage = totalPages > 0 ? ((pageNumber / totalPages) * 100).toFixed(2) : "0.00";
+      
+      const progressData = {
+        userId,
+        bookId,
+        currentPage: parseInt(pageNumber, 10),
+        totalPages: parseInt(totalPages || 0, 10),
+        progressPercentage,
+        lastReadAt: new Date(),
+      };
+      
+      const progress = await storage.upsertReadingProgress(progressData);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error updating reading progress:", error);
+      res.status(500).json({ message: "Failed to update reading progress" });
+    }
+  });
+
+  // Get user's last read page for resuming
+  app.get('/api/progress/:bookId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const progress = await storage.getReadingProgress(userId, req.params.bookId);
+      
+      if (progress) {
+        res.json({
+          lastPage: progress.currentPage,
+          totalPages: progress.totalPages,
+          progressPercentage: progress.progressPercentage,
+          lastReadAt: progress.lastReadAt
+        });
+      } else {
+        res.json({
+          lastPage: 1,
+          totalPages: 0,
+          progressPercentage: "0.00",
+          lastReadAt: null
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching last read page:", error);
+      res.status(500).json({ message: "Failed to fetch last read page" });
     }
   });
 
@@ -290,8 +348,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check subscription tier access
-      const userTier = user.subscriptionTier || 'free';
-      const canAccess = checkBookAccess(userTier, book.requiredTier);
+      const userTier = user?.subscriptionTier || 'free';
+      const canAccess = checkBookAccess(userTier, book.requiredTier || 'free');
       
       if (!canAccess) {
         return res.status(403).json({ 
