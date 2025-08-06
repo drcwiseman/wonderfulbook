@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProductionErrorBoundary } from "@/components/ProductionErrorBoundary";
 import { useAuth } from "@/hooks/useAuth";
+import { AnimatePresence } from "framer-motion";
+import PageTransition from "@/components/PageTransition";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import BookStore from "@/pages/bookstore";
@@ -21,29 +23,68 @@ import Register from "@/pages/auth/register";
 import ForgotPassword from "@/pages/auth/forgot-password";
 import ResetPassword from "@/pages/auth/reset-password";
 import NotFound from "@/pages/not-found";
+import ScrollToTop from "@/components/ScrollToTop";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  const PageWrapper = ({ children }: { children: React.ReactNode }) => (
+    <PageTransition>{children}</PageTransition>
+  );
+
   return (
-    <Switch>
-      <Route path="/">{isLoading || !isAuthenticated ? <Landing /> : <Home />}</Route>
-      <Route path="/bookstore" component={BookStore} />
-      <Route path="/library" component={Library} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/book/:id" component={BookDetail} />
-      <Route path="/subscribe" component={Subscribe} />
-      <Route path="/reader/:bookId" component={ReaderPage} />
-      <Route path="/admin" component={AdminPanel} />
-      <Route path="/admin/subscription-plans" component={AdminSubscriptionPlans} />
-      <Route path="/admin/email-management" component={AdminEmailManagement} />
-      {/* Authentication routes - available whether logged in or not */}
-      <Route path="/auth/login" component={Login} />
-      <Route path="/auth/register" component={Register} />
-      <Route path="/auth/forgot-password" component={ForgotPassword} />
-      <Route path="/auth/reset-password" component={ResetPassword} />
-      <Route component={NotFound} />
-    </Switch>
+    <AnimatePresence mode="wait">
+      <Switch>
+        <Route path="/">
+          <PageWrapper>
+            {isLoading || !isAuthenticated ? <Landing /> : <Home />}
+          </PageWrapper>
+        </Route>
+        <Route path="/bookstore">
+          <PageWrapper><BookStore /></PageWrapper>
+        </Route>
+        <Route path="/library">
+          <PageWrapper><Library /></PageWrapper>
+        </Route>
+        <Route path="/dashboard">
+          <PageWrapper><Dashboard /></PageWrapper>
+        </Route>
+        <Route path="/book/:id">
+          <PageWrapper><BookDetail /></PageWrapper>
+        </Route>
+        <Route path="/subscribe">
+          <PageWrapper><Subscribe /></PageWrapper>
+        </Route>
+        <Route path="/reader/:bookId">
+          <PageWrapper><ReaderPage /></PageWrapper>
+        </Route>
+        <Route path="/admin">
+          <PageWrapper><AdminPanel /></PageWrapper>
+        </Route>
+        <Route path="/admin/subscription-plans">
+          <PageWrapper><AdminSubscriptionPlans /></PageWrapper>
+        </Route>
+        <Route path="/admin/email-management">
+          <PageWrapper><AdminEmailManagement /></PageWrapper>
+        </Route>
+        {/* Authentication routes - available whether logged in or not */}
+        <Route path="/auth/login">
+          <PageWrapper><Login /></PageWrapper>
+        </Route>
+        <Route path="/auth/register">
+          <PageWrapper><Register /></PageWrapper>
+        </Route>
+        <Route path="/auth/forgot-password">
+          <PageWrapper><ForgotPassword /></PageWrapper>
+        </Route>
+        <Route path="/auth/reset-password">
+          <PageWrapper><ResetPassword /></PageWrapper>
+        </Route>
+        <Route>
+          <PageWrapper><NotFound /></PageWrapper>
+        </Route>
+      </Switch>
+    </AnimatePresence>
   );
 }
 
@@ -54,6 +95,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <ScrollToTop />
         </TooltipProvider>
       </QueryClientProvider>
     </ProductionErrorBoundary>

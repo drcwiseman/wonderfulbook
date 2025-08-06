@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import navigation styles */
+@import './styles/navigation.css';
+
 /* Retina and High-DPI Display Optimizations */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
   .retina-ready {
