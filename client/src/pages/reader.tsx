@@ -143,7 +143,8 @@ export default function ReaderPage() {
     
     // Step 2: Resume reading from last page where user left off
     if (progress && typeof progress === 'object') {
-      const lastPage = progress.lastPage || progress.currentPage;
+      const progressData = progress as any;
+      const lastPage = progressData.lastPage || progressData.currentPage;
       if (lastPage && lastPage > 1 && lastPage <= numPages) {
         setCurrentPage(Number(lastPage));
         toast({
@@ -222,14 +223,48 @@ export default function ReaderPage() {
   };
 
   // Handle bookmark toggle
-  const handleBookmarkToggle = () => {
-    if (isBookmarked) {
-      // Remove bookmark logic would go here
+  const removeBookmarkMutation = useMutation({
+    mutationFn: async (bookmarkId: string) => {
+      await apiRequest("DELETE", `/api/bookmarks/${bookmarkId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bookmarks', bookId] });
       setIsBookmarked(false);
       toast({
         title: "Bookmark Removed",
         description: `Page ${currentPage} bookmark removed`,
       });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to remove bookmark",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleBookmarkToggle = () => {
+    if (isBookmarked) {
+      // Find and remove the bookmark for current page
+      const currentBookmark = Array.isArray(bookmarks) 
+        ? bookmarks.find((bookmark: any) => bookmark.page === currentPage)
+        : null;
+      
+      if (currentBookmark) {
+        removeBookmarkMutation.mutate(currentBookmark.id);
+      }
     } else {
       createBookmarkMutation.mutate({
         bookId: bookId!,
@@ -370,24 +405,49 @@ export default function ReaderPage() {
                         </div>
                         
                         <div className="space-y-4">
-                          <h3 className="text-sm font-medium">Bookmarks</h3>
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-medium">Bookmarks</h3>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleBookmarkToggle}
+                              disabled={createBookmarkMutation.isPending || removeBookmarkMutation.isPending}
+                              className={`text-xs ${isBookmarked ? 'text-blue-600 border-blue-600' : ''}`}
+                            >
+                              {isBookmarked ? <BookmarkCheck className="w-3 h-3 mr-1" /> : <Bookmark className="w-3 h-3 mr-1" />}
+                              {isBookmarked ? 'Remove' : 'Add'} Bookmark
+                            </Button>
+                          </div>
                           <div className="space-y-2 max-h-60 overflow-y-auto">
                             {Array.isArray(bookmarks) && bookmarks.map((bookmark: any) => (
-                              <Button
-                                key={bookmark.id}
-                                variant="ghost"
-                                className="w-full justify-start text-left"
-                                onClick={() => handlePageChange(bookmark.page)}
-                              >
-                                <Bookmark className="w-4 h-4 mr-2" />
-                                <div>
-                                  <div className="text-sm">Page {bookmark.page}</div>
-                                  <div className="text-xs text-gray-500">{bookmark.note}</div>
-                                </div>
-                              </Button>
+                              <div key={bookmark.id} className="flex items-center justify-between p-2 border rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <Button
+                                  variant="ghost"
+                                  className="flex-1 justify-start text-left p-0 h-auto"
+                                  onClick={() => handlePageChange(bookmark.page)}
+                                >
+                                  <Bookmark className="w-4 h-4 mr-2 text-blue-600" />
+                                  <div>
+                                    <div className="text-sm font-medium">Page {bookmark.page}</div>
+                                    <div className="text-xs text-gray-500">{bookmark.note}</div>
+                                  </div>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeBookmarkMutation.mutate(bookmark.id)}
+                                  className="text-red-500 hover:text-red-700 p-1"
+                                >
+                                  ×
+                                </Button>
+                              </div>
                             ))}
                             {(!Array.isArray(bookmarks) || bookmarks.length === 0) && (
-                              <p className="text-sm text-gray-500">No bookmarks yet</p>
+                              <div className="text-center py-4">
+                                <Bookmark className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                <p className="text-sm text-gray-500">No bookmarks yet</p>
+                                <p className="text-xs text-gray-400">Click "Add Bookmark" to save your current page</p>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -464,14 +524,20 @@ export default function ReaderPage() {
                   </Button>
                 </div>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleBookmarkToggle}
-                  className={isBookmarked ? 'text-blue-600' : ''}
-                >
-                  {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBookmarkToggle}
+                    disabled={createBookmarkMutation.isPending || removeBookmarkMutation.isPending}
+                    className={`${isBookmarked ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                  >
+                    {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+                  </Button>
+                  <span className="text-xs text-gray-500">
+                    {isBookmarked ? 'Bookmarked' : 'Add Bookmark'}
+                  </span>
+                </div>
               </div>
             </motion.div>
           )}
