@@ -48,7 +48,6 @@ export const books = pgTable("books", {
   description: text("description"),
   coverImageUrl: text("cover_image_url"),
   pdfUrl: text("pdf_url"),
-  category: varchar("category").notNull(),
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),
   totalRatings: integer("total_ratings").default(0),
   isFeatured: boolean("is_featured").default(false),
@@ -90,6 +89,14 @@ export const categories = pgTable("categories", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Junction table for many-to-many relationship between books and categories
+export const bookCategories = pgTable("book_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id").references(() => books.id, { onDelete: "cascade" }).notNull(),
+  categoryId: varchar("category_id").references(() => categories.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Schemas for validation
 export const upsertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -119,6 +126,11 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
   updatedAt: true,
 });
 
+export const insertBookCategorySchema = createInsertSchema(bookCategories).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -130,3 +142,5 @@ export type InsertBookmark = z.infer<typeof insertBookmarkSchema>;
 export type Bookmark = typeof bookmarks.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Category = typeof categories.$inferSelect;
+export type InsertBookCategory = z.infer<typeof insertBookCategorySchema>;
+export type BookCategory = typeof bookCategories.$inferSelect;

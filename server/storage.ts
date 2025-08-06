@@ -4,6 +4,7 @@ import {
   readingProgress,
   bookmarks,
   categories,
+  bookCategories,
   type User,
   type UpsertUser,
   type Book,
@@ -14,6 +15,8 @@ import {
   type InsertBookmark,
   type Category,
   type InsertCategory,
+  type BookCategory,
+  type InsertBookCategory,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, ilike } from "drizzle-orm";
@@ -27,10 +30,16 @@ export interface IStorage {
   // Book operations
   getAllBooks(): Promise<Book[]>;
   getBook(id: string): Promise<Book | undefined>;
-  getBooksByCategory(category: string): Promise<Book[]>;
+  getBooksByCategory(categoryId: string): Promise<Book[]>;
   getFeaturedBooks(): Promise<Book[]>;
   searchBooks(query: string): Promise<Book[]>;
-  createBook(book: InsertBook): Promise<Book>;
+  createBook(book: InsertBook, categoryIds: string[]): Promise<Book>;
+  
+  // Book-Category operations
+  getBookCategories(bookId: string): Promise<Category[]>;
+  setBookCategories(bookId: string, categoryIds: string[]): Promise<void>;
+  addBookCategory(bookId: string, categoryId: string): Promise<void>;
+  removeBookCategory(bookId: string, categoryId: string): Promise<void>;
   
   // Reading progress operations
   getReadingProgress(userId: string, bookId: string): Promise<ReadingProgress | undefined>;
@@ -125,7 +134,17 @@ export class DatabaseStorage implements IStorage {
 
   // Book operations
   async getAllBooks(): Promise<Book[]> {
-    return await db.select().from(books).orderBy(desc(books.createdAt));
+    const booksList = await db.select().from(books).orderBy(desc(books.createdAt));
+    
+    // Add categories to each book
+    const booksWithCategories = await Promise.all(
+      booksList.map(async (book) => {
+        const categories = await this.getBookCategories(book.id);
+        return { ...book, categories };
+      })
+    );
+    
+    return booksWithCategories;
   }
 
   async getBook(id: string): Promise<Book | undefined> {
@@ -133,8 +152,13 @@ export class DatabaseStorage implements IStorage {
     return book;
   }
 
-  async getBooksByCategory(category: string): Promise<Book[]> {
-    return await db.select().from(books).where(eq(books.category, category));
+  async getBooksByCategory(categoryId: string): Promise<Book[]> {
+    return await db
+      .select()
+      .from(books)
+      .innerJoin(bookCategories, eq(books.id, bookCategories.bookId))
+      .where(eq(bookCategories.categoryId, categoryId))
+      .then(results => results.map(result => result.books));
   }
 
   async getFeaturedBooks(): Promise<Book[]> {
@@ -154,11 +178,17 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
-  async createBook(bookData: InsertBook): Promise<Book> {
+  async createBook(bookData: InsertBook, categoryIds: string[] = []): Promise<Book> {
     const [book] = await db
       .insert(books)
       .values(bookData)
       .returning();
+      
+    // Add book categories
+    if (categoryIds.length > 0) {
+      await this.setBookCategories(book.id, categoryIds);
+    }
+    
     return book;
   }
 
@@ -222,12 +252,18 @@ export class DatabaseStorage implements IStorage {
 
 
   // Admin operations
-  async updateBook(id: string, updates: Partial<Book>): Promise<Book> {
+  async updateBook(id: string, updates: Partial<Book>, categoryIds?: string[]): Promise<Book> {
     const [book] = await db
       .update(books)
       .set(updates)
       .where(eq(books.id, id))
       .returning();
+    
+    // Update categories if provided
+    if (categoryIds !== undefined) {
+      await this.setBookCategories(id, categoryIds);
+    }
+    
     return book;
   }
 
@@ -309,6 +345,39 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCategory(categoryId: string): Promise<void> {
     await db.delete(categories).where(eq(categories.id, categoryId));
+  }
+
+  // Book-Category relationship operations
+  async getBookCategories(bookId: string): Promise<Category[]> {
+    return await db
+      .select()
+      .from(categories)
+      .innerJoin(bookCategories, eq(categories.id, bookCategories.categoryId))
+      .where(eq(bookCategories.bookId, bookId))
+      .then(results => results.map(result => result.categories));
+  }
+
+  async setBookCategories(bookId: string, categoryIds: string[]): Promise<void> {
+    // Remove existing categories for this book
+    await db.delete(bookCategories).where(eq(bookCategories.bookId, bookId));
+    
+    // Add new categories
+    if (categoryIds.length > 0) {
+      const bookCategoryData = categoryIds.map(categoryId => ({
+        bookId,
+        categoryId,
+      }));
+      await db.insert(bookCategories).values(bookCategoryData);
+    }
+  }
+
+  async addBookCategory(bookId: string, categoryId: string): Promise<void> {
+    await db.insert(bookCategories).values({ bookId, categoryId });
+  }
+
+  async removeBookCategory(bookId: string, categoryId: string): Promise<void> {
+    await db.delete(bookCategories)
+      .where(and(eq(bookCategories.bookId, bookId), eq(bookCategories.categoryId, categoryId)));
   }
 }
 

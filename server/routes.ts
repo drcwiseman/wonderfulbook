@@ -404,8 +404,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new book with enhanced features
   app.post('/api/admin/books', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const validatedData = insertBookSchema.parse(req.body);
-      const book = await storage.createBook(validatedData);
+      const { categories, ...bookData } = req.body;
+      const validatedData = insertBookSchema.parse(bookData);
+      const book = await storage.createBook(validatedData, categories || []);
       res.json(book);
     } catch (error) {
       console.error("Error creating book:", error);
@@ -469,8 +470,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/admin/books/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const bookId = req.params.id;
-      const updates = req.body;
-      const book = await storage.updateBook(bookId, updates);
+      const { categories, ...updates } = req.body;
+      const book = await storage.updateBook(bookId, updates, categories);
       res.json(book);
     } catch (error) {
       console.error("Error updating book:", error);

@@ -26,7 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 const uploadSchema = z.object({
   title: z.string().min(1, "Title is required"),
   author: z.string().min(1, "Author is required"),
-  category: z.string().min(1, "Category is required"),
+  categories: z.array(z.string()).min(1, "At least one category is required"),
   tier: z.enum(["free", "basic", "premium"]),
   rating: z.number().min(1).max(5),
   coverImage: z.string().optional(),
@@ -37,7 +37,7 @@ const editBookSchema = z.object({
   title: z.string().min(1, "Title is required"),
   author: z.string().min(1, "Author is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  category: z.string().min(1, "Category is required"),
+  categories: z.array(z.string()).min(1, "At least one category is required"),
   tier: z.enum(["free", "basic", "premium"]),
   rating: z.number().min(1).max(5),
   coverImage: z.string().optional(),
@@ -67,6 +67,7 @@ export default function AdminPanel() {
       tier: "free",
       rating: 4,
       coverImage: "",
+      categories: [],
     },
   });
 
@@ -86,6 +87,12 @@ export default function AdminPanel() {
     enabled: isAdmin,
   });
 
+  // Fetch categories for forms
+  const { data: categories = [] } = useQuery({
+    queryKey: ["/api/admin/categories"],
+    enabled: isAdmin,
+  });
+
   // Create book mutation
   const createBookMutation = useMutation({
     mutationFn: async (data: UploadForm) => {
@@ -101,7 +108,7 @@ export default function AdminPanel() {
         title: data.title,
         author: data.author,
         description: description,
-        category: data.category,
+        categories: data.categories,
         tier: data.tier,
         rating: data.rating,
         coverImage: data.coverImage || "",
@@ -135,7 +142,7 @@ export default function AdminPanel() {
         title: data.title,
         author: data.author,
         description: editDescription || data.description,
-        category: data.category,
+        categories: data.categories,
         tier: data.tier,
         rating: data.rating,
         coverImage: data.coverImage,
@@ -168,7 +175,7 @@ export default function AdminPanel() {
       title: book.title,
       author: book.author,
       description: book.description,
-      category: book.category,
+      categories: book.categories || [],
       tier: book.tier,
       rating: book.rating,
       coverImage: book.coverImage || "",
@@ -329,23 +336,35 @@ export default function AdminPanel() {
                     label="Book PDF File"
                   />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Category</Label>
-                      <Select onValueChange={(value) => form.setValue("category", value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="self-improvement">Self Improvement</SelectItem>
-                          <SelectItem value="business">Business</SelectItem>
-                          <SelectItem value="productivity">Productivity</SelectItem>
-                          <SelectItem value="psychology">Psychology</SelectItem>
-                          <SelectItem value="finance">Finance</SelectItem>
-                          <SelectItem value="leadership">Leadership</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  <div className="space-y-2">
+                    <Label>Categories (Select multiple)</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-4 border rounded-md">
+                      {categories.map((category: any) => (
+                        <div key={category.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`category-${category.id}`}
+                            checked={form.watch("categories")?.includes(category.id) || false}
+                            onCheckedChange={(checked) => {
+                              const currentCategories = form.watch("categories") || [];
+                              if (checked) {
+                                form.setValue("categories", [...currentCategories, category.id]);
+                              } else {
+                                form.setValue("categories", currentCategories.filter((id: string) => id !== category.id));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`category-${category.id}`} className="text-sm font-normal">
+                            {category.name}
+                          </Label>
+                        </div>
+                      ))}
                     </div>
+                    {form.formState.errors.categories && (
+                      <p className="text-sm text-red-500">{form.formState.errors.categories.message as string}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                     <div className="space-y-2">
                       <Label htmlFor="tier">Subscription Tier</Label>
@@ -372,18 +391,7 @@ export default function AdminPanel() {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="file">PDF File</Label>
-                      <Input
-                        id="file"
-                        type="file"
-                        accept=".pdf"
-                        {...form.register("file")}
-                      />
-                      {form.formState.errors.file && (
-                        <p className="text-sm text-red-500">{form.formState.errors.file.message as string}</p>
-                      )}
-                    </div>
+
                   </div>
 
                   <Button
@@ -615,23 +623,35 @@ export default function AdminPanel() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-category">Category</Label>
-                    <Select onValueChange={(value) => editForm.setValue("category", value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="self-improvement">Self Improvement</SelectItem>
-                        <SelectItem value="business">Business</SelectItem>
-                        <SelectItem value="productivity">Productivity</SelectItem>
-                        <SelectItem value="psychology">Psychology</SelectItem>
-                        <SelectItem value="finance">Finance</SelectItem>
-                        <SelectItem value="leadership">Leadership</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-2">
+                  <Label>Categories (Select multiple)</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-4 border rounded-md">
+                    {categories.map((category: any) => (
+                      <div key={category.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`edit-category-${category.id}`}
+                          checked={editForm.watch("categories")?.includes(category.id) || false}
+                          onCheckedChange={(checked) => {
+                            const currentCategories = editForm.watch("categories") || [];
+                            if (checked) {
+                              editForm.setValue("categories", [...currentCategories, category.id]);
+                            } else {
+                              editForm.setValue("categories", currentCategories.filter((id: string) => id !== category.id));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`edit-category-${category.id}`} className="text-sm font-normal">
+                          {category.name}
+                        </Label>
+                      </div>
+                    ))}
                   </div>
+                  {editForm.formState.errors.categories && (
+                    <p className="text-sm text-red-500">{editForm.formState.errors.categories.message as string}</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                   <div className="space-y-2">
                     <Label htmlFor="edit-tier">Subscription Tier</Label>
