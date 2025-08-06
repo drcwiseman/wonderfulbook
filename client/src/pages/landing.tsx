@@ -5,16 +5,56 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users, TrendingUp, CheckCircle, ArrowRight, PlayCircle, Award, Shield, Clock, Zap, Star, Crown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+
+// Book Showcase Component for Landing
+function BookShowcaseForLanding() {
+  const { data: books = [] } = useQuery({
+    queryKey: ["/api/books"],
+  });
+
+  const showcaseBooks = books.slice(0, 6); // Show first 6 books
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-6xl mx-auto">
+      {showcaseBooks.map((book: any) => (
+        <div key={book.id} className="group cursor-pointer">
+          <div className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            <div className="aspect-[3/4] bg-gradient-to-br from-orange-800/20 to-amber-800/20 flex items-center justify-center">
+              {book.coverImageUrl ? (
+                <img
+                  src={book.coverImageUrl}
+                  alt={book.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
+                  <BookOpen className="w-12 h-12 text-white/80" />
+                </div>
+              )}
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute bottom-3 left-3 right-3">
+                <h3 className="text-white font-semibold text-sm mb-1 line-clamp-2">{book.title}</h3>
+                <p className="text-orange-200 text-xs">{book.author}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-orange-900 via-red-900 to-amber-900 text-white">
       <Header />
       
       {/* Modern Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-black/50"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-800/30 via-red-800/30 to-amber-800/40"></div>
         <div 
           className="absolute inset-0 opacity-10"
           style={{
@@ -24,9 +64,9 @@ export default function Landing() {
 
         <div className="relative z-10 container mx-auto px-6 text-center">
           <div className="max-w-5xl mx-auto">
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight bg-gradient-to-r from-white via-orange-100 to-amber-100 bg-clip-text text-transparent">
               Transform Your Mind with
-              <span className="block text-blue-400">Life-Changing Books</span>
+              <span className="block text-orange-300">Life-Changing Books</span>
             </h1>
             
             <p className="text-xl md:text-2xl mb-12 text-gray-300 max-w-3xl mx-auto leading-relaxed">
@@ -38,21 +78,21 @@ export default function Landing() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
               <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
                 <CardContent className="p-6 text-center">
-                  <BookOpen className="w-8 h-8 text-blue-400 mx-auto mb-3" />
+                  <BookOpen className="w-8 h-8 text-orange-400 mx-auto mb-3" />
                   <div className="text-3xl font-bold text-white mb-1">1000+</div>
                   <div className="text-gray-400">Premium Books</div>
                 </CardContent>
               </Card>
               <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
                 <CardContent className="p-6 text-center">
-                  <Users className="w-8 h-8 text-green-400 mx-auto mb-3" />
+                  <Users className="w-8 h-8 text-amber-400 mx-auto mb-3" />
                   <div className="text-3xl font-bold text-white mb-1">50K+</div>
                   <div className="text-gray-400">Active Readers</div>
                 </CardContent>
               </Card>
               <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
                 <CardContent className="p-6 text-center">
-                  <Award className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
+                  <Award className="w-8 h-8 text-yellow-300 mx-auto mb-3" />
                   <div className="text-3xl font-bold text-white mb-1">4.9★</div>
                   <div className="text-gray-400">User Rating</div>
                 </CardContent>
@@ -62,7 +102,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 onClick={() => window.location.href = "/api/login"}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <Zap className="w-5 h-5 mr-2" />
                 Start Free Trial
@@ -80,16 +120,32 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Book Showcase Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
+              Discover Our Premium Book Collection
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Handpicked titles from world-renowned authors and thought leaders. Experience the quality that sets us apart.
+            </p>
+          </div>
+          
+          <BookShowcaseForLanding />
+        </div>
+      </section>
+
       {/* Featured Books Section */}
       <section id="featured" className="py-16">
         <FeaturedBooks />
       </section>
 
       {/* Value Proposition Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-900/20 to-purple-900/20">
+      <section className="py-20 bg-gradient-to-r from-orange-900/20 to-red-900/20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
               Why Choose Wonderful Books?
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
@@ -98,9 +154,9 @@ export default function Landing() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <Card className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 border-blue-500/30 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
+            <Card className="bg-gradient-to-br from-orange-900/30 to-orange-800/30 border-orange-500/30 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
               <CardHeader className="text-center pb-3">
-                <Shield className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                <Shield className="w-12 h-12 text-orange-400 mx-auto mb-4" />
                 <CardTitle className="text-2xl text-white">Curated Quality</CardTitle>
               </CardHeader>
               <CardContent>
@@ -110,9 +166,9 @@ export default function Landing() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 border-purple-500/30 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
+            <Card className="bg-gradient-to-br from-red-900/30 to-red-800/30 border-red-500/30 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
               <CardHeader className="text-center pb-3">
-                <Clock className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                <Clock className="w-12 h-12 text-red-400 mx-auto mb-4" />
                 <CardTitle className="text-2xl text-white">Read Anywhere</CardTitle>
               </CardHeader>
               <CardContent>
@@ -122,9 +178,9 @@ export default function Landing() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-500/30 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
+            <Card className="bg-gradient-to-br from-amber-900/30 to-amber-800/30 border-amber-500/30 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
               <CardHeader className="text-center pb-3">
-                <TrendingUp className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                <TrendingUp className="w-12 h-12 text-amber-400 mx-auto mb-4" />
                 <CardTitle className="text-2xl text-white">Track Progress</CardTitle>
               </CardHeader>
               <CardContent>
@@ -141,7 +197,7 @@ export default function Landing() {
       <section id="pricing" className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
               Choose Your Reading Journey
             </h2>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
@@ -219,7 +275,7 @@ export default function Landing() {
                 </div>
                 <Button 
                   onClick={() => window.location.href = "/api/login"}
-                  className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white mt-6"
+                  className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white mt-6"
                 >
                   Choose Basic
                 </Button>
