@@ -23,18 +23,18 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-netflix-black via-netflix-black/90 to-transparent">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-gray-900 via-gray-900/95 to-transparent backdrop-blur-sm">
         <nav className="flex items-center justify-between px-4 md:px-8 py-4">
           <div className="flex items-center space-x-8">
-            <div className="text-netflix-red text-2xl font-bold">Wonderful Books</div>
+            <div className="text-orange-500 text-2xl font-bold">Wonderful Books</div>
             <div className="hidden md:flex space-x-6">
-              <a href="/" className="text-white hover:text-gray-300 transition-colors">Home</a>
-              <a href="#categories" className="text-white hover:text-gray-300 transition-colors">Categories</a>
+              <a href="/" className="text-white hover:text-orange-300 transition-colors font-medium">Home</a>
+              <a href="#categories" className="text-white hover:text-orange-300 transition-colors font-medium">Categories</a>
               {isAuthenticated && (
                 <>
-                  <a href="/dashboard" className="text-white hover:text-gray-300 transition-colors">Dashboard</a>
-                  <a href="#my-books" className="text-white hover:text-gray-300 transition-colors">My Books</a>
-                  <a href="#bookmarks" className="text-white hover:text-gray-300 transition-colors">Bookmarks</a>
+                  <a href="/dashboard" className="text-white hover:text-orange-300 transition-colors font-medium">Dashboard</a>
+                  <a href="#my-books" className="text-white hover:text-orange-300 transition-colors font-medium">My Books</a>
+                  <a href="#bookmarks" className="text-white hover:text-orange-300 transition-colors font-medium">Bookmarks</a>
                 </>
               )}
             </div>
@@ -47,7 +47,7 @@ export default function Header() {
                 placeholder="Search books..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-netflix-gray text-white px-4 py-2 rounded-md w-64 focus:outline-none focus:ring-2 focus:ring-netflix-red border-none"
+                className="bg-gray-800 text-white px-4 py-2 rounded-md w-64 focus:outline-none focus:ring-2 focus:ring-orange-500 border border-gray-600"
               />
               <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
             </form>
@@ -66,17 +66,17 @@ export default function Header() {
                 {/* Subscription Plan Badge */}
                 <div className="hidden md:block">
                   {(user as any)?.subscriptionTier === 'premium' && (
-                    <span className="px-2 py-1 bg-premium-gold text-netflix-black text-xs font-bold rounded">
+                    <span className="px-2 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold rounded">
                       PREMIUM
                     </span>
                   )}
                   {(user as any)?.subscriptionTier === 'basic' && (
-                    <span className="px-2 py-1 bg-basic-purple text-white text-xs font-bold rounded">
+                    <span className="px-2 py-1 bg-orange-400 text-white text-xs font-bold rounded">
                       BASIC
                     </span>
                   )}
                   {((user as any)?.subscriptionTier === 'free' || !(user as any)?.subscriptionTier) && (
-                    <span className="px-2 py-1 bg-trial-gray text-white text-xs font-bold rounded">
+                    <span className="px-2 py-1 bg-gray-600 text-white text-xs font-bold rounded">
                       FREE TRIAL
                     </span>
                   )}
@@ -91,7 +91,7 @@ export default function Header() {
                   variant="ghost"
                   size="sm"
                   onClick={() => window.location.href = "/api/logout"}
-                  className="text-white hover:text-netflix-red"
+                  className="text-white hover:text-orange-400"
                 >
                   Logout
                 </Button>
@@ -99,7 +99,7 @@ export default function Header() {
             ) : (
               <Button
                 onClick={() => window.location.href = "/api/login"}
-                className="bg-netflix-red hover:bg-red-700"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
               >
                 Sign In
               </Button>
@@ -119,14 +119,14 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-netflix-black md:hidden">
+        <div className="fixed inset-0 z-50 bg-gray-900 md:hidden">
           <div className="flex items-center justify-between p-4 border-b border-gray-700">
-            <div className="text-netflix-red text-2xl font-bold">Wonderful Books</div>
+            <div className="text-orange-500 text-2xl font-bold">Wonderful Books</div>
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleMobileMenu}
-              className="text-white"
+              className="text-white hover:text-orange-400"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -139,17 +139,17 @@ export default function Header() {
                 placeholder="Search books..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-netflix-gray text-white border-gray-600"
+                className="bg-gray-800 text-white border-gray-600 focus:ring-orange-500"
               />
             </form>
             
             <nav className="space-y-4">
-              <a href="/" className="block py-2 text-white text-lg border-b border-gray-700">Home</a>
-              <a href="#categories" className="block py-2 text-white text-lg border-b border-gray-700">Categories</a>
+              <a href="/" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">Home</a>
+              <a href="#categories" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">Categories</a>
               {isAuthenticated && (
                 <>
-                  <a href="#my-books" className="block py-2 text-white text-lg border-b border-gray-700">My Books</a>
-                  <a href="#bookmarks" className="block py-2 text-white text-lg">Bookmarks</a>
+                  <a href="#my-books" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">My Books</a>
+                  <a href="#bookmarks" className="block py-2 text-white hover:text-orange-300 text-lg font-medium">Bookmarks</a>
                 </>
               )}
             </nav>
