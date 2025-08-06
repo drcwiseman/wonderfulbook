@@ -9,9 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-// Set up PDF.js worker - disable worker for now to fix immediate loading
-pdfjs.GlobalWorkerOptions.workerSrc = '';
-pdfjs.disableWorker = true;
+// Set up PDF.js worker properly
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface PremiumPDFReaderProps {
   bookId: string;
@@ -378,9 +377,8 @@ export function PremiumPDFReader({
           loading=""
           className="flex items-center justify-center"
           options={{
-            cMapUrl: '/node_modules/pdfjs-dist/cmaps/',
+            cMapUrl: `//unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
             cMapPacked: true,
-            disableWorker: true,
           }}
         >
           {numPages && (
