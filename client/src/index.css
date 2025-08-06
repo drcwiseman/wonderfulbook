@@ -184,10 +184,12 @@
 /* Clean PDF viewer styles for Apple Books look */
 .rpv-core__viewer {
   background: rgb(249 250 251) !important;
+  overflow: hidden !important; /* Prevent scrolling in single page mode */
 }
 
 .dark .rpv-core__viewer {
   background: rgb(17 24 39) !important;
+  overflow: hidden !important; /* Prevent scrolling in single page mode */
 }
 
 /* Hide download/print buttons for security */
@@ -214,19 +216,38 @@
 /* Style PDF pages for clean reading experience */
 .rpv-core__page-layer {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin: 16px;
+  margin: 16px auto;
   border-radius: 8px;
   overflow: hidden;
+  max-width: 100%;
+  display: block;
 }
 
-/* Additional Apple Books styling */
+/* Additional Apple Books styling for single page mode */
 .rpv-core__inner-page {
   background: white !important;
   border-radius: 8px;
+  margin: 0 auto !important;
+  display: flex !important;
+  justify-content: center !important;
 }
 
 .dark .rpv-core__inner-page {
   background: rgb(31 41 55) !important;
+}
+
+/* Center single page and add smooth transitions */
+.rpv-core__inner-pages {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  min-height: 100vh !important;
+  padding: 20px 0 !important;
+}
+
+/* Smooth page transition effect */
+.rpv-core__page {
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out !important;
 }
 
 /* Smooth transitions for all PDF elements */

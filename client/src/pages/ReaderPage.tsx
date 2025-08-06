@@ -28,7 +28,7 @@ export default function ReaderPage() {
   const [showToolbars, setShowToolbars] = useState(true);
   const [showSidebar, setShowSidebar] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isScrollMode, setIsScrollMode] = useState(true);
+  const [isScrollMode, setIsScrollMode] = useState(false);
   
   // Touch/gesture handling
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
@@ -233,14 +233,22 @@ export default function ReaderPage() {
       setLastTap(now);
     }
 
-    // Handle swipe gestures
+    // Handle swipe gestures for page flipping
     if (Math.abs(deltaX) > 50 && Math.abs(deltaY) < 100) {
       if (deltaX > 0 && currentPage < totalPages) {
         // Swipe left - next page
         goToPage(currentPage + 1);
+        toast({
+          title: "Page Turn",
+          description: `Page ${currentPage + 1} of ${totalPages}`,
+        });
       } else if (deltaX < 0 && currentPage > 1) {
         // Swipe right - previous page
         goToPage(currentPage - 1);
+        toast({
+          title: "Page Turn",
+          description: `Page ${currentPage - 1} of ${totalPages}`,
+        });
       }
     }
 

@@ -26,7 +26,7 @@ export default function PDFViewer({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [zoom, setZoom] = useState(1);
-  const [isScrollMode, setIsScrollMode] = useState(true);
+  const [isScrollMode, setIsScrollMode] = useState(false);
   const viewerRef = useRef<any>(null);
 
   // Handle PDF document load
@@ -52,13 +52,22 @@ export default function PDFViewer({
   const goToPage = useCallback((page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      // Note: Actual page navigation would require PDF viewer API
-      toast({
-        title: "Page Navigation",
-        description: `Navigated to page ${page}`,
-      });
+      onPageChange?.(page, totalPages);
     }
-  }, [totalPages, toast]);
+  }, [totalPages, onPageChange]);
+
+  // Next and previous page functions
+  const nextPage = useCallback(() => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1);
+    }
+  }, [currentPage, totalPages, goToPage]);
+
+  const prevPage = useCallback(() => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1);
+    }
+  }, [currentPage, goToPage]);
 
   // Zoom controls
   const zoomIn = useCallback(() => {
@@ -95,6 +104,8 @@ export default function PDFViewer({
             onDocumentLoad={handleDocumentLoad}
             onPageChange={handlePageChange}
             theme="auto"
+            defaultScale={1}
+            scrollMode="page"
           />
         </div>
       </Worker>

@@ -165,7 +165,7 @@ export default function ReaderToolbar({
                 )}
               </Button>
 
-              {/* Center - Controls */}
+              {/* Center - Page Navigation & Controls */}
               <div className="flex items-center space-x-2">
                 <Button
                   variant="ghost"
@@ -176,6 +176,30 @@ export default function ReaderToolbar({
                   <ZoomOut className="w-4 h-4" />
                 </Button>
 
+                <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg px-2 py-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onGoToPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30"
+                  >
+                    ←
+                  </Button>
+                  <span className="text-xs text-gray-600 dark:text-gray-300 mx-2 min-w-12 text-center">
+                    {currentPage}/{totalPages}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onGoToPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30"
+                  >
+                    →
+                  </Button>
+                </div>
+
                 <Button
                   variant="ghost"
                   size="sm"
@@ -185,6 +209,7 @@ export default function ReaderToolbar({
                       ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' 
                       : 'text-gray-700 dark:text-gray-300'
                   } hover:bg-gray-100 dark:hover:bg-gray-800`}
+                  title={isScrollMode ? "Switch to Page Mode" : "Switch to Scroll Mode"}
                 >
                   {isScrollMode ? (
                     <Scroll className="w-4 h-4" />
