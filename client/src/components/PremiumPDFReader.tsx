@@ -9,8 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-// Set up PDF.js worker properly
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Configure PDF.js - disable worker for Vite compatibility
+pdfjs.GlobalWorkerOptions.workerSrc = '';
+// @ts-ignore - pdfjs type definitions don't include this
+pdfjs.disableWorker = true;
 
 interface PremiumPDFReaderProps {
   bookId: string;
@@ -43,11 +45,20 @@ export function PremiumPDFReader({
 
   const pdfUrl = `/api/stream/${bookId}`;
 
-  // Memoize PDF options to prevent unnecessary reloads
+  // Memoize PDF options and file config to prevent unnecessary reloads
   const pdfOptions = useMemo(() => ({
-    cMapUrl: `//unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+    disableWorker: true,
+    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
     cMapPacked: true,
   }), []);
+
+  const pdfFile = useMemo(() => ({
+    url: pdfUrl,
+    httpHeaders: {
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    withCredentials: true
+  }), [pdfUrl]);
 
   // Check if current page is bookmarked
   useEffect(() => {
@@ -393,13 +404,7 @@ export function PremiumPDFReader({
         )}
 
         <Document
-          file={{
-            url: pdfUrl,
-            httpHeaders: {
-              'X-Requested-With': 'XMLHttpRequest',
-            },
-            withCredentials: true
-          }}
+          file={pdfFile}
           onLoadSuccess={onDocumentLoadSuccess}
           onLoadError={onDocumentLoadError}
           loading=""
