@@ -16,7 +16,8 @@ function FeaturedBooks() {
   });
 
   const books = Array.isArray(booksData) ? booksData : [];
-  const featuredBooks = books.slice(0, 3);
+  // Show your actual book(s) and duplicate for display if needed
+  const featuredBooks = books.length > 0 ? [books[0], books[0], books[0]] : [];
 
   return (
     <div className="py-16">
@@ -279,11 +280,11 @@ export default function Home() {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="text-center">
-              <div className="text-4xl font-bold text-orange-400 mb-2">200+</div>
+              <div className="text-4xl font-bold text-orange-400 mb-2">1+</div>
               <div className="text-gray-400">Life-Changing Books</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-orange-400 mb-2">27+</div>
+              <div className="text-4xl font-bold text-orange-400 mb-2">5+</div>
               <div className="text-gray-400">Curated Categories</div>
             </div>
             <div className="text-center">
