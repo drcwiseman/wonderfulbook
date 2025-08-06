@@ -12,13 +12,24 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Trash2, Edit2, Search, Shield, Mail, Key, UserCheck, UserX, Users, TrendingUp } from "lucide-react";
+import { Trash2, Edit2, Search, Shield, Mail, Key, UserCheck, UserX, Users, TrendingUp, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 
 // User management schemas
+const createUserSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  role: z.enum(["user", "admin", "moderator"]).default("user"),
+  subscriptionTier: z.enum(["free", "basic", "premium"]).default("free"),
+  subscriptionStatus: z.enum(["active", "inactive", "cancelled"]).default("active"),
+  isActive: z.boolean().default(true),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
 const editUserSchema = z.object({
   firstName: z.string().min(1, "First name is required").optional(),
   lastName: z.string().min(1, "Last name is required").optional(),
@@ -41,6 +52,7 @@ const bulkUpdateSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+type CreateUserForm = z.infer<typeof createUserSchema>;
 type EditUserForm = z.infer<typeof editUserSchema>;
 type PasswordResetForm = z.infer<typeof passwordResetSchema>;
 type BulkUpdateForm = z.infer<typeof bulkUpdateSchema>;
@@ -70,6 +82,7 @@ export function UserManagement() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [resettingPasswordFor, setResettingPasswordFor] = useState<User | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -87,6 +100,17 @@ export function UserManagement() {
     queryKey: ["/api/admin/user-analytics"],
   });
 
+  // Create user form
+  const createForm = useForm<CreateUserForm>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: {
+      role: "user",
+      subscriptionTier: "free",
+      subscriptionStatus: "active",
+      isActive: true,
+    },
+  });
+
   // Edit user form
   const editForm = useForm<EditUserForm>({
     resolver: zodResolver(editUserSchema),
@@ -100,6 +124,30 @@ export function UserManagement() {
   // Bulk update form
   const bulkForm = useForm<BulkUpdateForm>({
     resolver: zodResolver(bulkUpdateSchema),
+  });
+
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (data: CreateUserForm) => {
+      return apiRequest("POST", "/api/admin/users", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User created successfully!",
+      });
+      setShowCreateDialog(false);
+      createForm.reset();
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/user-analytics"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Create Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   // Edit user mutation
@@ -267,6 +315,11 @@ export function UserManagement() {
     });
   };
 
+  // Handle create submit
+  const handleCreateSubmit = (data: CreateUserForm) => {
+    createUserMutation.mutate(data);
+  };
+
   // Handle edit submit
   const handleEditSubmit = (data: EditUserForm) => {
     if (editingUser) {
@@ -380,7 +433,7 @@ export function UserManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Search */}
+          {/* Search and Create */}
           <div className="flex gap-4">
             <div className="flex-1">
               <div className="relative">
@@ -393,6 +446,13 @@ export function UserManagement() {
                 />
               </div>
             </div>
+            <Button 
+              onClick={() => setShowCreateDialog(true)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create New User
+            </Button>
           </div>
 
           {/* Bulk Actions */}
@@ -858,6 +918,178 @@ export function UserManagement() {
                   </Button>
                   <Button type="submit" disabled={passwordResetMutation.isPending}>
                     {passwordResetMutation.isPending ? "Resetting..." : "Reset Password"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Create User Dialog */}
+      {showCreateDialog && (
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Create New User</DialogTitle>
+            </DialogHeader>
+            <Form {...createForm}>
+              <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={createForm.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={createForm.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={createForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={createForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={createForm.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="user">User</SelectItem>
+                          <SelectItem value="moderator">Moderator</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={createForm.control}
+                    name="subscriptionTier"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subscription Tier</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="free">Free</SelectItem>
+                            <SelectItem value="basic">Basic</SelectItem>
+                            <SelectItem value="premium">Premium</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={createForm.control}
+                    name="subscriptionStatus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subscription Status</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={createForm.control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Active Account
+                        </FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={createUserMutation.isPending}>
+                    {createUserMutation.isPending ? "Creating..." : "Create User"}
                   </Button>
                 </div>
               </form>

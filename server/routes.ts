@@ -627,6 +627,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { firstName, lastName, email, password, role, subscriptionTier, subscriptionStatus, isActive } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+      
+      // Create new user with manual data
+      const userData = {
+        id: `manual_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        email,
+        firstName,
+        lastName,
+        role: role || "user",
+        subscriptionTier: subscriptionTier || "free",
+        subscriptionStatus: subscriptionStatus || "active",
+        isActive: isActive !== undefined ? isActive : true,
+        profileImageUrl: null,
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        booksReadThisMonth: 0,
+        lastLoginAt: null,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      const user = await storage.createManualUser(userData);
+      res.json(user);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
   app.patch('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
