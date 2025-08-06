@@ -1160,9 +1160,22 @@ async function generateSamplePDF(book: any): Promise<Buffer> {
        .fontSize(16)
        .text('About This Book', 50, 300);
     
+    // Clean the description by removing HTML tags and entities
+    const cleanDescription = book.description
+      ? book.description
+          .replace(/<[^>]*>/g, '') // Remove HTML tags
+          .replace(/&nbsp;/g, ' ') // Replace &nbsp; with spaces
+          .replace(/&amp;/g, '&') // Replace HTML entities
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .trim()
+      : 'No description available';
+    
     doc.font('Helvetica')
        .fontSize(12)
-       .text(book.description, 50, 330, { 
+       .text(cleanDescription, 50, 330, { 
          width: 500, 
          align: 'justify',
          lineGap: 4
@@ -1188,15 +1201,21 @@ async function generateSamplePDF(book: any): Promise<Buffer> {
          });
       
       doc.moveDown(1)
-         .text('In a production environment, this content would be loaded from secure storage with proper access controls based on subscription tiers. The reading experience includes features like bookmarking, progress tracking, and offline access.', 50, doc.y, {
+         .text('Welcome to this transformational journey! This book contains powerful insights and practical strategies designed to help you overcome challenges and achieve lasting positive change in your life.', 50, doc.y, {
            width: 500,
            align: 'justify',
            lineGap: 6
          });
       
-      // Sample paragraph content
       doc.moveDown(2)
-         .text('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.', 50, doc.y, {
+         .text('Through proven methodologies and real-world applications, you will discover how to break through limiting beliefs, develop resilient mindsets, and create the life you truly desire. Each chapter builds upon the previous one, providing you with a comprehensive roadmap for personal transformation.', 50, doc.y, {
+           width: 500,
+           align: 'justify',
+           lineGap: 6
+         });
+      
+      doc.moveDown(2)
+         .text('Key topics covered in this chapter include developing self-awareness, setting meaningful goals, overcoming obstacles, building positive relationships, and maintaining long-term motivation. The strategies presented here have been tested and refined through years of research and practical application.', 50, doc.y, {
            width: 500,
            align: 'justify',
            lineGap: 6
