@@ -129,6 +129,19 @@
     }
   }
   
+  /* Header spacing fixes to prevent overlap */
+  .hero-section-spacing {
+    padding-top: 5rem; /* 80px for fixed header on mobile */
+    margin-top: -2rem; /* Adjust for better balance */
+  }
+  
+  @media (min-width: 640px) {
+    .hero-section-spacing {
+      padding-top: 6rem; /* 96px for larger screens */
+      margin-top: -2.5rem;
+    }
+  }
+  
   /* Touch-friendly interactive elements */
   .touch-target {
     @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
