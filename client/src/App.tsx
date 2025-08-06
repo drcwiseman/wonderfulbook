@@ -27,6 +27,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/book/:id" component={BookDetail} />
           <Route path="/reader/:id" component={ReaderPage} />
+          <Route path="/read/:id" component={ReaderPage} />
           <Route path="/subscribe" component={Subscribe} />
         </>
       )}

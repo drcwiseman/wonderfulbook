@@ -291,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check subscription tier access
       const userTier = user.subscriptionTier || 'free';
-      const canAccess = checkBookAccess(userTier, book.requiredTier);
+      const canAccess = checkBookAccess(userTier, book.requiredTier || 'free');
       
       if (!canAccess) {
         return res.status(403).json({ 
@@ -321,6 +321,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error streaming PDF:", error);
       res.status(500).json({ message: "Failed to stream PDF" });
+    }
+  });
+
+  // Bookmark routes
+  app.get('/api/bookmarks/:bookId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId } = req.params;
+      
+      const bookmarks = await storage.getBookmarks(userId, bookId);
+      res.json(bookmarks);
+    } catch (error) {
+      console.error('Error fetching bookmarks:', error);
+      res.status(500).json({ message: 'Failed to fetch bookmarks' });
+    }
+  });
+
+  app.post('/api/bookmarks', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId, pageNumber, note } = req.body;
+
+      // Map to correct field name (schema uses 'page' instead of 'pageNumber')
+      const bookmarkData = {
+        userId,
+        bookId,
+        page: pageNumber,
+        note: note || ''
+      };
+      
+      const bookmark = await storage.addBookmark(bookmarkData);
+      res.json(bookmark);
+    } catch (error) {
+      console.error('Error adding bookmark:', error);
+      res.status(500).json({ message: 'Failed to add bookmark' });
+    }
+  });
+
+  app.delete('/api/bookmarks/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      
+      await storage.deleteBookmark(id, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting bookmark:', error);
+      res.status(500).json({ message: 'Failed to delete bookmark' });
+    }
+  });
+
+  // Reading progress routes  
+  app.post('/api/reading-progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId, currentPage, totalPages } = req.body;
+      
+      const progress = await storage.updateReadingProgress({
+        userId,
+        bookId,
+        currentPage,
+        totalPages,
+        lastReadAt: new Date()
+      });
+      res.json(progress);
+    } catch (error) {
+      console.error('Error updating reading progress:', error);
+      res.status(500).json({ message: 'Failed to update reading progress' });
     }
   });
 

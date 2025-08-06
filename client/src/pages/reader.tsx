@@ -1,21 +1,16 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { Viewer, Worker } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { isUnauthorizedError } from '@/lib/authUtils';
+import AppleBooksPDFViewer from '@/components/AppleBooksPDFViewer';
 import type { Book } from '@shared/schema';
 
-// Import CSS
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
-
 export default function ReaderPage() {
-  const [, params] = useRoute('/reader/:bookId');
+  const [, paramsReader] = useRoute('/reader/:bookId');
+  const [, paramsRead] = useRoute('/read/:bookId');
   const [, setLocation] = useLocation();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -23,7 +18,7 @@ export default function ReaderPage() {
   const [accessError, setAccessError] = useState<string | null>(null);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
 
-  const bookId = params?.bookId;
+  const bookId = paramsReader?.bookId || paramsRead?.bookId;
 
   // Fetch book details
   const { data: book, isLoading: bookLoading } = useQuery<Book>({
@@ -158,65 +153,12 @@ export default function ReaderPage() {
     };
   }, []);
 
-  // Configure PDF viewer with security options
-  const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    sidebarTabs: (defaultTabs) => [
-      // Keep only the thumbnail and bookmark tabs
-      ...defaultTabs.filter((tab: any) => 
-        tab.id !== 'download' && 
-        tab.id !== 'print'
-      ),
-    ],
-  });
-
   if (authLoading || bookLoading || isLoadingPdf) {
     return (
-      <div className="min-h-screen bg-netflix-black flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="animate-spin w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full mx-auto mb-4" />
-          <p>{isLoadingPdf ? 'Loading your book...' : 'Loading...'}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (accessError) {
-    return (
-      <div className="min-h-screen bg-netflix-black text-white">
-        <div className="container mx-auto px-4 py-8">
-          <Button
-            onClick={() => setLocation('/')}
-            className="mb-6 bg-gray-800 hover:bg-gray-700"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
-          
-          <div className="flex flex-col items-center justify-center text-center py-20">
-            <div className="bg-gray-900 p-8 rounded-lg max-w-md">
-              <AlertCircle className="h-16 w-16 text-netflix-red mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-4">Access Restricted</h2>
-              <p className="text-gray-300 mb-6">{accessError}</p>
-              
-              {accessError.includes('upgrade') && (
-                <Button
-                  onClick={() => setLocation('/#pricing')}
-                  className="bg-netflix-red hover:bg-red-700"
-                >
-                  View Subscription Plans
-                </Button>
-              )}
-              
-              {accessError.includes('log in') && (
-                <Button
-                  onClick={() => window.location.href = '/api/login'}
-                  className="bg-netflix-red hover:bg-red-700"
-                >
-                  Log In
-                </Button>
-              )}
-            </div>
-          </div>
+      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-lg text-gray-900 dark:text-white">Loading your book...</p>
         </div>
       </div>
     );
@@ -224,74 +166,69 @@ export default function ReaderPage() {
 
   if (!book) {
     return (
-      <div className="min-h-screen bg-netflix-black text-white flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Book Not Found</h2>
-          <Button onClick={() => setLocation('/')}>
-            Back to Home
+          <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+          <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Book Not Found</h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">The book you're looking for doesn't exist or has been removed.</p>
+          <Button
+            onClick={() => setLocation('/')}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Library
           </Button>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-netflix-black">
-      {/* Header */}
-      <div className="bg-gray-900 border-b border-gray-800 px-4 py-3">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+  if (accessError) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-center max-w-md px-6">
+          <Lock className="w-16 h-16 mx-auto mb-6 text-yellow-500" />
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Access Required</h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">{accessError}</p>
+          <div className="space-y-4">
             <Button
-              onClick={() => setLocation('/')}
-              variant="ghost"
-              className="text-white hover:bg-gray-800"
+              onClick={() => setLocation('/subscribe')}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Library
+              Upgrade Subscription
             </Button>
-            <div>
-              <h1 className="text-lg font-semibold text-white">{book.title}</h1>
-              <p className="text-sm text-gray-400">by {book.author}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <Lock className="h-4 w-4" />
-            <span>Secure Reading</span>
+            <Button
+              variant="outline"
+              onClick={() => setLocation('/')}
+              className="w-full"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Library
+            </Button>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* PDF Reader */}
-      <div className="h-[calc(100vh-80px)]">
-        {pdfUrl ? (
-          <div className="h-full bg-gray-900 flex flex-col">
-            <div className="p-4 bg-gray-800 text-white text-center border-b border-gray-700">
-              <h2 className="text-lg font-semibold">{book.title}</h2>
-              <p className="text-sm text-gray-300">by {book.author}</p>
-            </div>
-            <div className="flex-1">
-              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-                <Viewer
-                  fileUrl={pdfUrl}
-                  plugins={[defaultLayoutPluginInstance]}
-                  theme="dark"
-                  onDocumentLoad={(e) => {
-                    console.log('PDF loaded:', e.doc.numPages, 'pages');
-                  }}
-                />
-              </Worker>
-            </div>
-          </div>
-        ) : !accessError ? (
-          <div className="flex items-center justify-center h-full text-white">
-            <div className="text-center">
-              <div className="animate-spin w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full mx-auto mb-4" />
-              <p>Loading your book...</p>
-            </div>
-          </div>
-        ) : null}
+  if (!pdfUrl) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-lg text-gray-900 dark:text-white">Loading your book...</p>
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="h-screen w-screen overflow-hidden">
+      <AppleBooksPDFViewer 
+        book={book} 
+        pdfUrl={pdfUrl} 
+        bookId={bookId || ''} 
+      />
     </div>
   );
 }
