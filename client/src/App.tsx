@@ -23,7 +23,7 @@ function Router() {
       <Route path="/book/:id" component={BookDetail} />
       <Route path="/subscribe" component={Subscribe} />
       <Route path="/reader/:bookId" component={ReaderPage} />
-      <Route path="/admin/*" component={AdminPanel} />
+      <Route path="/admin" component={AdminPanel} />
       <Route component={NotFound} />
     </Switch>
   );
