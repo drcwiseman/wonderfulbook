@@ -125,11 +125,14 @@ export default function AdminPanel() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Book created successfully!",
+        description: "Book created and published successfully!",
       });
       form.reset();
       setDescription("");
       setPdfFile("");
+      form.setValue("categories", []);
+      form.setValue("coverImage", "");
+      form.setValue("fileUrl", "");
       queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
     },
@@ -241,11 +244,6 @@ export default function AdminPanel() {
   }
 
   const onSubmit = (data: UploadForm) => {
-    console.log("Form submitted with data:", data);
-    console.log("Description:", description);
-    console.log("PDF File:", pdfFile);
-    console.log("Form errors:", form.formState.errors);
-    
     // Set the fileUrl from the pdfFile state
     const formDataWithFile = {
       ...data,

@@ -405,11 +405,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/admin/books', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { categories, ...bookData } = req.body;
-      const validatedData = insertBookSchema.parse(bookData);
+      
+      // Convert rating to string if it's a number for proper validation
+      if (typeof bookData.rating === 'number') {
+        bookData.rating = bookData.rating.toString();
+      }
+      
+      // Map frontend fields to backend schema
+      const mappedData = {
+        title: bookData.title,
+        author: bookData.author,
+        description: bookData.description,
+        coverImageUrl: bookData.coverImage,
+        pdfUrl: bookData.fileUrl,
+        rating: bookData.rating,
+        requiredTier: bookData.tier,
+      };
+      
+      const validatedData = insertBookSchema.parse(mappedData);
       const book = await storage.createBook(validatedData, categories || []);
       res.json(book);
     } catch (error) {
       console.error("Error creating book:", error);
+      console.error("Validation error details:", error);
       res.status(500).json({ message: "Failed to create book" });
     }
   });
