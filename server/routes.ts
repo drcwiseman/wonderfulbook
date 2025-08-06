@@ -1160,18 +1160,34 @@ async function generateSamplePDF(book: any): Promise<Buffer> {
        .fontSize(16)
        .text('About This Book', 50, 300);
     
-    // Clean the description by removing HTML tags and entities
+    // Clean the description by aggressively removing HTML tags and entities
     const cleanDescription = book.description
       ? book.description
-          .replace(/<[^>]*>/g, '') // Remove HTML tags
+          .replace(/<style[^>]*>.*?<\/style>/gis, '') // Remove style blocks
+          .replace(/<script[^>]*>.*?<\/script>/gis, '') // Remove script blocks
+          .replace(/<[^>]*>/g, '') // Remove all HTML tags
           .replace(/&nbsp;/g, ' ') // Replace &nbsp; with spaces
           .replace(/&amp;/g, '&') // Replace HTML entities
           .replace(/&lt;/g, '<')
           .replace(/&gt;/g, '>')
           .replace(/&quot;/g, '"')
           .replace(/&#39;/g, "'")
+          .replace(/&hellip;/g, '...')
+          .replace(/&mdash;/g, '—')
+          .replace(/&ndash;/g, '–')
+          .replace(/&rsquo;/g, "'")
+          .replace(/&lsquo;/g, "'")
+          .replace(/&rdquo;/g, '"')
+          .replace(/&ldquo;/g, '"')
+          .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+          .replace(/[\r\n]+/g, ' ') // Replace line breaks with spaces
           .trim()
-      : 'No description available';
+      : 'This is a sample book demonstrating the secure PDF streaming capabilities of the Wonderful Books platform. In a production environment, this would contain the actual book content.';
+    
+    // Log cleaned description to verify HTML removal
+    console.log('Original description length:', book.description?.length || 0);
+    console.log('Cleaned description length:', cleanDescription.length);
+    console.log('Cleaned description preview:', cleanDescription.substring(0, 200) + '...');
     
     doc.font('Helvetica')
        .fontSize(12)
