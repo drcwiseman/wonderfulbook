@@ -4,8 +4,8 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import PDFViewer from '@/components/PDFViewer';
-import ReaderToolbar from '@/components/ReaderToolbar';
+import FlipPagePDFViewer from '@/components/FlipPagePDFViewer';
+import FlipPageToolbar from '@/components/FlipPageToolbar';
 import BookmarkSidebar from '@/components/BookmarkSidebar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Lock, AlertCircle } from 'lucide-react';
@@ -239,17 +239,9 @@ export default function ReaderPage() {
       if (deltaX > 0 && currentPage < totalPages) {
         // Swipe left - next page
         goToPage(currentPage + 1);
-        toast({
-          title: "Page Turn",
-          description: `Page ${currentPage + 1} of ${totalPages}`,
-        });
       } else if (deltaX < 0 && currentPage > 1) {
         // Swipe right - previous page
         goToPage(currentPage - 1);
-        toast({
-          title: "Page Turn",
-          description: `Page ${currentPage - 1} of ${totalPages}`,
-        });
       }
     }
 
@@ -404,33 +396,32 @@ export default function ReaderPage() {
 
   // Main reader interface
   return (
-    <div className={`h-screen w-screen overflow-hidden relative ${isDarkMode ? 'dark' : ''}`}>
-      {/* PDF Viewer */}
-      <PDFViewer
+    <div 
+      className={`h-screen w-screen overflow-hidden relative reader-container ${isDarkMode ? 'dark' : ''}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onContextMenu={(e) => e.preventDefault()} // Disable right-click
+    >
+      {/* Custom PDF Viewer - No Scrolling */}
+      <FlipPagePDFViewer
         book={book}
         pdfUrl={pdfUrl}
-        bookId={bookId!}
         currentPage={currentPage}
         onPageChange={handlePageChange}
         onDocumentLoad={handleDocumentLoad}
-        onGoToPage={goToPage}
       />
 
-      {/* Toolbars */}
-      <ReaderToolbar
+      {/* Enhanced Toolbars */}
+      <FlipPageToolbar
         book={book}
         currentPage={currentPage}
         totalPages={totalPages}
         isBookmarked={isCurrentPageBookmarked}
         showToolbars={showToolbars}
-        isScrollMode={isScrollMode}
         isDarkMode={isDarkMode}
         onBack={() => setLocation('/')}
         onToggleBookmark={() => toggleBookmarkMutation.mutate()}
         onGoToPage={goToPage}
-        onZoomIn={() => {/* handled by PDFViewer */}}
-        onZoomOut={() => {/* handled by PDFViewer */}}
-        onToggleScrollMode={() => setIsScrollMode(prev => !prev)}
         onToggleDarkMode={() => setIsDarkMode(prev => !prev)}
         onToggleSidebar={() => setShowSidebar(true)}
       />

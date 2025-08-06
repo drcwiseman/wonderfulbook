@@ -181,44 +181,69 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Clean PDF viewer styles for Apple Books look */
-.rpv-core__viewer {
-  background: rgb(249 250 251) !important;
-  overflow: hidden !important; /* Prevent scrolling in single page mode */
+/* Flip Page PDF Viewer Styles - No Scrolling */
+.flip-page-viewer {
+  background: rgb(249 250 251);
+  transition: background-color 0.3s ease;
 }
 
-/* Force single page layout */
-.rpv-core__inner-pages {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  height: 100vh !important;
-  overflow: hidden !important;
-  padding: 20px !important;
+.dark .flip-page-viewer {
+  background: rgb(17 24 39);
 }
 
-/* Hide all pages except current one */
-.rpv-core__page-layer:not(:first-child) {
-  display: none !important;
+/* Page transition animations */
+.page-flip-enter {
+  opacity: 0;
+  transform: translateX(100px);
 }
 
-/* Style the visible page */
-.rpv-core__page-layer:first-child {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  margin: 0 auto !important;
+.page-flip-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.dark .rpv-core__viewer {
-  background: rgb(17 24 39) !important;
-  overflow: hidden !important; /* Prevent scrolling in single page mode */
+.page-flip-exit {
+  opacity: 1;
+  transform: translateX(0);
 }
 
-/* Dark mode for single page layout */
-.dark .rpv-core__inner-pages {
-  background: rgb(17 24 39) !important;
+.page-flip-exit-active {
+  opacity: 0;
+  transform: translateX(-100px);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Custom page image styling */
+.pdf-page-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.dark .pdf-page-image {
+  background: rgb(31, 41, 55);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Enhanced toolbar styling */
+.flip-toolbar {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Security: Disable text selection and context menu */
+.reader-container {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Hide download/print buttons for security */
@@ -227,69 +252,4 @@
 .rpv-download,
 .rpv-print {
   display: none !important;
-}
-
-/* Style PDF toolbar */
-.rpv-toolbar {
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgb(229 231 235);
-  padding: 8px 16px !important;
-}
-
-.dark .rpv-toolbar {
-  background: rgba(17, 24, 39, 0.95) !important;
-  border-bottom: 1px solid rgb(55 65 81);
-}
-
-/* Style PDF pages for clean reading experience */
-.rpv-core__page-layer {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin: 16px auto;
-  border-radius: 8px;
-  overflow: hidden;
-  max-width: 100%;
-  display: block;
-}
-
-/* Smooth page transition effect */
-.rpv-core__page {
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out !important;
-}
-
-/* Remove default PDF viewer scrolling */
-.rpv-core__viewer-content {
-  overflow: hidden !important;
-}
-
-/* Ensure only one page is visible */
-.rpv-core__page-layer {
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  margin: 0 !important;
-}
-
-/* Smooth transitions for all PDF elements */
-.rpv-core__viewer * {
-  transition: all 0.2s ease-in-out;
-}
-
-/* Hide scrollbars in full reading mode */
-.rpv-core__viewer::-webkit-scrollbar {
-  width: 8px;
-}
-
-.rpv-core__viewer::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.rpv-core__viewer::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-}
-
-.dark .rpv-core__viewer::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
 }
