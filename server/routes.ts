@@ -310,7 +310,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
       res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('Content-Disposition', 'inline'); // Prevent download dialog
+      res.setHeader('Content-Disposition', 'inline');
+      res.setHeader('Content-Length', pdfBuffer.length.toString());
       
       // Stream the PDF buffer
       res.send(pdfBuffer);

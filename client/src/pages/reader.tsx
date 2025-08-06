@@ -287,21 +287,21 @@ export default function ReaderPage() {
       {/* PDF Reader */}
       <div className="h-[calc(100vh-80px)]">
         {pdfUrl ? (
-          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-            <div className="h-full bg-gray-100">
-              <Viewer
-                fileUrl={pdfUrl}
-                plugins={[defaultLayoutPluginInstance]}
-                onDocumentLoad={(e) => {
-                  console.log('PDF document loaded successfully:', e.doc.numPages, 'pages');
-                }}
-                onLoadError={(error) => {
-                  console.error('PDF load error:', error);
-                  setAccessError('Failed to load PDF. The file may be corrupted.');
-                }}
-              />
-            </div>
-          </Worker>
+          <div className="h-full bg-gray-100">
+            {/* Try using a simple iframe first to test if PDF works */}
+            <iframe
+              src={pdfUrl}
+              className="w-full h-full"
+              title={`${book.title} - PDF Reader`}
+              onLoad={() => {
+                console.log('PDF iframe loaded successfully');
+              }}
+              onError={(error) => {
+                console.error('PDF iframe error:', error);
+                setAccessError('Failed to load PDF in iframe.');
+              }}
+            />
+          </div>
         ) : !accessError ? (
           <div className="flex items-center justify-center h-full text-white">
             <div className="text-center">
