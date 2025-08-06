@@ -54,6 +54,24 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Subscription plans table (admin configurable)
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: varchar("id").primaryKey(),
+  name: varchar("name").notNull(),
+  price: varchar("price").notNull(), // Display price (e.g., "£9.99")
+  priceAmount: integer("price_amount").notNull(), // Price in pence/cents
+  currency: varchar("currency").default("GBP"),
+  period: varchar("period").default("per month"),
+  description: text("description"),
+  bookLimit: integer("book_limit").default(3), // -1 for unlimited
+  features: text("features").array(), // Array of feature strings
+  isActive: boolean("is_active").default(true),
+  stripePriceId: varchar("stripe_price_id"),
+  displayOrder: integer("display_order").default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Books table
 export const books = pgTable("books", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -204,6 +222,28 @@ export type RegisterData = z.infer<typeof registerSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
+
+// Subscription Plans types  
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateSubscriptionPlanSchema = z.object({
+  name: z.string().min(1, "Plan name is required").optional(),
+  price: z.string().min(1, "Price display is required").optional(),
+  priceAmount: z.number().min(0, "Price amount must be positive").optional(),
+  currency: z.string().min(1, "Currency is required").optional(),
+  period: z.string().min(1, "Period is required").optional(),
+  description: z.string().optional(),
+  bookLimit: z.number().min(-1, "Book limit must be -1 (unlimited) or positive").optional(),
+  features: z.array(z.string()).optional(),
+  isActive: z.boolean().optional(),
+  stripePriceId: z.string().optional(),
+  displayOrder: z.number().min(1, "Display order must be positive").optional(),
+});
 
 // Types
 export type UpsertUser = z.infer<typeof upsertUserSchema>;

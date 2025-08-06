@@ -734,6 +734,79 @@ export class DatabaseStorage implements IStorage {
       recentSignups,
     };
   }
+
+  // Subscription plan management methods
+  async getAllSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    try {
+      const plans = await db.select().from(subscriptionPlans).orderBy(subscriptionPlans.displayOrder);
+      return plans as SubscriptionPlan[];
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      return [];
+    }
+  }
+
+  async getSubscriptionPlan(id: string): Promise<SubscriptionPlan | undefined> {
+    try {
+      const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+      return plan as SubscriptionPlan | undefined;
+    } catch (error) {
+      console.error("Error fetching subscription plan:", error);
+      return undefined;
+    }
+  }
+
+  async createSubscriptionPlan(planData: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    try {
+      const [plan] = await db.insert(subscriptionPlans).values(planData).returning();
+      return plan as SubscriptionPlan;
+    } catch (error) {
+      console.error("Error creating subscription plan:", error);
+      throw error;
+    }
+  }
+
+  async updateSubscriptionPlan(id: string, updates: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
+    try {
+      const [plan] = await db
+        .update(subscriptionPlans)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(subscriptionPlans.id, id))
+        .returning();
+      
+      if (!plan) {
+        throw new Error("Subscription plan not found");
+      }
+      
+      return plan as SubscriptionPlan;
+    } catch (error) {
+      console.error("Error updating subscription plan:", error);
+      throw error;
+    }
+  }
+
+  async deleteSubscriptionPlan(id: string): Promise<void> {
+    try {
+      await db.delete(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+    } catch (error) {
+      console.error("Error deleting subscription plan:", error);
+      throw error;
+    }
+  }
+
+  async getActiveSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    try {
+      const plans = await db
+        .select()
+        .from(subscriptionPlans)
+        .where(eq(subscriptionPlans.isActive, true))
+        .orderBy(subscriptionPlans.displayOrder);
+      return plans as SubscriptionPlan[];
+    } catch (error) {
+      console.error("Error fetching active subscription plans:", error);
+      return [];
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

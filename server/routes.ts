@@ -633,6 +633,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin subscription plan routes
+  app.get("/api/admin/subscription-plans", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const plans = await storage.getAllSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ error: "Failed to fetch subscription plans" });
+    }
+  });
+
+  app.get("/api/admin/subscription-plans/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const plan = await storage.getSubscriptionPlan(req.params.id);
+      if (!plan) {
+        return res.status(404).json({ error: "Subscription plan not found" });
+      }
+      res.json(plan);
+    } catch (error) {
+      console.error("Error fetching subscription plan:", error);
+      res.status(500).json({ error: "Failed to fetch subscription plan" });
+    }
+  });
+
+  app.post("/api/admin/subscription-plans", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const plan = await storage.createSubscriptionPlan(req.body);
+      res.status(201).json(plan);
+    } catch (error) {
+      console.error("Error creating subscription plan:", error);
+      res.status(500).json({ error: "Failed to create subscription plan" });
+    }
+  });
+
+  app.put("/api/admin/subscription-plans/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const plan = await storage.updateSubscriptionPlan(req.params.id, req.body);
+      res.json(plan);
+    } catch (error) {
+      console.error("Error updating subscription plan:", error);
+      res.status(500).json({ error: "Failed to update subscription plan" });
+    }
+  });
+
+  app.delete("/api/admin/subscription-plans/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSubscriptionPlan(req.params.id);
+      res.json({ message: "Subscription plan deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting subscription plan:", error);
+      res.status(500).json({ error: "Failed to delete subscription plan" });
+    }
+  });
+
   // Create new book with enhanced features
   app.post('/api/admin/books', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
