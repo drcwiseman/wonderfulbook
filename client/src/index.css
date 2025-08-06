@@ -110,9 +110,23 @@
   
   /* Mobile card enhancements */
   .mobile-card {
-    @apply bg-white border-2 border-orange-300 hover:border-orange-500 shadow-lg hover:shadow-xl;
+    @apply bg-white border-4 border-orange-400 hover:border-orange-600 shadow-xl hover:shadow-2xl;
     @apply transform transition-all duration-300 hover:scale-105;
-    min-height: 280px;
+    min-height: 320px;
+  }
+  
+  /* High contrast text for mobile visibility */
+  @media (max-width: 768px) {
+    .mobile-text-high-contrast {
+      color: #000000 !important;
+      font-weight: 900 !important;
+      text-shadow: 0 0 1px rgba(255, 165, 0, 0.3);
+    }
+    
+    .mobile-icon-contrast {
+      color: #ea580c !important;
+      filter: drop-shadow(0 0 2px rgba(234, 88, 12, 0.4));
+    }
   }
   
   /* Touch-friendly interactive elements */
