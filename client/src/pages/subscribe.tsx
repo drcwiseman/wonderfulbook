@@ -70,7 +70,7 @@ export default function Subscribe() {
   const [selectedTier, setSelectedTier] = useState<string>("basic");
   const [isCreatingSubscription, setIsCreatingSubscription] = useState(false);
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function Subscribe() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       toast({
         title: "Please Login",
         description: "You need to be logged in to subscribe",
@@ -91,9 +91,9 @@ export default function Subscribe() {
       });
       setTimeout(() => {
         window.location.href = "/api/login";
-      }, 1000);
+      }, 2000);
     }
-  }, [isAuthenticated, toast]);
+  }, [isAuthenticated, isLoading, toast]);
 
   const handleTierSelection = async (tier: string) => {
     if (isCreatingSubscription) return; // Prevent multiple clicks
@@ -140,10 +140,27 @@ export default function Subscribe() {
     }
   };
 
-  if (!isAuthenticated) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-netflix-black flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-netflix-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl mb-4">Please Login to Continue</h2>
+          <p className="text-gray-400 mb-6">You need to be logged in to access subscription plans</p>
+          <Button 
+            onClick={() => window.location.href = "/api/login"}
+            className="bg-netflix-red hover:bg-red-700"
+          >
+            Login Now
+          </Button>
+        </div>
       </div>
     );
   }
