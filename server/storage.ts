@@ -219,32 +219,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(bookmarks).where(eq(bookmarks.id, id));
   }
 
-  // Stripe and subscription operations (these were missing from implementation)
-  async updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({
-        stripeCustomerId,
-        stripeSubscriptionId,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
 
-  async updateUserSubscription(userId: string, tier: string, status: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({
-        subscriptionTier: tier,
-        subscriptionStatus: status,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
 
   // Admin operations
   async updateBook(id: string, updates: Partial<Book>): Promise<Book> {
