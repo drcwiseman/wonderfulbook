@@ -143,7 +143,7 @@ export default function ReaderPage() {
     
     // Resume to saved page
     if (progress && typeof progress === 'object' && 'currentPage' in progress) {
-      setCurrentPage(progress.currentPage);
+      setCurrentPage(Number(progress.currentPage));
     }
   }, [progress]);
 
@@ -158,7 +158,7 @@ export default function ReaderPage() {
     if (book && typeof book === 'object' && 'id' in book && isAuthenticated && totalPages > 0) {
       const progressPercentage = ((page / totalPages) * 100).toFixed(2);
       updateProgressMutation.mutate({
-        bookId: book.id,
+        bookId: String(book.id),
         currentPage: page,
         totalPages,
         progressPercentage,
@@ -217,9 +217,10 @@ export default function ReaderPage() {
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.25, 0.5));
 
-  // Configure PDF viewer
+  // Configure PDF viewer with better font handling
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
     sidebarTabs: () => [], // Remove all sidebar tabs
+    enableSmoothScroll: true,
   });
 
   // Security: Disable context menu and text selection
@@ -272,7 +273,7 @@ export default function ReaderPage() {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-white'} select-none`}>
-      <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}>
+      <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
         {/* Top Toolbar */}
         <AnimatePresence>
           {isToolbarVisible && (
@@ -294,7 +295,7 @@ export default function ReaderPage() {
                     Back
                   </Button>
                   <h1 className="text-lg font-semibold text-gray-900 dark:text-white truncate max-w-xs">
-                    {book && typeof book === 'object' && 'title' in book ? book.title : 'Loading...'}
+                    {book && typeof book === 'object' && 'title' in book ? String(book.title) : 'Loading...'}
                   </h1>
                 </div>
 

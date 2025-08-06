@@ -346,37 +346,98 @@ async function generateSamplePDF(book: any): Promise<Buffer> {
   
   const PDFKit = await import('pdfkit');
   const PDFDocument = PDFKit.default;
-  const doc = new PDFDocument();
+  
+  // Create PDF with proper font settings
+  const doc = new PDFDocument({
+    font: 'Helvetica',
+    size: 'A4',
+    margins: {
+      top: 50,
+      bottom: 50,
+      left: 50,
+      right: 50
+    },
+    info: {
+      Title: book.title,
+      Author: book.author,
+      Subject: book.description,
+      Keywords: book.category
+    }
+  });
+  
   const chunks: Buffer[] = [];
-
   doc.on('data', (chunk: Buffer) => chunks.push(chunk));
   
   return new Promise((resolve) => {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     
-    // Add book content to PDF
-    doc.fontSize(24).text(book.title, 50, 50);
-    doc.fontSize(16).text(`by ${book.author}`, 50, 90);
-    doc.moveDown(2);
-    doc.fontSize(12).text(book.description, 50, 150, { width: 500 });
+    // Title page with proper formatting
+    doc.font('Helvetica-Bold')
+       .fontSize(28)
+       .text(book.title, 50, 100, { align: 'center', width: 500 });
     
-    // Add some sample content
-    doc.moveDown(2);
-    doc.text('Chapter 1: Introduction', 50, doc.y, { underline: true });
-    doc.moveDown();
-    doc.text(`This is a sample preview of "${book.title}". In a production environment, this would contain the actual book content securely streamed from your storage system.`, 50, doc.y, { width: 500 });
+    doc.font('Helvetica')
+       .fontSize(18)
+       .text(`by ${book.author}`, 50, 160, { align: 'center', width: 500 });
     
-    doc.moveDown(2);
-    doc.text('Sample Content:', 50, doc.y, { underline: true });
-    doc.moveDown();
+    doc.fontSize(14)
+       .text(book.category, 50, 200, { align: 'center', width: 500 });
     
-    // Add multiple pages of sample content
+    // Description
+    doc.moveDown(3);
+    doc.font('Helvetica-Bold')
+       .fontSize(16)
+       .text('About This Book', 50, 300);
+    
+    doc.font('Helvetica')
+       .fontSize(12)
+       .text(book.description, 50, 330, { 
+         width: 500, 
+         align: 'justify',
+         lineGap: 4
+       });
+    
+    // Content pages with proper typography
     for (let i = 1; i <= 5; i++) {
-      if (i > 1) doc.addPage();
-      doc.text(`Page ${i}`, 50, 50);
-      doc.moveDown();
-      doc.text(`This is page ${i} of the sample content for "${book.title}". `, 50, doc.y);
-      doc.text('In a real implementation, this would be the actual book content loaded from secure storage with proper access controls based on the user\'s subscription tier.', 50, doc.y + 20, { width: 500 });
+      doc.addPage();
+      
+      // Page header
+      doc.font('Helvetica-Bold')
+         .fontSize(20)
+         .text(`Chapter ${i}: Sample Content`, 50, 50);
+      
+      // Page content with proper formatting
+      doc.font('Helvetica')
+         .fontSize(12)
+         .moveDown(2)
+         .text(`This is page ${i} of "${book.title}". `, 50, doc.y, {
+           width: 500,
+           align: 'justify',
+           lineGap: 6
+         });
+      
+      doc.moveDown(1)
+         .text('In a production environment, this content would be loaded from secure storage with proper access controls based on subscription tiers. The reading experience includes features like bookmarking, progress tracking, and offline access.', 50, doc.y, {
+           width: 500,
+           align: 'justify',
+           lineGap: 6
+         });
+      
+      // Sample paragraph content
+      doc.moveDown(2)
+         .text('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.', 50, doc.y, {
+           width: 500,
+           align: 'justify',
+           lineGap: 6
+         });
+      
+      // Page footer
+      doc.font('Helvetica')
+         .fontSize(10)
+         .text(`Page ${i} | ${book.title}`, 50, 750, { 
+           width: 500, 
+           align: 'center' 
+         });
     }
     
     doc.end();
