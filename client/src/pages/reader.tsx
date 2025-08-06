@@ -31,90 +31,15 @@ export default function ReaderPage() {
     enabled: !!bookId,
   });
 
-  // Load PDF only once when authenticated and book ID is available
+  // Simple check for authentication and set ready state
   useEffect(() => {
-    let isCancelled = false;
-
-    const loadPdf = async () => {
-      if (!bookId || !isAuthenticated || authLoading || isLoadingPdf || pdfUrl) {
-        return;
-      }
-
-      setIsLoadingPdf(true);
-      try {
-        const response = await fetch(`/api/stream/${bookId}`, {
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/pdf',
-          },
-        });
-
-        if (isCancelled) return;
-
-        if (!response.ok) {
-          console.error('PDF fetch failed:', response.status, response.statusText);
-          if (response.status === 401) {
-            // Session expired, redirect to login
-            toast({
-              title: "Session Expired",
-              description: "Please log in again to continue reading.",
-              variant: "destructive",
-            });
-            setTimeout(() => {
-              window.location.href = "/api/login";
-            }, 1000);
-            return;
-          }
-          if (response.status === 403) {
-            const errorData = await response.json();
-            setAccessError(errorData.message || 'Access denied. Please upgrade your subscription.');
-            return;
-          }
-          throw new Error(`Failed to load PDF: ${response.statusText}`);
-        }
-
-        const blob = await response.blob();
-        if (isCancelled) return;
-
-        console.log('PDF blob received:', blob.size, 'bytes, type:', blob.type);
-        
-        // Verify it's actually a PDF
-        if (blob.type !== 'application/pdf' && blob.size === 0) {
-          throw new Error('Invalid PDF received from server');
-        }
-
-        const url = URL.createObjectURL(blob);
-        console.log('PDF URL created:', url);
-        setPdfUrl(url);
-        setAccessError(null);
-      } catch (error) {
-        if (isCancelled) return;
-        console.error('Error loading PDF:', error);
-        if (isUnauthorizedError(error as Error)) {
-          toast({
-            title: "Unauthorized",
-            description: "You are logged out. Logging in again...",
-            variant: "destructive",
-          });
-          setTimeout(() => {
-            window.location.href = "/api/login";
-          }, 500);
-          return;
-        }
-        setAccessError('Failed to load the book. Please try again.');
-      } finally {
-        if (!isCancelled) {
-          setIsLoadingPdf(false);
-        }
-      }
-    };
-
-    loadPdf();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [bookId, isAuthenticated, authLoading, toast, isLoadingPdf, pdfUrl]);
+    if (bookId && isAuthenticated && !authLoading) {
+      // Skip blob creation, just set pdfUrl to indicate ready
+      setPdfUrl('ready');
+      setAccessError(null);
+      setIsLoadingPdf(false);
+    }
+  }, [bookId, isAuthenticated, authLoading]);
 
   // Cleanup PDF URL on unmount
   useEffect(() => {
@@ -288,17 +213,17 @@ export default function ReaderPage() {
       <div className="h-[calc(100vh-80px)]">
         {pdfUrl ? (
           <div className="h-full bg-gray-100">
-            {/* Try using a simple iframe first to test if PDF works */}
+            {/* Direct iframe to API endpoint - bypass blob creation */}
             <iframe
-              src={pdfUrl}
+              src={`/api/stream/${bookId}`}
               className="w-full h-full"
               title={`${book.title} - PDF Reader`}
               onLoad={() => {
-                console.log('PDF iframe loaded successfully');
+                console.log('PDF iframe loaded successfully from direct API');
               }}
               onError={(error) => {
                 console.error('PDF iframe error:', error);
-                setAccessError('Failed to load PDF in iframe.');
+                setAccessError('Failed to load PDF directly from API.');
               }}
             />
           </div>
