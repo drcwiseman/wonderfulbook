@@ -50,6 +50,12 @@ export const users = pgTable("users", {
   lastLoginAt: timestamp("last_login_at"),
   passwordResetToken: varchar("password_reset_token"),
   passwordResetExpires: timestamp("password_reset_expires"),
+  // Anti-abuse fields for free trial
+  freeTrialUsed: boolean("free_trial_used").default(false),
+  freeTrialStartedAt: timestamp("free_trial_started_at"),
+  freeTrialEndedAt: timestamp("free_trial_ended_at"),
+  registrationIp: varchar("registration_ip"), // Track IP for duplicate prevention
+  deviceFingerprint: varchar("device_fingerprint"), // Browser/device fingerprint
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -117,6 +123,41 @@ export const userSubscriptionCycles = pgTable("user_subscription_cycles", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Anti-abuse tracking table for free trial prevention
+export const freeTrialAbusePrevention = pgTable("free_trial_abuse_prevention", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").notNull(),
+  emailDomain: varchar("email_domain").notNull(), // Extract domain for tracking
+  registrationIp: varchar("registration_ip").notNull(),
+  deviceFingerprint: varchar("device_fingerprint"), // Browser fingerprint
+  userId: varchar("user_id").references(() => users.id),
+  freeTrialStartedAt: timestamp("free_trial_started_at").notNull(),
+  freeTrialEndedAt: timestamp("free_trial_ended_at"),
+  isBlocked: boolean("is_blocked").default(false),
+  blockReason: varchar("block_reason"), // reason for blocking
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  emailIndex: index("idx_email_domain").on(table.email),
+  ipIndex: index("idx_registration_ip").on(table.registrationIp),
+  fingerprintIndex: index("idx_device_fingerprint").on(table.deviceFingerprint),
+}));
+
+// Rate limiting table for signup attempts
+export const signupAttempts = pgTable("signup_attempts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email"),
+  registrationIp: varchar("registration_ip").notNull(),
+  deviceFingerprint: varchar("device_fingerprint"),
+  attemptedAt: timestamp("attempted_at").defaultNow(),
+  successful: boolean("successful").default(false),
+  blockUntil: timestamp("block_until"), // Temporary block timestamp
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  ipAttemptIndex: index("idx_ip_attempt").on(table.registrationIp, table.attemptedAt),
+  emailAttemptIndex: index("idx_email_attempt").on(table.email, table.attemptedAt),
+}));
 
 // User reading progress
 export const readingProgress = pgTable("reading_progress", {

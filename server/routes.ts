@@ -11,6 +11,7 @@ import fs from "fs";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { registerSEORoutes } from "./routes-seo";
+import { antiAbuseService } from "./antiAbuseService";
 
 // Local authentication middleware
 const isAuthenticated = (req: any, res: any, next: any) => {
@@ -77,21 +78,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Local authentication routes
+  // Local authentication routes with anti-abuse protection
   app.post('/api/auth/register', async (req, res) => {
     try {
       const userData = registerSchema.parse(req.body);
+      const userIP = (req.headers['x-forwarded-for'] as string) || 
+                    (req.headers['x-real-ip'] as string) || 
+                    req.socket.remoteAddress || 
+                    req.ip || 
+                    '127.0.0.1';
+      
+      // Extract device fingerprint from request headers/body
+      const deviceFingerprint = req.body.deviceFingerprint;
+      
+      // Check IP rate limiting first
+      const ipCheck = await antiAbuseService.checkIpRateLimit(userIP);
+      if (!ipCheck.allowed) {
+        await antiAbuseService.recordFailedSignup({
+          email: userData.email,
+          ip: userIP,
+          deviceFingerprint,
+          userAgent: req.headers['user-agent']
+        });
+        return res.status(429).json({ 
+          message: ipCheck.reason,
+          retryAfter: ipCheck.retryAfter
+        });
+      }
+      
+      // Check free trial eligibility
+      const eligibilityCheck = await antiAbuseService.checkFreeTrialEligibility({
+        email: userData.email,
+        ip: userIP,
+        deviceFingerprint,
+        userAgent: req.headers['user-agent']
+      });
+      
+      if (!eligibilityCheck.eligible) {
+        await antiAbuseService.recordFailedSignup({
+          email: userData.email,
+          ip: userIP,
+          deviceFingerprint,
+          userAgent: req.headers['user-agent']
+        });
+        return res.status(403).json({ 
+          message: eligibilityCheck.reason,
+          conflictType: eligibilityCheck.conflictType
+        });
+      }
+      
+      // Register the user
       const user = await storage.registerUser(userData);
+      
+      // Record successful free trial start
+      await antiAbuseService.recordFreeTrialStart(user, userIP, deviceFingerprint);
       
       // TODO: Send verification email
       console.log('Email verification token:', user.emailVerificationToken);
       
       res.status(201).json({ 
-        message: "Registration successful! Please check your email to verify your account.",
-        userId: user.id
+        message: "Registration successful! Your 7-day free trial has started. Please check your email to verify your account.",
+        userId: user.id,
+        freeTrialEndsAt: user.freeTrialEndedAt
       });
     } catch (error: any) {
       console.error('Registration error:', error);
+      
+      // Record failed attempt
+      const userIP = (req.headers['x-forwarded-for'] as string) || 
+                    (req.headers['x-real-ip'] as string) || 
+                    req.socket.remoteAddress || 
+                    req.ip || 
+                    '127.0.0.1';
+      
+      await antiAbuseService.recordFailedSignup({
+        email: req.body.email || 'unknown',
+        ip: userIP,
+        deviceFingerprint: req.body.deviceFingerprint,
+        userAgent: req.headers['user-agent']
+      });
+      
       if (error.message?.includes('Email already registered') || error.message?.includes('Username already taken')) {
         return res.status(409).json({ message: error.message });
       }
@@ -897,6 +963,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error bulk deleting books:", error);
       res.status(500).json({ message: "Failed to delete books" });
+    }
+  });
+
+  // Admin anti-abuse monitoring routes
+  app.get('/api/admin/abuse-stats', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const stats = await antiAbuseService.getAbuseStatistics();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching abuse statistics:", error);
+      res.status(500).json({ message: "Failed to fetch abuse statistics" });
+    }
+  });
+
+  app.post('/api/admin/cleanup-abuse-records', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await antiAbuseService.cleanupOldRecords();
+      res.json({ message: "Old abuse records cleaned up successfully" });
+    } catch (error) {
+      console.error("Error cleaning up abuse records:", error);
+      res.status(500).json({ message: "Failed to cleanup abuse records" });
     }
   });
 

@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Eye, EyeOff, BookOpen, CheckCircle } from "lucide-react";
+import { useDeviceFingerprint } from "@/components/DeviceFingerprint";
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +20,7 @@ export default function Register() {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const deviceFingerprint = useDeviceFingerprint();
 
   const form = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
@@ -34,20 +36,40 @@ export default function Register() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterData) => {
-      const response = await apiRequest("POST", "/api/auth/register", data);
+      // Include device fingerprint in the registration data
+      const registrationData = {
+        ...data,
+        deviceFingerprint
+      };
+      const response = await apiRequest("POST", "/api/auth/register", registrationData);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setRegistrationSuccess(true);
       toast({
-        title: "Account Created!",
-        description: "Check your email to verify your account and start reading.",
+        title: "Free Trial Started!",
+        description: "Your 7-day free trial has begun! Check your email to verify your account.",
       });
     },
     onError: (error: any) => {
+      let title = "Registration Failed";
+      let description = error.message || "Something went wrong. Please try again.";
+      
+      // Handle specific anti-abuse errors
+      if (error.message?.includes("already used")) {
+        title = "Free Trial Not Available";
+        description = "This free trial offer has already been used. Please upgrade to a paid plan to continue.";
+      } else if (error.message?.includes("Too many")) {
+        title = "Rate Limited";
+        description = "Too many registration attempts. Please try again later.";
+      } else if (error.message?.includes("temporarily blocked")) {
+        title = "Temporarily Blocked";
+        description = "Account creation temporarily blocked. Please try again later.";
+      }
+      
       toast({
-        title: "Registration Failed",
-        description: error.message || "Something went wrong. Please try again.",
+        title,
+        description,
         variant: "destructive",
       });
     },
