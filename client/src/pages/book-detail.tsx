@@ -280,7 +280,8 @@ export default function BookDetail() {
                   
                   <Button 
                     onClick={() => setLocation(`/reader/${params?.id}`)}
-                    className="w-full bg-netflix-red hover:bg-red-700 text-white mb-4"
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white mb-4 font-semibold"
+                    size="lg"
                   >
                     Read Now
                   </Button>
@@ -309,32 +310,49 @@ export default function BookDetail() {
               </Card>
             </div>
 
-            {/* PDF Reader */}
+            {/* Book Preview */}
             <div className="lg:col-span-3">
               <Card className="bg-netflix-gray border-gray-700">
                 <CardContent className="p-6">
-                  <div className="bg-white rounded-lg" style={{ minHeight: "600px" }}>
-                    {/* This would contain the actual PDF viewer */}
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                      <div className="text-center">
-                        <Book className="w-16 h-16 mx-auto mb-4" />
-                        <p className="text-lg font-semibold">PDF Reader</p>
-                        <p className="text-sm">Page {currentPage + 1}</p>
-                        <div className="mt-4 space-x-2">
-                          <Button
-                            variant="outline"
-                            onClick={() => handlePageChange(Math.max(0, currentPage - 1))}
-                            disabled={currentPage === 0}
-                          >
-                            Previous
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => handlePageChange(currentPage + 1)}
-                          >
-                            Next
-                          </Button>
+                  <div 
+                    className="bg-gradient-to-br from-orange-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-lg border-2 border-dashed border-orange-200 dark:border-gray-600 cursor-pointer hover:border-orange-400 dark:hover:border-orange-500 transition-colors" 
+                    style={{ minHeight: "600px" }}
+                    onClick={() => setLocation(`/reader/${params?.id}`)}
+                  >
+                    <div className="flex items-center justify-center h-full text-center">
+                      <div>
+                        <div className="bg-orange-100 dark:bg-orange-900/20 rounded-full p-6 mx-auto mb-6 w-24 h-24 flex items-center justify-center">
+                          <Book className="w-12 h-12 text-orange-600 dark:text-orange-400" />
                         </div>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                          {book.title}
+                        </h3>
+                        <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
+                          Click to start reading in our premium reader
+                        </p>
+                        <Button 
+                          size="lg"
+                          className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 text-lg font-semibold"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLocation(`/reader/${params?.id}`);
+                          }}
+                        >
+                          Open Book Reader
+                        </Button>
+                        {progress && (
+                          <div className="mt-6 max-w-sm mx-auto">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                              Continue reading from page {progress.currentPage}
+                            </p>
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div
+                                className="bg-orange-600 h-2 rounded-full"
+                                style={{ width: `${progress.progressPercentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
