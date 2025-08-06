@@ -31,15 +31,68 @@ export default function ReaderPage() {
     enabled: !!bookId,
   });
 
-  // Simple check for authentication and set ready state
+  // Load PDF with proper blob handling
   useEffect(() => {
-    if (bookId && isAuthenticated && !authLoading) {
-      // Skip blob creation, just set pdfUrl to indicate ready
-      setPdfUrl('ready');
-      setAccessError(null);
-      setIsLoadingPdf(false);
-    }
-  }, [bookId, isAuthenticated, authLoading]);
+    let isCancelled = false;
+
+    const loadPdf = async () => {
+      if (!bookId || !isAuthenticated || authLoading || pdfUrl) {
+        return;
+      }
+
+      setIsLoadingPdf(true);
+      try {
+        const response = await fetch(`/api/stream/${bookId}`, {
+          credentials: 'include',
+        });
+
+        if (isCancelled) return;
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            toast({
+              title: "Session Expired",
+              description: "Please log in again to continue reading.",
+              variant: "destructive",
+            });
+            setTimeout(() => {
+              window.location.href = "/api/login";
+            }, 1000);
+            return;
+          }
+          if (response.status === 403) {
+            const errorData = await response.json();
+            setAccessError(errorData.message || 'Access denied. Please upgrade your subscription.');
+            return;
+          }
+          throw new Error(`Failed to load PDF: ${response.statusText}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        if (isCancelled) return;
+
+        // Create blob URL for PDF.js
+        const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+        setAccessError(null);
+      } catch (error) {
+        if (isCancelled) return;
+        console.error('Error loading PDF:', error);
+        setAccessError('Failed to load the book. Please try again.');
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingPdf(false);
+        }
+      }
+    };
+
+    loadPdf();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [bookId, isAuthenticated, authLoading, toast, pdfUrl]);
 
   // Cleanup PDF URL on unmount
   useEffect(() => {
@@ -212,38 +265,22 @@ export default function ReaderPage() {
       {/* PDF Reader */}
       <div className="h-[calc(100vh-80px)]">
         {pdfUrl ? (
-          <div className="h-full bg-gray-100 flex flex-col">
-            <div className="p-4 bg-gray-800 text-white text-center">
+          <div className="h-full bg-gray-900 flex flex-col">
+            <div className="p-4 bg-gray-800 text-white text-center border-b border-gray-700">
               <h2 className="text-lg font-semibold">{book.title}</h2>
               <p className="text-sm text-gray-300">by {book.author}</p>
             </div>
-            <div className="flex-1 relative">
-              {/* Try multiple approaches for maximum compatibility */}
-              <object
-                data={`/api/stream/${bookId}#toolbar=0&navpanes=0&scrollbar=0`}
-                type="application/pdf"
-                className="w-full h-full absolute inset-0"
-              >
-                <iframe
-                  src={`/api/stream/${bookId}#toolbar=0&navpanes=0&scrollbar=0`}
-                  className="w-full h-full absolute inset-0"
-                  title={`${book.title} - PDF Reader`}
-                >
-                  <div className="flex items-center justify-center h-full text-gray-600">
-                    <div className="text-center">
-                      <p className="mb-4">PDF could not be displayed in browser.</p>
-                      <a 
-                        href={`/api/stream/${bookId}`}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Open Book in New Tab
-                      </a>
-                    </div>
-                  </div>
-                </iframe>
-              </object>
+            <div className="flex-1">
+              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                <Viewer
+                  fileUrl={pdfUrl}
+                  plugins={[defaultLayoutPluginInstance]}
+                  theme="dark"
+                  onDocumentLoad={(e) => {
+                    console.log('PDF loaded:', e.doc.numPages, 'pages');
+                  }}
+                />
+              </Worker>
             </div>
           </div>
         ) : !accessError ? (
