@@ -66,11 +66,24 @@ export function PremiumPDFReader({
         }
         
         console.error('Error getting PDF token:', error);
-        toast({
-          title: "Access Error",
-          description: "Failed to get book access. Please try refreshing the page.",
-          variant: "destructive",
-        });
+        
+        // Check if it's an authentication error  
+        if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+          toast({
+            title: "Please log in",
+            description: "You need to be logged in to read books. Redirecting to login...",
+            variant: "destructive",
+          });
+          setTimeout(() => {
+            window.location.href = '/api/login';
+          }, 1500);
+        } else {
+          toast({
+            title: "Access Error",
+            description: "Failed to get book access. Please try refreshing the page.",
+            variant: "destructive",
+          });
+        }
       }
     };
     
