@@ -102,7 +102,7 @@ export default function IntelligentSearch({ onSelectBook, className }: Intellige
     setSuggestions(newSuggestions.slice(0, 8));
     setShowSuggestions(true);
     setSelectedIndex(-1);
-  }, [query, books]);
+  }, [query, books.length]); // Only depend on books.length to avoid infinite renders
 
   // Handle keyboard navigation
   useEffect(() => {

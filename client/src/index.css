@@ -131,14 +131,14 @@
   
   /* Header spacing fixes to prevent overlap */
   .hero-section-spacing {
-    padding-top: 5rem; /* 80px for fixed header on mobile */
-    margin-top: -2rem; /* Adjust for better balance */
+    padding-top: 8rem; /* 128px for fixed header on mobile */
+    margin-top: 0; /* Remove negative margin */
   }
   
   @media (min-width: 640px) {
     .hero-section-spacing {
-      padding-top: 6rem; /* 96px for larger screens */
-      margin-top: -2.5rem;
+      padding-top: 9rem; /* 144px for larger screens */
+      margin-top: 0;
     }
   }
   
