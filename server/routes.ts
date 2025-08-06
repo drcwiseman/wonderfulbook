@@ -1002,7 +1002,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/pdf-token/:bookId", isAuthenticated, async (req: any, res) => {
     try {
       const { bookId } = req.params;
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      
+      console.log('PDF token request - User:', userId, 'Book:', bookId);
+      
+      if (!userId) {
+        console.log('No user ID found in request');
+        return res.status(401).json({ message: "User ID not found" });
+      }
 
       // Get book details to verify access
       const book = await storage.getBook(bookId);

@@ -67,8 +67,12 @@ export function PremiumPDFReader({
         
         console.error('Error getting PDF token:', error);
         
+        console.log('Full error object:', error);
+        console.log('Error response:', error.response);
+        
         // Check if it's an authentication error  
-        if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        if (error.message?.includes('401') || error.message?.includes('Unauthorized') || 
+            error.response?.status === 401) {
           toast({
             title: "Please log in",
             description: "You need to be logged in to read books. Redirecting to login...",
