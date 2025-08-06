@@ -56,8 +56,14 @@ export function PremiumPDFReader({
         if (isCancelled) return;
         
         setPdfUrl(`/api/stream-token/${token}/${bookId}`);
-      } catch (error) {
+      } catch (error: any) {
         if (isCancelled) return;
+        
+        // Don't show errors for aborted requests during development
+        if (error.message?.includes('aborted') || error.name === 'AbortError') {
+          console.log('Token request was cancelled - this is normal during navigation');
+          return;
+        }
         
         console.error('Error getting PDF token:', error);
         toast({
@@ -176,8 +182,9 @@ export function PremiumPDFReader({
     setIsLoading(false);
     
     // Don't show error if component is unmounting or signal aborted
-    if (error.message.includes('aborted') || error.message.includes('AbortError')) {
-      console.log('PDF loading was cancelled - this is normal during navigation');
+    if (error.message.includes('aborted') || error.message.includes('AbortError') || 
+        error.name === 'AbortError' || error.message.includes('The user aborted a request')) {
+      console.log('PDF loading was cancelled - this is normal during navigation or hot reloading');
       return;
     }
     

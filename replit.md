@@ -3,6 +3,12 @@
 ## Overview
 Wonderful Books is a subscription-based digital reading platform, akin to Netflix, offering unlimited access to a curated collection of self-improvement and educational books. It features a tiered subscription model (Free Trial, Basic, Premium), comprehensive reading functionalities like progress tracking, bookmarks, personalized recommendations, and a robust admin panel for content and user management. The platform aims to provide a seamless, engaging reading experience with a focus on self-development literature.
 
+## Recent Updates (August 2025)
+- **PDF Authentication System**: Implemented secure token-based PDF streaming that bypasses cookie authentication issues
+- **Premium PDF Reader**: Built Apple Books-inspired interface with auto-hide controls, dark/light mode, and smooth animations
+- **Version Compatibility**: Resolved PDF.js compatibility issues with matching versions (pdfjs-dist@3.11.174, react-pdf@7.7.1)
+- **Enhanced Error Handling**: Added robust handling for aborted requests and development server interruptions
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
