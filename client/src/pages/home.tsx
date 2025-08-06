@@ -33,9 +33,9 @@ function FeaturedBooks() {
             <Card key={book.id} className="bg-gray-900 border-gray-800 hover:bg-gray-800 transition-colors">
               <CardContent className="p-0">
                 <div className="aspect-[3/4] bg-gray-800 rounded-t-lg overflow-hidden">
-                  {book.coverImageUrl ? (
+                  {book.cover_image_url ? (
                     <img
-                      src={book.coverImageUrl}
+                      src={book.cover_image_url}
                       alt={book.title}
                       className="w-full h-full object-cover"
                     />
@@ -47,9 +47,9 @@ function FeaturedBooks() {
                 </div>
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-3">
-                    {book.tier && book.tier !== 'free' && (
+                    {book.required_tier && book.required_tier !== 'free' && (
                       <Badge className="bg-orange-600 text-white text-xs">
-                        {book.tier === 'premium' ? 'Premium' : 'Popular'}
+                        {book.required_tier === 'premium' ? 'Premium' : 'Popular'}
                       </Badge>
                     )}
                     {book.rating && (
