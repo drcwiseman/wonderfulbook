@@ -49,13 +49,13 @@ export default function Library() {
   });
 
   // Get user's reading progress
-  const { data: progressData = [], isLoading: progressLoading } = useQuery({
+  const { data: progressData = [], isLoading: progressLoading } = useQuery<any[]>({
     queryKey: ['/api/user/reading-progress'],
     enabled: isAuthenticated
   });
 
   // Get user's bookmarks
-  const { data: bookmarks = [], isLoading: bookmarksLoading } = useQuery({
+  const { data: bookmarks = [], isLoading: bookmarksLoading } = useQuery<any[]>({
     queryKey: ['/api/bookmarks'],
     enabled: isAuthenticated
   });
@@ -70,8 +70,8 @@ export default function Library() {
       return tierHierarchy[userTier] >= tierHierarchy[bookTier];
     })
     .map(book => {
-      const progress = progressData.find((p: any) => p.bookId === book.id);
-      const isBookmarked = bookmarks.some((b: any) => b.bookId === book.id);
+      const progress = (progressData as any[]).find((p: any) => p.bookId === book.id);
+      const isBookmarked = (bookmarks as any[]).some((b: any) => b.bookId === book.id);
       
       return {
         ...book,
