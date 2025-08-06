@@ -1,166 +1,172 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
+import { Check, Crown, Star, Zap } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function PricingSection() {
-  const handlePlanSelection = (tier: string) => {
-    if (tier === 'free') {
+  const { user, isAuthenticated } = useAuth();
+  const [isHovered, setIsHovered] = useState<string | null>(null);
+
+  const handleUpgrade = (tier: string) => {
+    if (!isAuthenticated) {
       window.location.href = "/api/login";
     } else {
-      window.location.href = "/subscribe";
+      window.location.href = `/subscribe?tier=${tier}`;
     }
   };
 
+  const plans = [
+    {
+      id: "free",
+      name: "Free Trial",
+      price: "£0",
+      period: "forever",
+      icon: <Zap className="w-6 h-6 text-trial-gray" />,
+      description: "Perfect for getting started",
+      features: [
+        "Access to 3 featured books",
+        "Basic reading features",
+        "Progress tracking",
+        "Mobile & desktop access",
+        "No credit card required"
+      ],
+      buttonText: "Start Free Trial",
+      buttonClass: "bg-trial-gray hover:bg-gray-600 text-white",
+      cardClass: "border-gray-200 hover:border-trial-gray",
+      popular: false
+    },
+    {
+      id: "basic",
+      name: "Basic Plan",
+      price: "£9.99",
+      period: "per month",
+      icon: <Star className="w-6 h-6 text-basic-purple" />,
+      description: "Great for regular readers",
+      features: [
+        "Access to 10 books per month",
+        "All reading features",
+        "Progress tracking & bookmarks",
+        "Mobile & desktop access",
+        "Customer support",
+        "Offline reading"
+      ],
+      buttonText: "Choose Basic",
+      buttonClass: "bg-basic-purple hover:bg-purple-600 text-white",
+      cardClass: "border-gray-200 hover:border-basic-purple",
+      popular: false
+    },
+    {
+      id: "premium",
+      name: "Premium Plan",
+      price: "£19.99",
+      period: "per month",
+      icon: <Crown className="w-6 h-6 text-premium-gold" />,
+      description: "Best value for book lovers",
+      features: [
+        "Unlimited access to all books",
+        "All premium features",
+        "Advanced analytics",
+        "Priority customer support",
+        "Exclusive early access",
+        "Download for offline reading",
+        "Multi-device sync",
+        "Ad-free experience"
+      ],
+      buttonText: "Go Premium",
+      buttonClass: "bg-premium-gold hover:bg-yellow-400 text-netflix-black",
+      cardClass: "border-premium-gold hover:border-yellow-400 ring-2 ring-premium-gold/20",
+      popular: true
+    }
+  ];
+
   return (
-    <section className="py-20 px-4 md:px-8 bg-netflix-gray">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">Choose Your Reading Journey</h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Select the perfect plan for your transformational reading experience
+    <section className="py-16 bg-gradient-to-b from-netflix-black to-netflix-gray">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Choose Your Reading Journey
+          </h2>
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            Unlock a world of transformational books with our flexible subscription plans. 
+            Start your personal growth journey today.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {/* Free Trial */}
-          <Card className="relative bg-gradient-to-br from-gray-900 to-black border border-gray-700 hover:border-gray-500 transition-all duration-500 hover:scale-105 overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-600 to-gray-400"></div>
-            <CardContent className="p-8 text-center relative">
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold mb-2 text-white">Free Trial</h3>
-                <div className="text-gray-400 text-sm mb-4">Perfect for exploring</div>
-                <div className="flex items-baseline justify-center mb-2">
-                  <span className="text-5xl font-bold text-white">£0</span>
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {plans.map((plan) => (
+            <Card
+              key={plan.id}
+              className={`relative bg-netflix-gray/50 backdrop-blur-sm ${plan.cardClass} transition-all duration-300 ${
+                isHovered === plan.id ? 'transform scale-105' : ''
+              }`}
+              onMouseEnter={() => setIsHovered(plan.id)}
+              onMouseLeave={() => setIsHovered(null)}
+            >
+              {plan.popular && (
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <Badge className="bg-premium-gold text-netflix-black px-4 py-1 text-sm font-bold">
+                    MOST POPULAR
+                  </Badge>
                 </div>
-                <div className="text-gray-400 text-sm">14 days free</div>
-              </div>
+              )}
               
-              <div className="space-y-4 mb-8 text-left">
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-gray-400 mr-3 flex-shrink-0" />
-                  <span className="text-gray-300 text-sm">Access to 3 featured books</span>
+              <CardHeader className="text-center pb-2">
+                <div className="flex justify-center mb-4">
+                  {plan.icon}
                 </div>
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-gray-400 mr-3 flex-shrink-0" />
-                  <span className="text-gray-300 text-sm">Basic reading features</span>
+                <CardTitle className="text-white text-2xl font-bold">
+                  {plan.name}
+                </CardTitle>
+                <div className="text-center">
+                  <span className="text-4xl font-bold text-white">{plan.price}</span>
+                  <span className="text-gray-400 ml-2">{plan.period}</span>
                 </div>
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-gray-400 mr-3 flex-shrink-0" />
-                  <span className="text-gray-300 text-sm">Mobile & desktop access</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-gray-400 mr-3 flex-shrink-0" />
-                  <span className="text-gray-300 text-sm">Progress tracking</span>
-                </div>
-              </div>
+                <p className="text-gray-300 text-sm mt-2">{plan.description}</p>
+              </CardHeader>
               
-              <Button 
-                onClick={() => handlePlanSelection('free')}
-                className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg transition-all duration-300"
-              >
-                Start Free Trial
-              </Button>
-            </CardContent>
-          </Card>
+              <CardContent className="space-y-4">
+                <ul className="space-y-3">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-center text-gray-200">
+                      <Check className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                
+                <div className="pt-4">
+                  {isAuthenticated && (user as any)?.subscriptionTier === plan.id ? (
+                    <Button 
+                      disabled
+                      className="w-full bg-green-600 text-white cursor-not-allowed"
+                    >
+                      Current Plan
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleUpgrade(plan.id)}
+                      className={`w-full ${plan.buttonClass} transition-all duration-200 font-semibold`}
+                    >
+                      {plan.buttonText}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-          {/* Basic Plan */}
-          <Card className="relative bg-gradient-to-br from-netflix-red to-red-800 border-2 border-netflix-red hover:border-red-400 transition-all duration-500 hover:scale-110 transform overflow-hidden shadow-2xl">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-400 to-netflix-red"></div>
-            <div className="absolute top-4 right-4">
-              <Badge className="bg-white text-netflix-red font-bold px-3 py-1">POPULAR</Badge>
-            </div>
-            <CardContent className="p-8 text-center relative">
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold mb-2 text-white">Basic</h3>
-                <div className="text-red-200 text-sm mb-4">Great for regular readers</div>
-                <div className="flex items-baseline justify-center mb-2">
-                  <span className="text-5xl font-bold text-white">£9</span>
-                  <span className="text-2xl text-red-200">.99</span>
-                </div>
-                <div className="text-red-200 text-sm">per month</div>
-              </div>
-              
-              <div className="space-y-4 mb-8 text-left">
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                  <span className="text-red-100 text-sm">Access to 10 books monthly</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                  <span className="text-red-100 text-sm">All reading features</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                  <span className="text-red-100 text-sm">Bookmarks & annotations</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                  <span className="text-red-100 text-sm">Offline reading</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                  <span className="text-red-100 text-sm">Personal recommendations</span>
-                </div>
-              </div>
-              
-              <Button 
-                onClick={() => handlePlanSelection('basic')}
-                className="w-full bg-white text-netflix-red hover:bg-gray-100 font-bold py-3 rounded-lg transition-all duration-300"
-              >
-                Choose Basic
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Premium Plan */}
-          <Card className="relative bg-gradient-to-br from-amber-600 to-yellow-600 border-2 border-yellow-500 hover:border-yellow-300 transition-all duration-500 hover:scale-105 overflow-hidden shadow-2xl">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-300 to-amber-400"></div>
-            <div className="absolute top-4 right-4">
-              <Badge className="bg-yellow-300 text-amber-900 font-bold px-3 py-1">BEST VALUE</Badge>
-            </div>
-            <CardContent className="p-8 text-center relative">
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold mb-2 text-white">Premium</h3>
-                <div className="text-yellow-100 text-sm mb-4">Unlimited access</div>
-                <div className="flex items-baseline justify-center mb-2">
-                  <span className="text-5xl font-bold text-white">£19</span>
-                  <span className="text-2xl text-yellow-100">.99</span>
-                </div>
-                <div className="text-yellow-100 text-sm">per month</div>
-              </div>
-              
-              <div className="space-y-4 mb-8 text-left">
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                  <span className="text-yellow-50 text-sm">Unlimited book access</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                  <span className="text-yellow-50 text-sm">Premium reading features</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                  <span className="text-yellow-50 text-sm">Advanced annotations</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                  <span className="text-yellow-50 text-sm">Priority support</span>
-                </div>
-                <div className="flex items-center">
-                  <Check className="h-4 w-4 text-white mr-3 flex-shrink-0" />
-                  <span className="text-yellow-50 text-sm">Exclusive early access</span>
-                </div>
-              </div>
-              
-              <Button 
-                onClick={() => handlePlanSelection('premium')}
-                className="w-full bg-white text-amber-700 hover:bg-yellow-50 font-bold py-3 rounded-lg transition-all duration-300"
-              >
-                Choose Premium
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="text-center mt-12">
+          <p className="text-gray-400 text-sm mb-4">
+            All plans include 30-day money-back guarantee • Cancel anytime
+          </p>
+          <div className="flex justify-center space-x-8 text-sm text-gray-300">
+            <span>✓ Secure payments</span>
+            <span>✓ Instant access</span>
+            <span>✓ No hidden fees</span>
+          </div>
         </div>
       </div>
     </section>

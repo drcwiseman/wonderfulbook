@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Star, Zap, Link } from "lucide-react";
+import PricingSection from "@/components/PricingSection";
 
 export default function Home() {
   const { toast } = useToast();
@@ -96,6 +97,7 @@ export default function Home() {
       )}
       
       <FeaturedBooks />
+      <PricingSection />
       <CategoriesSection />
       <RecommendationsSection />
       <Footer />
