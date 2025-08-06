@@ -78,6 +78,17 @@ export default function AdminPanel() {
 
   const editForm = useForm<EditBookForm>({
     resolver: zodResolver(editBookSchema),
+    defaultValues: {
+      title: "",
+      author: "",
+      description: "",
+      categories: [],
+      tier: "free",
+      rating: 4,
+      coverImage: "",
+      isVisible: true,
+      isFeatured: false,
+    },
   });
 
   // Sync pdfFile with form fileUrl
@@ -204,7 +215,7 @@ export default function AdminPanel() {
   // Edit book mutation
   const editBookMutation = useMutation({
     mutationFn: async (data: EditBookForm & { id: string }) => {
-      return apiRequest("PATCH", `/api/admin/books/${data.id}`, {
+      const requestData = {
         title: data.title,
         author: data.author,
         description: editDescription || data.description,
@@ -214,7 +225,11 @@ export default function AdminPanel() {
         coverImage: data.coverImage,
         isVisible: data.isVisible,
         isFeatured: data.isFeatured,
-      });
+      };
+      console.log("Sending PATCH request to:", `/api/admin/books/${data.id}`);
+      console.log("Request data:", requestData);
+      
+      return apiRequest("PATCH", `/api/admin/books/${data.id}`, requestData);
     },
     onSuccess: () => {
       toast({
@@ -368,6 +383,10 @@ export default function AdminPanel() {
   };
 
   const onEditSubmit = (data: EditBookForm) => {
+    console.log("Edit form submitted with data:", data);
+    console.log("Edit form errors:", editForm.formState.errors);
+    console.log("Editing book:", editingBook);
+    
     if (editingBook) {
       editBookMutation.mutate({ ...data, id: editingBook.id });
     }
@@ -872,7 +891,10 @@ export default function AdminPanel() {
 
                   <div className="space-y-2">
                     <Label htmlFor="edit-tier">Subscription Tier</Label>
-                    <Select onValueChange={(value) => editForm.setValue("tier", value as any)}>
+                    <Select 
+                      value={editForm.watch("tier") || "free"} 
+                      onValueChange={(value) => editForm.setValue("tier", value as any)}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select tier" />
                       </SelectTrigger>
