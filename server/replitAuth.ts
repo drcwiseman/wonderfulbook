@@ -102,14 +102,18 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    // Use the actual domain from REPLIT_DOMAINS instead of req.hostname
+    const domain = process.env.REPLIT_DOMAINS!.split(",")[0];
+    passport.authenticate(`replitauth:${domain}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    // Use the actual domain from REPLIT_DOMAINS instead of req.hostname
+    const domain = process.env.REPLIT_DOMAINS!.split(",")[0];
+    passport.authenticate(`replitauth:${domain}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
@@ -130,12 +134,12 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  if (!req.isAuthenticated() || !user || !user.claims) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
   const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
+  if (user.expires_at && now <= user.expires_at) {
     return next();
   }
 
