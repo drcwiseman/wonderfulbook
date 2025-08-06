@@ -63,6 +63,25 @@ export default function Header() {
             
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
+                {/* Subscription Plan Badge */}
+                <div className="hidden md:block">
+                  {(user as any)?.subscriptionTier === 'premium' && (
+                    <span className="px-2 py-1 bg-premium-gold text-netflix-black text-xs font-bold rounded">
+                      PREMIUM
+                    </span>
+                  )}
+                  {(user as any)?.subscriptionTier === 'basic' && (
+                    <span className="px-2 py-1 bg-basic-purple text-white text-xs font-bold rounded">
+                      BASIC
+                    </span>
+                  )}
+                  {((user as any)?.subscriptionTier === 'free' || !(user as any)?.subscriptionTier) && (
+                    <span className="px-2 py-1 bg-trial-gray text-white text-xs font-bold rounded">
+                      FREE TRIAL
+                    </span>
+                  )}
+                </div>
+                
                 <img
                   src={(user as any)?.profileImageUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"}
                   alt="User profile"
