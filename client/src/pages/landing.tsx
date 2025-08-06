@@ -4,6 +4,7 @@ import FeaturedBooks from "@/components/FeaturedBooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "wouter";
 import { BookOpen, Users, TrendingUp, CheckCircle, ArrowRight, PlayCircle, Award, Shield, Clock, Zap, Star, Crown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -105,16 +106,22 @@ export default function Landing() {
                 className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <Zap className="w-5 h-5 mr-2" />
-                Start Free Trial
+                Continue with Replit
               </Button>
-              <Button 
-                variant="outline"
-                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg backdrop-blur-sm border-white/30"
-              >
-                View Pricing
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
+              <Link href="/auth/register">
+                <Button 
+                  variant="outline"
+                  className="bg-white/10 hover:bg-white/20 text-orange-600 px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg backdrop-blur-sm border-orange-300 hover:bg-orange-50"
+                >
+                  Create Account
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+            </div>
+            <div className="mt-6 text-center">
+              <Link href="/auth/login" className="text-orange-600 hover:text-orange-500 font-medium text-lg">
+                Already have an account? Sign in here
+              </Link>
             </div>
           </div>
         </div>

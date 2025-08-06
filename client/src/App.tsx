@@ -13,6 +13,10 @@ import BookDetail from "@/pages/book-detail";
 import Subscribe from "@/pages/subscribe";
 import ReaderPage from "@/pages/reader";
 import AdminPanel from "@/pages/admin";
+import Login from "@/pages/auth/login";
+import Register from "@/pages/auth/register";
+import ForgotPassword from "@/pages/auth/forgot-password";
+import ResetPassword from "@/pages/auth/reset-password";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,6 +32,11 @@ function Router() {
       <Route path="/subscribe" component={Subscribe} />
       <Route path="/reader/:bookId" component={ReaderPage} />
       <Route path="/admin" component={AdminPanel} />
+      {/* Authentication routes - available whether logged in or not */}
+      <Route path="/auth/login" component={Login} />
+      <Route path="/auth/register" component={Register} />
+      <Route path="/auth/forgot-password" component={ForgotPassword} />
+      <Route path="/auth/reset-password" component={ResetPassword} />
       <Route component={NotFound} />
     </Switch>
   );

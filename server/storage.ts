@@ -20,14 +20,25 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, ilike } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+import { nanoid } from "nanoid";
+import type { RegisterData } from "@shared/schema";
 
 // Interface for storage operations
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createManualUser(userData: any): Promise<User>;
+  
+  // Local authentication operations
+  registerUser(userData: RegisterData): Promise<User>;
+  authenticateUser(email: string, password: string): Promise<User | null>;
+  verifyEmail(token: string): Promise<boolean>;
+  resetPassword(token: string, newPassword: string): Promise<boolean>;
+  generatePasswordResetToken(email: string): Promise<string | null>;
   
   // Admin user management operations
   getAllUsers(): Promise<User[]>;
@@ -107,6 +118,146 @@ export class DatabaseStorage implements IStorage {
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  // Local authentication operations
+  async registerUser(userData: RegisterData): Promise<User> {
+    // Check if email or username already exists
+    const existingUser = await db.select().from(users)
+      .where(or(eq(users.email, userData.email), eq(users.username, userData.username)));
+    
+    if (existingUser.length > 0) {
+      const existing = existingUser[0];
+      if (existing.email === userData.email) {
+        throw new Error("Email already registered");
+      }
+      if (existing.username === userData.username) {
+        throw new Error("Username already taken");
+      }
+    }
+
+    // Hash password
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(userData.password, saltRounds);
+    
+    // Generate email verification token
+    const emailVerificationToken = nanoid(32);
+
+    const [user] = await db
+      .insert(users)
+      .values({
+        id: nanoid(12),
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        username: userData.username,
+        passwordHash,
+        authProvider: 'local',
+        emailVerified: false,
+        emailVerificationToken,
+        subscriptionTier: 'free',
+        subscriptionStatus: 'inactive',
+        role: 'user',
+        isActive: true,
+      })
+      .returning();
+
+    return user;
+  }
+
+  async authenticateUser(email: string, password: string): Promise<User | null> {
+    const [user] = await db.select().from(users)
+      .where(and(eq(users.email, email), eq(users.authProvider, 'local')));
+    
+    if (!user || !user.passwordHash) {
+      return null;
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    if (!isValidPassword) {
+      return null;
+    }
+
+    // Update last login
+    await db.update(users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(users.id, user.id));
+
+    return user;
+  }
+
+  async verifyEmail(token: string): Promise<boolean> {
+    const [user] = await db.select().from(users)
+      .where(eq(users.emailVerificationToken, token));
+    
+    if (!user) {
+      return false;
+    }
+
+    await db.update(users)
+      .set({ 
+        emailVerified: true, 
+        emailVerificationToken: null,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, user.id));
+
+    return true;
+  }
+
+  async generatePasswordResetToken(email: string): Promise<string | null> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    
+    if (!user) {
+      return null;
+    }
+
+    const resetToken = nanoid(32);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await db.update(users)
+      .set({
+        passwordResetToken: resetToken,
+        passwordResetExpires: expiresAt,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, user.id));
+
+    return resetToken;
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<boolean> {
+    const [user] = await db.select().from(users)
+      .where(eq(users.passwordResetToken, token));
+    
+    if (!user || !user.passwordResetExpires) {
+      return false;
+    }
+
+    // Check if token has expired
+    if (user.passwordResetExpires < new Date()) {
+      return false;
+    }
+
+    // Hash new password
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(newPassword, saltRounds);
+
+    await db.update(users)
+      .set({
+        passwordHash,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, user.id));
+
+    return true;
   }
 
   async createManualUser(userData: any): Promise<User> {

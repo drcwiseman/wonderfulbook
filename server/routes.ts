@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@shared/schema";
 import { insertBookSchema, insertCategorySchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -32,6 +33,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Local authentication routes
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const userData = registerSchema.parse(req.body);
+      const user = await storage.registerUser(userData);
+      
+      // TODO: Send verification email
+      console.log('Email verification token:', user.emailVerificationToken);
+      
+      res.status(201).json({ 
+        message: "Registration successful! Please check your email to verify your account.",
+        userId: user.id
+      });
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      if (error.message?.includes('Email already registered') || error.message?.includes('Username already taken')) {
+        return res.status(409).json({ message: error.message });
+      }
+      res.status(400).json({ message: error.message || "Registration failed" });
+    }
+  });
+
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const loginData = loginSchema.parse(req.body);
+      const user = await storage.authenticateUser(loginData.email, loginData.password);
+      
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      if (!user.emailVerified) {
+        return res.status(401).json({ message: "Please verify your email before signing in" });
+      }
+
+      if (!user.isActive) {
+        return res.status(401).json({ message: "Your account has been deactivated" });
+      }
+
+      // Create a session for local auth users
+      // Simulate the Replit auth session structure
+      req.login({
+        claims: { sub: user.id, email: user.email },
+        access_token: 'local_auth_token',
+        expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+      }, (err) => {
+        if (err) {
+          console.error('Session creation error:', err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        res.json({ message: "Login successful", user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName } });
+      });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      res.status(400).json({ message: error.message || "Login failed" });
+    }
+  });
+
+  app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+      const { email } = forgotPasswordSchema.parse(req.body);
+      const resetToken = await storage.generatePasswordResetToken(email);
+      
+      if (resetToken) {
+        // TODO: Send password reset email
+        console.log('Password reset token:', resetToken);
+        console.log('Reset URL:', `${req.protocol}://${req.get('host')}/auth/reset-password?token=${resetToken}`);
+      }
+      
+      // Always return success to prevent email enumeration
+      res.json({ message: "If an account with that email exists, we've sent password reset instructions." });
+    } catch (error: any) {
+      console.error('Forgot password error:', error);
+      res.status(400).json({ message: error.message || "Request failed" });
+    }
+  });
+
+  app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+      const resetData = resetPasswordSchema.parse(req.body);
+      const success = await storage.resetPassword(resetData.token, resetData.password);
+      
+      if (!success) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+      
+      res.json({ message: "Password reset successful! You can now sign in with your new password." });
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      res.status(400).json({ message: error.message || "Password reset failed" });
+    }
+  });
+
+  app.get('/api/auth/verify-email/:token', async (req, res) => {
+    try {
+      const { token } = req.params;
+      const success = await storage.verifyEmail(token);
+      
+      if (!success) {
+        return res.status(400).json({ message: "Invalid or expired verification token" });
+      }
+      
+      res.json({ message: "Email verified successfully! You can now sign in." });
+    } catch (error: any) {
+      console.error('Email verification error:', error);
+      res.status(500).json({ message: "Verification failed" });
     }
   });
 
