@@ -15,8 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X } from "lucide-react";
-import { RichTextEditor } from "@/components/RichTextEditor";
-import { ImageUploader } from "@/components/ImageUploader";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -51,7 +50,7 @@ export default function AdminPanel() {
   const queryClient = useQueryClient();
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const [editingBook, setEditingBook] = useState<any>(null);
-  const [description, setDescription] = useState("");
+
 
   // Admin authorization check
   const isAdmin = (user as any)?.id === "45814604" || (user as any)?.email === "drcwiseman@gmail.com";
@@ -87,11 +86,11 @@ export default function AdminPanel() {
       return apiRequest("POST", "/api/admin/books", {
         title: data.title,
         author: data.author,
-        description: description,
+        description: data.description,
         category: data.category,
         tier: data.tier,
         rating: data.rating,
-        coverImage: data.coverImage,
+        coverImage: data.coverImage || "",
         fileUrl: "placeholder.pdf", // For now, placeholder until file upload is implemented
       });
     },
@@ -101,7 +100,6 @@ export default function AdminPanel() {
         description: "Book created successfully!",
       });
       form.reset();
-      setDescription("");
       queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
     },
     onError: (error: any) => {
@@ -284,23 +282,16 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
-                  {/* Image Upload */}
-                  <ImageUploader
-                    value={form.watch("coverImage")}
-                    onChange={(imageUrl) => form.setValue("coverImage", imageUrl)}
-                    label="Cover Image"
-                  />
-
-                  {/* Rich Text Description */}
                   <div className="space-y-2">
-                    <Label>Description</Label>
-                    <RichTextEditor
-                      content={description}
-                      onChange={setDescription}
-                      placeholder="Enter book description with rich formatting..."
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      {...form.register("description")}
+                      placeholder="Enter book description..."
+                      rows={4}
                     />
-                    {description.length < 10 && (
-                      <p className="text-sm text-red-500">Description must be at least 10 characters</p>
+                    {form.formState.errors.description && (
+                      <p className="text-sm text-red-500">{form.formState.errors.description.message as string}</p>
                     )}
                   </div>
 

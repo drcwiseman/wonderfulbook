@@ -2,6 +2,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Button } from '@/components/ui/button';
 import { Bold, Italic, List, ListOrdered, Quote, Undo, Redo } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface RichTextEditorProps {
   content: string;
@@ -34,6 +35,13 @@ export function RichTextEditor({ content, onChange, placeholder = "Enter text...
       },
     },
   });
+
+  // Update editor content when prop changes
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
 
   if (!editor) {
     return null;
