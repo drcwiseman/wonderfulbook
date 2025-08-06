@@ -5,8 +5,13 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import AppleBooksPDFViewer from '@/components/AppleBooksPDFViewer';
+import { Viewer, Worker } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import type { Book } from '@shared/schema';
+
+// Import CSS
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 export default function ReaderPage() {
   const [, paramsReader] = useRoute('/reader/:bookId');
@@ -153,6 +158,17 @@ export default function ReaderPage() {
     };
   }, []);
 
+  // Create plugin instance once
+  const defaultLayoutPluginInstance = defaultLayoutPlugin({
+    sidebarTabs: (defaultTabs) => [
+      // Filter out download and print tabs for security
+      ...defaultTabs.filter((tab: any) => 
+        tab.id !== 'download' && 
+        tab.id !== 'print'
+      ),
+    ],
+  });
+
   if (authLoading || bookLoading || isLoadingPdf) {
     return (
       <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
@@ -223,12 +239,51 @@ export default function ReaderPage() {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden">
-      <AppleBooksPDFViewer 
-        book={book} 
-        pdfUrl={pdfUrl} 
-        bookId={bookId || ''} 
-      />
+    <div className="h-screen bg-white dark:bg-gray-900 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <Button
+          variant="ghost"
+          onClick={() => setLocation('/')}
+          className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Library
+        </Button>
+        
+        <div className="text-center flex-1 mx-4">
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-white truncate">{book.title}</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{book.author}</p>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          {user?.subscriptionTier && (
+            <span className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
+              {user.subscriptionTier.charAt(0).toUpperCase() + user.subscriptionTier.slice(1)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* PDF Reader */}
+      <div className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+          <div className="h-full">
+            <Viewer
+              fileUrl={pdfUrl}
+              plugins={[defaultLayoutPluginInstance]}
+              onDocumentLoad={(e) => {
+                console.log('PDF loaded:', e.doc.numPages, 'pages');
+                toast({
+                  title: "Book Ready",
+                  description: `${e.doc.numPages} pages loaded successfully`,
+                });
+              }}
+              theme="auto"
+            />
+          </div>
+        </Worker>
+      </div>
     </div>
   );
 }

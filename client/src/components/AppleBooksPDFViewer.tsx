@@ -1,24 +1,23 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Viewer, Worker, DocumentLoadEvent, PageChangeEvent } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { Viewer, Worker } from '@react-pdf-viewer/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   BookmarkIcon, 
   ArrowLeftIcon, 
   ArrowRightIcon,
-  ZoomInIcon,
-  ZoomOutIcon,
   MenuIcon,
   XIcon,
-  BookOpenIcon,
-  SettingsIcon
+  BookOpenIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import type { Book, Bookmark, ReadingProgress } from '@shared/schema';
+
+// Import required CSS
+import '@react-pdf-viewer/core/lib/styles/index.css';
 
 interface AppleBooksPDFViewerProps {
   book: Book;
@@ -33,7 +32,6 @@ export default function AppleBooksPDFViewer({ book, pdfUrl, bookId }: AppleBooks
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [goToPage, setGoToPage] = useState('');
-  const viewerRef = useRef<any>(null);
   
   // Auto-hide controls after 3 seconds of inactivity
   const hideControlsTimer = useRef<NodeJS.Timeout>();
@@ -107,33 +105,21 @@ export default function AppleBooksPDFViewer({ book, pdfUrl, bookId }: AppleBooks
   });
 
   // Handle PDF document load
-  const handleDocumentLoad = useCallback((e: DocumentLoadEvent) => {
+  const handleDocumentLoad = useCallback((e: any) => {
     setTotalPages(e.doc.numPages);
     console.log('PDF loaded:', e.doc.numPages, 'pages');
     
     // Resume from last read position
     if (progress?.currentPage && progress.currentPage > 1) {
       setCurrentPage(progress.currentPage);
-      // Note: Actual page jumping would require PDF viewer API
     }
   }, [progress]);
-
-  // Handle page change
-  const handlePageChange = useCallback((e: PageChangeEvent) => {
-    const newPage = e.currentPage + 1; // PDF viewer is 0-indexed
-    setCurrentPage(newPage);
-    
-    // Update reading progress (debounced)
-    if (totalPages > 0) {
-      updateProgressMutation.mutate({ currentPage: newPage, totalPages });
-    }
-  }, [totalPages, updateProgressMutation]);
 
   // Go to specific page
   const handleGoToPage = () => {
     const pageNum = parseInt(goToPage);
-    if (pageNum >= 1 && pageNum <= totalPages && viewerRef.current) {
-      // This would require PDF viewer API to jump to page
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      setCurrentPage(pageNum);
       setGoToPage('');
       toast({
         title: "Page Navigation",
@@ -146,16 +132,6 @@ export default function AppleBooksPDFViewer({ book, pdfUrl, bookId }: AppleBooks
   const handleAddBookmark = () => {
     addBookmarkMutation.mutate(currentPage);
   };
-
-  // Default layout plugin with custom toolbar
-  const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    sidebarTabs: () => [],
-    toolbarPlugin: {
-      searchPlugin: {
-        keyword: '',
-      },
-    },
-  });
 
   return (
     <div 
@@ -320,18 +296,17 @@ export default function AppleBooksPDFViewer({ book, pdfUrl, bookId }: AppleBooks
 
       {/* PDF Viewer */}
       <div 
-        className="h-full"
+        className="h-full bg-white dark:bg-gray-800"
         style={{ paddingTop: showControls ? '130px' : '0px' }}
       >
         <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
           <div className="h-full">
             <Viewer
-              ref={viewerRef}
               fileUrl={pdfUrl}
-              plugins={[defaultLayoutPluginInstance]}
               onDocumentLoad={handleDocumentLoad}
-              onPageChange={handlePageChange}
-              theme="auto"
+              theme={{
+                theme: 'auto',
+              }}
             />
           </div>
         </Worker>
