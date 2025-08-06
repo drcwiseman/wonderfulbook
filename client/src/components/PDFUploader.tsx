@@ -120,9 +120,14 @@ export function PDFUploader({ value, onChange, label = "PDF File", className = "
       <Label>{label}</Label>
       
       <div
-        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
+        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        onClick={(e) => {
+          e.preventDefault();
+          console.log('PDF drop zone clicked');
+          fileInputRef.current?.click();
+        }}
       >
         {value || fileName ? (
           <div className="flex items-center justify-center space-x-2">
@@ -163,7 +168,12 @@ export function PDFUploader({ value, onChange, label = "PDF File", className = "
         <Button
           type="button"
           variant="outline"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('PDF upload button clicked');
+            fileInputRef.current?.click();
+          }}
           disabled={isUploading}
         >
           <Upload className="h-4 w-4 mr-2" />

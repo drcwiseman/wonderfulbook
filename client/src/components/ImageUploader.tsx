@@ -119,9 +119,14 @@ export function ImageUploader({ value, onChange, label = "Image", className = ""
       <Label>{label}</Label>
       
       <div
-        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
+        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        onClick={(e) => {
+          e.preventDefault();
+          console.log('Image drop zone clicked');
+          fileInputRef.current?.click();
+        }}
       >
         {preview ? (
           <div className="relative">
@@ -169,7 +174,12 @@ export function ImageUploader({ value, onChange, label = "Image", className = ""
         <Button
           type="button"
           variant="outline"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Image upload button clicked');
+            fileInputRef.current?.click();
+          }}
           disabled={isUploading}
         >
           <Upload className="h-4 w-4 mr-2" />
