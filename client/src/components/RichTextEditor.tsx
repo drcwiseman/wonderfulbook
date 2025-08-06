@@ -3,9 +3,10 @@ import StarterKit from '@tiptap/starter-kit';
 import { Color } from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Button } from '@/components/ui/button';
-import { Bold, Italic, List, ListOrdered, Quote, Undo, Redo, Palette } from 'lucide-react';
+import { Bold, Italic, List, ListOrdered, Quote, Undo, Redo, Palette, Type } from 'lucide-react';
 import { useEffect, useCallback, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface RichTextEditorProps {
   content: string;
@@ -16,6 +17,7 @@ interface RichTextEditorProps {
 
 export function RichTextEditor({ content, onChange, placeholder = "Enter text...", className = "" }: RichTextEditorProps) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [currentFontSize, setCurrentFontSize] = useState('16');
   
   const handleUpdate = useCallback(({ editor }: any) => {
     onChange(editor.getHTML());
@@ -33,7 +35,11 @@ export function RichTextEditor({ content, onChange, placeholder = "Enter text...
           keepAttributes: false,
         },
       }),
-      TextStyle,
+      TextStyle.configure({
+        HTMLAttributes: {
+          class: 'my-custom-class',
+        },
+      }),
       Color.configure({
         types: ['textStyle'],
       }),
@@ -66,6 +72,20 @@ export function RichTextEditor({ content, onChange, placeholder = "Enter text...
     '#888888', '#a10000', '#b26b00', '#b2b200', '#006100', '#0047b2', '#6b24b2',
     '#444444', '#5c0000', '#663d00', '#666600', '#003700', '#002966', '#3d1466'
   ];
+
+  const fontSizes = [
+    { label: 'Small', value: '12', class: 'text-xs' },
+    { label: 'Normal', value: '16', class: 'text-base' },
+    { label: 'Large', value: '18', class: 'text-lg' },
+    { label: 'Extra Large', value: '20', class: 'text-xl' },
+    { label: 'Huge', value: '24', class: 'text-2xl' }
+  ];
+
+  const applyFontSize = (size: string) => {
+    // Use inline styles since TipTap doesn't have built-in font size extension
+    editor.chain().focus().setMark('textStyle', { fontSize: `${size}px` }).run();
+    setCurrentFontSize(size);
+  };
 
   return (
     <div className={`border border-gray-200 dark:border-gray-700 rounded-lg ${className}`}>
@@ -135,6 +155,25 @@ export function RichTextEditor({ content, onChange, placeholder = "Enter text...
         >
           <Redo className="w-4 h-4" />
         </Button>
+        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
+        
+        {/* Font Size Selector */}
+        <div className="flex items-center space-x-1">
+          <Type className="w-4 h-4 text-gray-500" />
+          <Select value={currentFontSize} onValueChange={applyFontSize}>
+            <SelectTrigger className="w-20 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {fontSizes.map((size) => (
+                <SelectItem key={size.value} value={size.value}>
+                  <span className={size.class}>{size.label}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
         
         {/* Color Picker */}
