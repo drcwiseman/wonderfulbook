@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertBookSchema } from "@shared/schema";
+import { insertBookSchema, insertCategorySchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -630,24 +630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Categories endpoint
-  app.get('/api/categories', async (req, res) => {
-    try {
-      // Return predefined categories
-      const categories = [
-        { id: 'personal-development', name: 'Personal Development', icon: 'rocket' },
-        { id: 'spirituality', name: 'Spirituality & Mindfulness', icon: 'om' },
-        { id: 'business', name: 'Business & Finance', icon: 'chart-line' },
-        { id: 'health', name: 'Health & Wellness', icon: 'heart' },
-        { id: 'relationships', name: 'Relationships', icon: 'users' },
-        { id: 'psychology', name: 'Psychology', icon: 'brain' },
-      ];
-      res.json(categories);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      res.status(500).json({ message: "Failed to fetch categories" });
-    }
-  });
+
 
   // Secure PDF streaming endpoint
   app.get("/api/stream/:bookId", isAuthenticated, async (req: any, res) => {
@@ -696,6 +679,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error streaming PDF:", error);
       res.status(500).json({ message: "Failed to stream PDF" });
+    }
+  });
+
+  // Category management routes (admin only)
+  app.get('/api/admin/categories', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const categories = await storage.getAllCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.post('/api/admin/categories', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validatedData = insertCategorySchema.parse(req.body);
+      const category = await storage.createCategory(validatedData);
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  app.put('/api/admin/categories/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const updates = insertCategorySchema.partial().parse(req.body);
+      const category = await storage.updateCategory(req.params.id, updates);
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  app.delete('/api/admin/categories/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteCategory(req.params.id);
+      res.json({ message: "Category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
+  // Public category routes
+  app.get('/api/categories', async (req, res) => {
+    try {
+      const categories = await storage.getActiveCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching active categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
     }
   });
 

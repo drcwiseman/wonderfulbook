@@ -3,6 +3,7 @@ import {
   books,
   readingProgress,
   bookmarks,
+  categories,
   type User,
   type UpsertUser,
   type Book,
@@ -11,6 +12,8 @@ import {
   type InsertReadingProgress,
   type Bookmark,
   type InsertBookmark,
+  type Category,
+  type InsertCategory,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, ilike } from "drizzle-orm";
@@ -53,6 +56,13 @@ export interface IStorage {
     monthlyRevenue: number;
     conversionRate: number;
   }>;
+
+  // Category operations
+  getAllCategories(): Promise<Category[]>;
+  getActiveCategories(): Promise<Category[]>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(categoryId: string, updates: Partial<InsertCategory>): Promise<Category>;
+  deleteCategory(categoryId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -293,6 +303,37 @@ export class DatabaseStorage implements IStorage {
       monthlyRevenue: Math.round(monthlyRevenue * 100) / 100, // Round to 2 decimal places
       conversionRate,
     };
+  }
+  // Category operations
+  async getAllCategories(): Promise<Category[]> {
+    return await db.select().from(categories).orderBy(categories.name);
+  }
+
+  async getActiveCategories(): Promise<Category[]> {
+    return await db.select().from(categories)
+      .where(eq(categories.isActive, true))
+      .orderBy(categories.name);
+  }
+
+  async createCategory(categoryData: InsertCategory): Promise<Category> {
+    const [category] = await db
+      .insert(categories)
+      .values(categoryData)
+      .returning();
+    return category;
+  }
+
+  async updateCategory(categoryId: string, updates: Partial<InsertCategory>): Promise<Category> {
+    const [category] = await db
+      .update(categories)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(categories.id, categoryId))
+      .returning();
+    return category;
+  }
+
+  async deleteCategory(categoryId: string): Promise<void> {
+    await db.delete(categories).where(eq(categories.id, categoryId));
   }
 }
 

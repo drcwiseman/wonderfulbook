@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { ImageUploader } from "@/components/ImageUploader";
 import { PDFUploader } from "@/components/PDFUploader";
+import { CategoryManager } from "@/components/CategoryManager";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -256,9 +257,10 @@ export default function AdminPanel() {
         </div>
 
         <Tabs defaultValue="upload" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="upload">Upload Books</TabsTrigger>
             <TabsTrigger value="manage">Book Management</TabsTrigger>
+            <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
           </TabsList>
@@ -503,6 +505,11 @@ export default function AdminPanel() {
             </Card>
           </TabsContent>
 
+          {/* Categories Tab */}
+          <TabsContent value="categories">
+            <CategoryManager />
+          </TabsContent>
+
           {/* Analytics Tab */}
           <TabsContent value="analytics">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -561,7 +568,7 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Subscription management features coming soon...
+                  Subscription management features coming soon.
                 </p>
               </CardContent>
             </Card>
@@ -570,11 +577,11 @@ export default function AdminPanel() {
 
         {/* Edit Book Dialog */}
         <Dialog open={!!editingBook} onOpenChange={() => setEditingBook(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Book</DialogTitle>
               <DialogDescription>
-                Update book information and settings
+                Update book information and metadata.
               </DialogDescription>
             </DialogHeader>
             {editingBook && (
@@ -599,20 +606,12 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Image Upload for Edit */}
-                <ImageUploader
-                  value={editForm.watch("coverImage") || ""}
-                  onChange={(imageUrl) => editForm.setValue("coverImage", imageUrl)}
-                  label="Cover Image"
-                />
-
-                {/* Rich Text Description for Edit */}
                 <div className="space-y-2">
                   <Label>Description</Label>
                   <RichTextEditor
                     content={editDescription}
                     onChange={setEditDescription}
-                    placeholder="Enter book description with rich formatting..."
+                    placeholder="Enter book description..."
                   />
                 </div>
 
