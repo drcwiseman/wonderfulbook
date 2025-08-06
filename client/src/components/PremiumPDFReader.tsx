@@ -79,7 +79,7 @@ export function PremiumPDFReader({
             variant: "destructive",
           });
           setTimeout(() => {
-            window.location.href = '/api/login';
+            window.location.href = '/auth/login';
           }, 1500);
         } else {
           toast({
@@ -214,7 +214,7 @@ export function PremiumPDFReader({
       });
       // Redirect to login after showing error
       setTimeout(() => {
-        window.location.href = '/api/login';
+        window.location.href = '/auth/login';
       }, 2000);
     } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
       toast({

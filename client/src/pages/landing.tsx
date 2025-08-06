@@ -241,7 +241,7 @@ export default function Landing() {
                   </div>
                 </div>
                 <Button 
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => window.location.href = "/auth/login"}
                   className="w-full bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white mt-6 font-semibold"
                 >
                   Start Free Trial
@@ -281,7 +281,7 @@ export default function Landing() {
                   </div>
                 </div>
                 <Button 
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => window.location.href = "/auth/login"}
                   className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white mt-6 font-semibold"
                 >
                   Choose Basic
@@ -330,7 +330,7 @@ export default function Landing() {
                   </div>
                 </div>
                 <Button 
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => window.location.href = "/auth/login"}
                   className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-bold mt-6 shadow-lg"
                 >
                   Choose Premium

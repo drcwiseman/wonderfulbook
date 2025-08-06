@@ -11,7 +11,7 @@ export default function PricingSection() {
 
   const handleUpgrade = (tier: string) => {
     if (!isAuthenticated) {
-      window.location.href = "/api/login";
+      window.location.href = "/auth/login";
     } else {
       window.location.href = `/subscribe?tier=${tier}`;
     }

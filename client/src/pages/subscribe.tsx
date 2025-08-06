@@ -90,7 +90,7 @@ export default function Subscribe() {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/auth/login";
       }, 2000);
     }
   }, [isAuthenticated, isLoading, toast]);
@@ -155,7 +155,7 @@ export default function Subscribe() {
           <h2 className="text-2xl mb-4">Please Login to Continue</h2>
           <p className="text-gray-400 mb-6">You need to be logged in to access subscription plans</p>
           <Button 
-            onClick={() => window.location.href = "/api/login"}
+            onClick={() => window.location.href = "/auth/login"}
             className="bg-netflix-red hover:bg-red-700"
           >
             Login Now

@@ -152,7 +152,7 @@ export default function Library() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Your Library</h1>
           <p className="text-gray-600 mb-6">Sign in to view your personal book collection</p>
           <Button 
-            onClick={() => window.location.href = "/api/login"}
+            onClick={() => window.location.href = "/auth/login"}
             className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
           >
             Sign In

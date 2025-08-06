@@ -33,7 +33,7 @@ export default function HeroSection() {
             </Button>
           ) : (
             <Button 
-              onClick={() => window.location.href = "/api/login"}
+              onClick={() => window.location.href = "/auth/login"}
               className="bg-netflix-red hover:bg-red-700 text-white px-8 py-3 rounded-md font-semibold transition-colors text-lg"
             >
               Start Free Trial

@@ -361,7 +361,7 @@ export default function AdminPanel() {
             </p>
             <Button 
               className="w-full" 
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = '/auth/login'}
             >
               Log In
             </Button>

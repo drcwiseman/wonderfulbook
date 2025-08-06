@@ -128,7 +128,7 @@ export default function Header() {
               </div>
             ) : (
               <Button
-                onClick={() => window.location.href = "/api/login"}
+                onClick={() => window.location.href = "/auth/login"}
                 className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
               >
                 Sign In
