@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useRoute, useLocation } from "wouter";
+import { useRoute } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +14,6 @@ import type { Book as BookType, ReadingProgress, Bookmark as BookmarkType } from
 
 export default function BookDetail() {
   const [, params] = useRoute("/book/:id");
-  const [, setLocation] = useLocation();
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(0);
@@ -202,20 +201,15 @@ export default function BookDetail() {
                 </p>
                 
                 <div className="bg-netflix-red/10 border-l-4 border-netflix-red p-6 rounded">
-                  <h3 className="text-xl font-semibold mb-2 text-netflix-red">
-                    {book.requiredTier === 'free' ? 'Login Required' : 'Upgrade Required'}
-                  </h3>
+                  <h3 className="text-xl font-semibold mb-2 text-netflix-red">Upgrade Required</h3>
                   <p className="text-gray-300 mb-4">
-                    {book.requiredTier === 'free' 
-                      ? 'Please log in to start reading this book for free.'
-                      : `This book requires a ${book.requiredTier} subscription to access.`
-                    }
+                    This book requires a {book.requiredTier} subscription to access.
                   </p>
                   <Button
-                    onClick={() => window.location.href = book.requiredTier === 'free' ? '/api/login' : '/subscribe'}
+                    onClick={() => window.location.href = "/subscribe"}
                     className="bg-netflix-red hover:bg-red-700"
                   >
-                    {book.requiredTier === 'free' ? 'Log In to Read' : 'Upgrade Now'}
+                    Upgrade Now
                   </Button>
                 </div>
               </div>
@@ -284,7 +278,7 @@ export default function BookDetail() {
                   <Badge variant="secondary" className="mb-4">{book.category}</Badge>
                   
                   <Button 
-                    onClick={() => setLocation(`/read/${params?.id}`)}
+                    onClick={() => setLocation(`/reader/${id}`)}
                     className="w-full bg-netflix-red hover:bg-red-700 text-white mb-4"
                   >
                     Read Now

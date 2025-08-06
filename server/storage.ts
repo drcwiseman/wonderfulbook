@@ -37,11 +37,8 @@ export interface IStorage {
   
   // Bookmark operations
   getUserBookmarks(userId: string, bookId?: string): Promise<Bookmark[]>;
-  getBookmarks(userId: string, bookId: string): Promise<Bookmark[]>;
   createBookmark(bookmark: InsertBookmark): Promise<Bookmark>;
-  addBookmark(bookmark: InsertBookmark): Promise<Bookmark>;
-  deleteBookmark(id: string, userId?: string): Promise<void>;
-  updateReadingProgress(progress: InsertReadingProgress): Promise<ReadingProgress>;
+  deleteBookmark(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -180,34 +177,13 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(bookmarks.createdAt));
   }
 
-  async getBookmarks(userId: string, bookId: string): Promise<Bookmark[]> {
-    return await db
-      .select()
-      .from(bookmarks)
-      .where(and(eq(bookmarks.userId, userId), eq(bookmarks.bookId, bookId)))
-      .orderBy(desc(bookmarks.createdAt));
-  }
-
   async createBookmark(bookmark: InsertBookmark): Promise<Bookmark> {
     const [newBookmark] = await db.insert(bookmarks).values(bookmark).returning();
     return newBookmark;
   }
 
-  async addBookmark(bookmark: InsertBookmark): Promise<Bookmark> {
-    const [newBookmark] = await db.insert(bookmarks).values(bookmark).returning();
-    return newBookmark;
-  }
-
-  async deleteBookmark(id: string, userId?: string): Promise<void> {
-    if (userId) {
-      await db.delete(bookmarks).where(and(eq(bookmarks.id, id), eq(bookmarks.userId, userId)));
-    } else {
-      await db.delete(bookmarks).where(eq(bookmarks.id, id));
-    }
-  }
-
-  async updateReadingProgress(progress: InsertReadingProgress): Promise<ReadingProgress> {
-    return await this.upsertReadingProgress(progress);
+  async deleteBookmark(id: string): Promise<void> {
+    await db.delete(bookmarks).where(eq(bookmarks.id, id));
   }
 }
 

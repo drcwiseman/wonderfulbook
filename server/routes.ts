@@ -291,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check subscription tier access
       const userTier = user.subscriptionTier || 'free';
-      const canAccess = checkBookAccess(userTier, book.requiredTier || 'free');
+      const canAccess = checkBookAccess(userTier, book.requiredTier);
       
       if (!canAccess) {
         return res.status(403).json({ 
@@ -301,19 +301,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Generate a proper PDF using pdfkit
+      // For demo purposes, we'll generate a sample PDF with the book content
       const pdfBuffer = await generateSamplePDF(book);
       
-      // Set security headers that allow iframe display
+      // Set security headers
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
       res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('Content-Disposition', 'inline');
-      res.setHeader('Content-Length', pdfBuffer.length.toString());
-      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-      res.setHeader('Content-Security-Policy', 'frame-ancestors \'self\'');
+      res.setHeader('Content-Disposition', 'inline'); // Prevent download dialog
       
       // Stream the PDF buffer
       res.send(pdfBuffer);
@@ -322,79 +319,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error streaming PDF:", error);
       res.status(500).json({ message: "Failed to stream PDF" });
     }
-  });
-
-  // Bookmark routes
-  app.get('/api/bookmarks/:bookId', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { bookId } = req.params;
-      
-      const bookmarks = await storage.getBookmarks(userId, bookId);
-      res.json(bookmarks);
-    } catch (error) {
-      console.error('Error fetching bookmarks:', error);
-      res.status(500).json({ message: 'Failed to fetch bookmarks' });
-    }
-  });
-
-  app.post('/api/bookmarks', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { bookId, pageNumber, note } = req.body;
-
-      // Map to correct field name (schema uses 'page' instead of 'pageNumber')
-      const bookmarkData = {
-        userId,
-        bookId,
-        page: pageNumber,
-        note: note || ''
-      };
-      
-      const bookmark = await storage.addBookmark(bookmarkData);
-      res.json(bookmark);
-    } catch (error) {
-      console.error('Error adding bookmark:', error);
-      res.status(500).json({ message: 'Failed to add bookmark' });
-    }
-  });
-
-  app.delete('/api/bookmarks/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { id } = req.params;
-      
-      await storage.deleteBookmark(id, userId);
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Error deleting bookmark:', error);
-      res.status(500).json({ message: 'Failed to delete bookmark' });
-    }
-  });
-
-  // Reading progress routes  
-  app.post('/api/reading-progress', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { bookId, currentPage, totalPages } = req.body;
-      
-      const progress = await storage.updateReadingProgress({
-        userId,
-        bookId,
-        currentPage,
-        totalPages,
-        lastReadAt: new Date()
-      });
-      res.json(progress);
-    } catch (error) {
-      console.error('Error updating reading progress:', error);
-      res.status(500).json({ message: 'Failed to update reading progress' });
-    }
-  });
-
-  // Serve test file for demonstration
-  app.get('/test-reader', (req, res) => {
-    res.sendFile(__dirname + '/../test-pdf-reader.html');
   });
 
   const httpServer = createServer(app);
@@ -417,63 +341,43 @@ function checkBookAccess(userTier: string, requiredTier: string): boolean {
 
 // Helper function to generate a sample PDF for demo purposes
 async function generateSamplePDF(book: any): Promise<Buffer> {
-  try {
-    // Import PDFKit dynamically to avoid module issues
-    const PDFDocument = (await import('pdfkit')).default;
-    const doc = new PDFDocument({
-      margins: { top: 50, bottom: 50, left: 50, right: 50 }
-    });
-    const chunks: Buffer[] = [];
+  // In a real application, you would fetch the actual PDF from secure storage
+  // For demo purposes, we'll create a simple PDF with book information
+  
+  const PDFDocument = require('pdfkit');
+  const doc = new PDFDocument();
+  const chunks: Buffer[] = [];
 
-    doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+  doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+  
+  return new Promise((resolve) => {
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
     
-    return new Promise((resolve, reject) => {
-      doc.on('end', () => {
-        const buffer = Buffer.concat(chunks);
-        console.log('PDF generated:', buffer.length, 'bytes');
-        resolve(buffer);
-      });
-      
-      doc.on('error', (error) => {
-        console.error('PDF generation error:', error);
-        reject(error);
-      });
-      
-      // Add book content to PDF
-      doc.fontSize(24).text(book.title, { align: 'center' });
-      doc.moveDown(0.5);
-      doc.fontSize(16).text(`by ${book.author}`, { align: 'center' });
-      doc.moveDown(2);
-      doc.fontSize(12).text(book.description, { width: 500, align: 'justify' });
-      
-      // Add some sample content
-      doc.moveDown(2);
-      doc.fontSize(14).text('Chapter 1: Introduction', { underline: true });
+    // Add book content to PDF
+    doc.fontSize(24).text(book.title, 50, 50);
+    doc.fontSize(16).text(`by ${book.author}`, 50, 90);
+    doc.moveDown(2);
+    doc.fontSize(12).text(book.description, 50, 150, { width: 500 });
+    
+    // Add some sample content
+    doc.moveDown(2);
+    doc.text('Chapter 1: Introduction', 50, doc.y, { underline: true });
+    doc.moveDown();
+    doc.text(`This is a sample preview of "${book.title}". In a production environment, this would contain the actual book content securely streamed from your storage system.`, 50, doc.y, { width: 500 });
+    
+    doc.moveDown(2);
+    doc.text('Sample Content:', 50, doc.y, { underline: true });
+    doc.moveDown();
+    
+    // Add multiple pages of sample content
+    for (let i = 1; i <= 5; i++) {
+      if (i > 1) doc.addPage();
+      doc.text(`Page ${i}`, 50, 50);
       doc.moveDown();
-      doc.fontSize(12).text(`This is a sample preview of "${book.title}". In a production environment, this would contain the actual book content securely streamed from your storage system.`, { width: 500, align: 'justify' });
-      
-      doc.moveDown(2);
-      doc.fontSize(14).text('Sample Content:', { underline: true });
-      doc.moveDown();
-      
-      // Add multiple pages of sample content
-      for (let i = 1; i <= 5; i++) {
-        if (i > 1) doc.addPage();
-        doc.fontSize(16).text(`Page ${i}`, { align: 'center' });
-        doc.moveDown(2);
-        doc.fontSize(12).text(`This is page ${i} of the sample content for "${book.title}". `, { width: 500 });
-        doc.moveDown();
-        doc.text('In a real implementation, this would be the actual book content loaded from secure storage with proper access controls based on the user\'s subscription tier.', { width: 500, align: 'justify' });
-        
-        // Add some more content to make it look like a real book
-        doc.moveDown();
-        doc.text('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', { width: 500, align: 'justify' });
-      }
-      
-      doc.end();
-    });
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    throw error;
-  }
+      doc.text(`This is page ${i} of the sample content for "${book.title}". `, 50, doc.y);
+      doc.text('In a real implementation, this would be the actual book content loaded from secure storage with proper access controls based on the user\'s subscription tier.', 50, doc.y + 20, { width: 500 });
+    }
+    
+    doc.end();
+  });
 }
