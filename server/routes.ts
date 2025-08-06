@@ -1257,19 +1257,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // For demo purposes, we'll generate a sample PDF with the book content
-      const pdfBuffer = await generateSamplePDF(book);
-      
-      // Set security headers
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('Content-Disposition', 'inline'); // Prevent download dialog
-      
-      // Stream the PDF buffer
-      res.send(pdfBuffer);
+      // Stream the actual PDF file from the book's pdfUrl
+      if (!book.pdfUrl) {
+        return res.status(404).json({ message: "PDF file not available for this book" });
+      }
+
+      // For files served via /uploads/, serve directly from file system
+      if (book.pdfUrl.startsWith('/uploads/')) {
+        const filePath = path.join(process.cwd(), book.pdfUrl.substring(1)); // Remove leading slash
+        
+        if (!fs.existsSync(filePath)) {
+          console.error('PDF file not found:', filePath);
+          return res.status(404).json({ message: "PDF file not found" });
+        }
+
+        // Set proper PDF headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache for 1 hour
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        
+        // Stream the actual PDF file
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        return;
+      }
+
+      // For external URLs, proxy the PDF content
+      try {
+        const response = await fetch(book.pdfUrl);
+        if (!response.ok) {
+          console.error('Failed to fetch PDF from URL:', book.pdfUrl, response.status);
+          return res.status(404).json({ message: "PDF file not accessible" });
+        }
+
+        const pdfBuffer = await response.arrayBuffer();
+        
+        // Set proper PDF headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Cache-Control', 'private, max-age=3600');
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        
+        // Stream the actual PDF content
+        res.send(Buffer.from(pdfBuffer));
+      } catch (error) {
+        console.error('Error fetching PDF from URL:', error);
+        return res.status(500).json({ message: "Failed to load PDF file" });
+      }
       
     } catch (error: any) {
       console.error("Error streaming PDF:", error);
@@ -1309,26 +1344,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Book not found" });
       }
 
-      // For demo purposes, we'll generate a sample PDF with the book content
-      const pdfBuffer = await generateSamplePDF(book);
-      
-      // Set security headers
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('Content-Disposition', 'inline');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-      
-      // Don't clean up token immediately - let it expire naturally
-      // This allows for retry attempts during PDF loading
-      console.log(`PDF token ${tokenKey} used successfully for book ${bookId}`);
-      
-      // Stream the PDF buffer
-      res.send(pdfBuffer);
+      // Stream the actual PDF file from the book's pdfUrl
+      if (!book.pdfUrl) {
+        return res.status(404).json({ message: "PDF file not available for this book" });
+      }
+
+      // For files served via /uploads/, serve directly from file system
+      if (book.pdfUrl.startsWith('/uploads/')) {
+        const filePath = path.join(process.cwd(), book.pdfUrl.substring(1)); // Remove leading slash
+        
+        if (!fs.existsSync(filePath)) {
+          console.error('PDF file not found:', filePath);
+          return res.status(404).json({ message: "PDF file not found" });
+        }
+
+        // Set proper PDF headers with CORS
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Cache-Control', 'private, max-age=3600');
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        
+        console.log(`PDF token ${tokenKey} used successfully for book ${bookId}`);
+        
+        // Stream the actual PDF file
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        return;
+      }
+
+      // For external URLs, proxy the PDF content
+      try {
+        const response = await fetch(book.pdfUrl);
+        if (!response.ok) {
+          console.error('Failed to fetch PDF from URL:', book.pdfUrl, response.status);
+          return res.status(404).json({ message: "PDF file not accessible" });
+        }
+
+        const pdfBuffer = await response.arrayBuffer();
+        
+        // Set proper PDF headers with CORS
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Cache-Control', 'private, max-age=3600');
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        
+        console.log(`PDF token ${tokenKey} used successfully for book ${bookId}`);
+        
+        // Stream the actual PDF content
+        res.send(Buffer.from(pdfBuffer));
+      } catch (error) {
+        console.error('Error fetching PDF from URL:', error);
+        return res.status(500).json({ message: "Failed to load PDF file" });
+      }
       
     } catch (error: any) {
       console.error("Error streaming PDF with token:", error);
@@ -1414,255 +1487,3 @@ function checkBookAccess(userTier: string, requiredTier: string): boolean {
   return userLevel >= requiredLevel;
 }
 
-// Helper function to generate a sample PDF for demo purposes
-async function generateSamplePDF(book: any): Promise<Buffer> {
-  // In a real application, you would fetch the actual PDF from secure storage
-  // For demo purposes, we'll create a simple PDF with book information
-  
-  const PDFKit = await import('pdfkit');
-  const PDFDocument = PDFKit.default;
-  
-  // Create PDF with basic options only
-  const doc = new PDFDocument();
-  
-  const chunks: Buffer[] = [];
-  doc.on('data', (chunk: Buffer) => chunks.push(chunk));
-  
-  return new Promise((resolve) => {
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    
-    // Title page with proper formatting
-    doc.font('Helvetica-Bold')
-       .fontSize(28)
-       .text(book.title, 50, 100, { align: 'center', width: 500 });
-    
-    doc.font('Helvetica')
-       .fontSize(18)
-       .text(`by ${book.author}`, 50, 160, { align: 'center', width: 500 });
-    
-    doc.fontSize(14)
-       .text(book.category, 50, 200, { align: 'center', width: 500 });
-    
-    // Description
-    doc.moveDown(3);
-    doc.font('Helvetica-Bold')
-       .fontSize(16)
-       .text('About This Book', 50, 300);
-    
-    // Clean the description by aggressively removing HTML tags and entities
-    const cleanDescription = book.description
-      ? book.description
-          .replace(/<style[^>]*>.*?<\/style>/gis, '') // Remove style blocks
-          .replace(/<script[^>]*>.*?<\/script>/gis, '') // Remove script blocks
-          .replace(/<[^>]*>/g, '') // Remove all HTML tags
-          .replace(/&nbsp;/g, ' ') // Replace &nbsp; with spaces
-          .replace(/&amp;/g, '&') // Replace HTML entities
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          .replace(/&hellip;/g, '...')
-          .replace(/&mdash;/g, '—')
-          .replace(/&ndash;/g, '–')
-          .replace(/&rsquo;/g, "'")
-          .replace(/&lsquo;/g, "'")
-          .replace(/&rdquo;/g, '"')
-          .replace(/&ldquo;/g, '"')
-          .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-          .replace(/[\r\n]+/g, ' ') // Replace line breaks with spaces
-          .trim()
-      : 'This is a sample book demonstrating the secure PDF streaming capabilities of the Wonderful Books platform. In a production environment, this would contain the actual book content.';
-    
-    // Log cleaned description to verify HTML removal
-    console.log(`Generating PDF for "${book.title}" - Original: ${book.description?.length || 0} chars, Cleaned: ${cleanDescription.length} chars`);
-    
-    doc.font('Helvetica')
-       .fontSize(12)
-       .text(cleanDescription, 50, 330, { 
-         width: 500, 
-         align: 'justify',
-         lineGap: 4
-       });
-    
-    // Generate substantial content - 200+ pages
-    const chapters = [
-      {
-        title: "Understanding Excellence in Character",
-        content: [
-          "Excellence is not a destination but a journey of continuous growth and refinement. In this chapter, we explore the foundational principles that distinguish exceptional individuals from those who settle for mediocrity.",
-          "Character excellence begins with self-awareness. You must first understand your current position before you can chart a course to where you want to be. This requires honest self-evaluation and the courage to confront areas that need improvement.",
-          "The development of character excellence is built on consistent daily habits. Small, intentional actions compound over time to create significant transformation. Excellence becomes a way of being, not just something you do occasionally.",
-          "Integrity forms the cornerstone of character excellence. When your actions align with your values, you build a foundation that can withstand any challenge. This alignment creates authenticity that others recognize and respect.",
-          "Excellence in character also requires the ability to learn from failure. Every setback contains valuable lessons that can accelerate your growth if you approach them with the right mindset."
-        ]
-      },
-      {
-        title: "Mastering Professional Competence", 
-        content: [
-          "Professional competence goes beyond technical skills. It encompasses your ability to deliver consistent results, solve complex problems, and add value in every situation.",
-          "Developing competence requires a commitment to lifelong learning. The rapidly changing professional landscape demands that you continuously update your knowledge and skills to remain relevant and effective.",
-          "True competence includes emotional intelligence - the ability to understand and manage your emotions while effectively working with others. This skill often determines success more than technical expertise alone.",
-          "Excellence in competence means taking ownership of your professional development. You cannot wait for others to invest in your growth; you must be proactive in seeking opportunities to expand your capabilities.",
-          "Competent professionals understand the importance of building systems and processes that ensure consistent quality in their work. They don't rely on luck or inspiration; they create frameworks for success."
-        ]
-      },
-      {
-        title: "Discovering Your Divine Calling",
-        content: [
-          "Your calling is the intersection of your gifts, passions, and the world's needs. It represents the unique contribution you were designed to make during your time on earth.",
-          "Discovering your calling requires quiet reflection and careful attention to the activities that energize you and the problems you feel compelled to solve.",
-          "Many people confuse their job with their calling. While your calling may be expressed through your work, it encompasses a broader purpose that extends beyond your professional role.",
-          "Living out your calling requires courage to step outside your comfort zone and pursue what truly matters to you, even when others don't understand your path.",
-          "Your calling will evolve as you grow and gain new experiences. Remain open to how God may redirect your steps as you walk faithfully in the direction He leads."
-        ]
-      }
-    ];
-
-    let pageNumber = 0;
-    
-    // Table of Contents
-    doc.addPage();
-    pageNumber++;
-    doc.font('Helvetica-Bold')
-       .fontSize(24)
-       .text('Table of Contents', 50, 50, { align: 'center', width: 500 });
-    
-    let tocY = 120;
-    chapters.forEach((chapter, index) => {
-      doc.font('Helvetica')
-         .fontSize(12)
-         .text(`Chapter ${index + 1}: ${chapter.title}`, 50, tocY);
-      doc.text(`Page ${(index * 65) + 10}`, 450, tocY, { align: 'right', width: 100 });
-      tocY += 25;
-    });
-    
-    // Generate chapters with substantial content
-    chapters.forEach((chapter, chapterIndex) => {
-      // Chapter title page
-      doc.addPage();
-      pageNumber++;
-      
-      doc.font('Helvetica-Bold')
-         .fontSize(28)
-         .text(`Chapter ${chapterIndex + 1}`, 50, 100, { align: 'center', width: 500 });
-      
-      doc.moveDown(2)
-         .fontSize(20)
-         .text(chapter.title, 50, doc.y, { align: 'center', width: 500 });
-      
-      // Chapter content - multiple pages per chapter
-      chapter.content.forEach((paragraph, paragraphIndex) => {
-        if (paragraphIndex % 2 === 0) {
-          doc.addPage();
-          pageNumber++;
-        }
-        
-        doc.font('Helvetica')
-           .fontSize(12)
-           .moveDown(2);
-        
-        // Add section header for some paragraphs
-        if (paragraphIndex % 2 === 0) {
-          doc.font('Helvetica-Bold')
-             .fontSize(14)
-             .text(`Section ${paragraphIndex / 2 + 1}: Key Principles`, 50, 80);
-          doc.moveDown(1);
-        }
-        
-        // Main content
-        doc.font('Helvetica')
-           .fontSize(12)
-           .text(paragraph, 50, doc.y, {
-             width: 500,
-             align: 'justify',
-             lineGap: 6
-           });
-        
-        // Add additional content to make pages fuller
-        doc.moveDown(2)
-           .text('Practical Application: Take time to reflect on how this principle applies to your current situation. Consider specific actions you can take this week to implement these insights into your daily routine.', 50, doc.y, {
-             width: 500,
-             align: 'justify',
-             lineGap: 6
-           });
-        
-        doc.moveDown(2)
-           .text('Remember that excellence is not about perfection, but about consistent progress toward your highest potential. Each day presents new opportunities to practice these principles and move closer to the person you were created to be.', 50, doc.y, {
-             width: 500,
-             align: 'justify',
-             lineGap: 6
-           });
-        
-        // Page footer
-        doc.font('Helvetica')
-           .fontSize(10)
-           .text(`Page ${pageNumber} | ${book.title}`, 50, 750, { 
-             width: 500, 
-             align: 'center' 
-           });
-      });
-      
-      // Add extra pages with detailed content for each chapter
-      for (let extraPage = 0; extraPage < 15; extraPage++) {
-        doc.addPage();
-        pageNumber++;
-        
-        // Varied content for each page
-        const pageTypes = [
-          {
-            title: "Daily Reflection Questions",
-            content: "1. What specific area of excellence will you focus on today?\n2. How can you demonstrate character in your current challenges?\n3. What competencies do you need to develop further?\n4. How is your calling being expressed in your current role?\n5. What steps will you take to maintain consistent growth?"
-          },
-          {
-            title: "Practical Exercises",
-            content: "This week, implement one new habit that aligns with excellence. Track your progress and note the impact on your professional and personal relationships. Excellence is built through consistent, intentional actions that compound over time."
-          },
-          {
-            title: "Case Study Application",
-            content: "Consider a professional challenge you're currently facing. Apply the principles from this chapter to develop a strategic approach. Excellence requires both theoretical understanding and practical application in real-world scenarios."
-          }
-        ];
-        
-        const pageType = pageTypes[extraPage % pageTypes.length];
-        
-        doc.font('Helvetica-Bold')
-           .fontSize(16)
-           .text(pageType.title, 50, 80);
-        
-        doc.moveDown(2)
-           .font('Helvetica')
-           .fontSize(12)
-           .text(pageType.content, 50, doc.y, {
-             width: 500,
-             align: 'justify',
-             lineGap: 6
-           });
-        
-        // Add substantial additional content
-        doc.moveDown(3)
-           .text('The journey toward excellence requires both individual commitment and community support. Surround yourself with others who share your dedication to growth and who will challenge you to reach higher standards in all areas of life.', 50, doc.y, {
-             width: 500,
-             align: 'justify',
-             lineGap: 6
-           });
-        
-        doc.moveDown(2)
-           .text('Excellence is not a destination but a continuous process of refinement. Each day offers opportunities to practice these principles and move closer to your full potential. Embrace the journey and celebrate the progress you make along the way.', 50, doc.y, {
-             width: 500,
-             align: 'justify',
-             lineGap: 6
-           });
-        
-        // Page footer
-        doc.font('Helvetica')
-           .fontSize(10)
-           .text(`Page ${pageNumber} | ${book.title}`, 50, 750, { 
-             width: 500, 
-             align: 'center' 
-           });
-      }
-    });
-    
-    doc.end();
-  });
-}
