@@ -293,19 +293,19 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Free Plan */}
+            {/* Free Trial Plan */}
             <Card className="bg-white border-2 border-gray-200 hover:border-orange-200 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
               <CardHeader className="text-center pb-6">
                 <Zap className="w-12 h-12 text-orange-400 mx-auto mb-4" />
                 <CardTitle className="text-2xl text-gray-900 mb-2">Free Trial</CardTitle>
                 <div className="text-4xl font-bold text-gray-900 mb-2">£0</div>
-                <div className="text-gray-500">Forever</div>
+                <div className="text-gray-500">7 days free</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
-                    <span className="text-gray-700">3 featured books</span>
+                    <span className="text-gray-700">Access to 3 books for 7 days</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
@@ -317,7 +317,15 @@ export default function Home() {
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
-                    <span className="text-gray-700">All devices</span>
+                    <span className="text-gray-700">Mobile & desktop access</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">No credit card required</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">Upgrade anytime to continue</span>
                   </div>
                 </div>
                 <Button 
@@ -334,7 +342,7 @@ export default function Home() {
               <CardHeader className="text-center pb-6">
                 <Star className="w-12 h-12 text-orange-500 mx-auto mb-4" />
                 <CardTitle className="text-2xl text-gray-900 mb-2">Basic Plan</CardTitle>
-                <div className="text-4xl font-bold text-orange-600 mb-2">£9.99</div>
+                <div className="text-4xl font-bold text-orange-600 mb-2">£5.99</div>
                 <div className="text-orange-500">per month</div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -379,7 +387,7 @@ export default function Home() {
               <CardHeader className="text-center pb-6 pt-8">
                 <Crown className="w-12 h-12 text-orange-600 mx-auto mb-4" />
                 <CardTitle className="text-2xl text-gray-900 mb-2">Premium Plan</CardTitle>
-                <div className="text-4xl font-bold text-orange-600 mb-2">£19.99</div>
+                <div className="text-4xl font-bold text-orange-600 mb-2">£9.99</div>
                 <div className="text-orange-500">per month</div>
               </CardHeader>
               <CardContent className="space-y-4">
