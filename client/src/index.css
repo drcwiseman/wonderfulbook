@@ -187,9 +187,38 @@
   overflow: hidden !important; /* Prevent scrolling in single page mode */
 }
 
+/* Force single page layout */
+.rpv-core__inner-pages {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+  padding: 20px !important;
+}
+
+/* Hide all pages except current one */
+.rpv-core__page-layer:not(:first-child) {
+  display: none !important;
+}
+
+/* Style the visible page */
+.rpv-core__page-layer:first-child {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 0 auto !important;
+}
+
 .dark .rpv-core__viewer {
   background: rgb(17 24 39) !important;
   overflow: hidden !important; /* Prevent scrolling in single page mode */
+}
+
+/* Dark mode for single page layout */
+.dark .rpv-core__inner-pages {
+  background: rgb(17 24 39) !important;
 }
 
 /* Hide download/print buttons for security */
@@ -223,31 +252,23 @@
   display: block;
 }
 
-/* Additional Apple Books styling for single page mode */
-.rpv-core__inner-page {
-  background: white !important;
-  border-radius: 8px;
-  margin: 0 auto !important;
-  display: flex !important;
-  justify-content: center !important;
-}
-
-.dark .rpv-core__inner-page {
-  background: rgb(31 41 55) !important;
-}
-
-/* Center single page and add smooth transitions */
-.rpv-core__inner-pages {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: flex-start !important;
-  min-height: 100vh !important;
-  padding: 20px 0 !important;
-}
-
 /* Smooth page transition effect */
 .rpv-core__page {
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out !important;
+}
+
+/* Remove default PDF viewer scrolling */
+.rpv-core__viewer-content {
+  overflow: hidden !important;
+}
+
+/* Ensure only one page is visible */
+.rpv-core__page-layer {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
 }
 
 /* Smooth transitions for all PDF elements */

@@ -197,8 +197,9 @@ export default function ReaderPage() {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
       updateProgressMutation.mutate({ currentPage: page, totalPages });
+      showToolbarsTemporarily();
     }
-  }, [totalPages, updateProgressMutation]);
+  }, [totalPages, updateProgressMutation, showToolbarsTemporarily]);
 
   // Touch and gesture handling
   const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -409,8 +410,10 @@ export default function ReaderPage() {
         book={book}
         pdfUrl={pdfUrl}
         bookId={bookId!}
+        currentPage={currentPage}
         onPageChange={handlePageChange}
         onDocumentLoad={handleDocumentLoad}
+        onGoToPage={goToPage}
       />
 
       {/* Toolbars */}
