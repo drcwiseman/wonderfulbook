@@ -36,6 +36,11 @@ export const users = pgTable("users", {
   subscriptionTier: varchar("subscription_tier").default("free"),
   subscriptionStatus: varchar("subscription_status").default("inactive"),
   booksReadThisMonth: integer("books_read_this_month").default(0),
+  role: varchar("role").default("user"), // user, admin, moderator
+  isActive: boolean("is_active").default(true),
+  lastLoginAt: timestamp("last_login_at"),
+  passwordResetToken: varchar("password_reset_token"),
+  passwordResetExpires: timestamp("password_reset_expires"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -131,9 +136,34 @@ export const insertBookCategorySchema = createInsertSchema(bookCategories).omit(
   createdAt: true,
 });
 
+// Admin user management schemas
+export const adminUpdateUserSchema = z.object({
+  firstName: z.string().min(1, "First name is required").optional(),
+  lastName: z.string().min(1, "Last name is required").optional(),
+  email: z.string().email("Invalid email address").optional(),
+  role: z.enum(["user", "admin", "moderator"]).optional(),
+  subscriptionTier: z.enum(["free", "basic", "premium"]).optional(),
+  subscriptionStatus: z.enum(["active", "inactive", "cancelled"]).optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const passwordResetSchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+  newPassword: z.string().min(8, "Password must be at least 8 characters").optional(),
+  sendResetEmail: z.boolean().default(false),
+});
+
+export const bulkUserUpdateSchema = z.object({
+  userIds: z.array(z.string()).min(1, "At least one user must be selected"),
+  updates: adminUpdateUserSchema,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type AdminUpdateUser = z.infer<typeof adminUpdateUserSchema>;
+export type PasswordReset = z.infer<typeof passwordResetSchema>;
+export type BulkUserUpdate = z.infer<typeof bulkUserUpdateSchema>;
 export type InsertBook = z.infer<typeof insertBookSchema>;
 export type Book = typeof books.$inferSelect;
 export type InsertReadingProgress = z.infer<typeof insertReadingProgressSchema>;

@@ -608,6 +608,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin user management routes
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { search } = req.query;
+      let users;
+      
+      if (search) {
+        users = await storage.searchUsers(search as string);
+      } else {
+        users = await storage.getAllUsers();
+      }
+      
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.patch('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const user = await storage.updateUser(id, updates);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const currentUserId = req.user?.claims?.sub;
+      
+      // Prevent self-deletion
+      if (id === currentUserId) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      await storage.deleteUser(id);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  app.patch('/api/admin/users/bulk', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userIds, updates } = req.body;
+      const currentUserId = req.user?.claims?.sub;
+      
+      // Prevent updating own account if role change
+      if (updates.role && userIds.includes(currentUserId)) {
+        return res.status(400).json({ message: "Cannot modify your own role" });
+      }
+      
+      await storage.bulkUpdateUsers(userIds, updates);
+      res.json({ message: "Users updated successfully" });
+    } catch (error) {
+      console.error("Error bulk updating users:", error);
+      res.status(500).json({ message: "Failed to update users" });
+    }
+  });
+
+  app.delete('/api/admin/users/bulk', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userIds } = req.body;
+      const currentUserId = req.user?.claims?.sub;
+      
+      // Prevent self-deletion
+      if (userIds.includes(currentUserId)) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      await storage.bulkDeleteUsers(userIds);
+      res.json({ message: "Users deleted successfully" });
+    } catch (error) {
+      console.error("Error bulk deleting users:", error);
+      res.status(500).json({ message: "Failed to delete users" });
+    }
+  });
+
+  app.post('/api/admin/users/:id/reset-password', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { newPassword, sendEmail } = req.body;
+      
+      const result = await storage.resetUserPassword(id, newPassword);
+      
+      if (sendEmail) {
+        // In a real application, you would send an email here
+        console.log(`Password reset for user ${id}. Temp password: ${result.tempPassword}`);
+      }
+      
+      res.json({ 
+        message: "Password reset successfully",
+        tempPassword: result.tempPassword
+      });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  app.patch('/api/admin/users/:id/role', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+      const currentUserId = req.user?.claims?.sub;
+      
+      // Prevent changing own role
+      if (id === currentUserId) {
+        return res.status(400).json({ message: "Cannot modify your own role" });
+      }
+      
+      const user = await storage.updateUserRole(id, role);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
+  app.patch('/api/admin/users/:id/status', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isActive } = req.body;
+      
+      const user = await storage.toggleUserStatus(id, isActive);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      res.status(500).json({ message: "Failed to update user status" });
+    }
+  });
+
+  app.get('/api/admin/user-analytics', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const analytics = await storage.getUserAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching user analytics:", error);
+      res.status(500).json({ message: "Failed to fetch user analytics" });
+    }
+  });
+
   // Stripe subscription routes
   app.post('/api/create-subscription', isAuthenticated, async (req: any, res) => {
     try {

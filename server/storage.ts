@@ -27,6 +27,24 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
+  // Admin user management operations
+  getAllUsers(): Promise<User[]>;
+  searchUsers(query: string): Promise<User[]>;
+  updateUser(id: string, updates: Partial<User>): Promise<User>;
+  deleteUser(id: string): Promise<void>;
+  bulkUpdateUsers(ids: string[], updates: Partial<User>): Promise<void>;
+  bulkDeleteUsers(ids: string[]): Promise<void>;
+  resetUserPassword(userId: string, newPassword?: string): Promise<{ success: boolean; tempPassword?: string }>;
+  updateUserRole(userId: string, role: string): Promise<User>;
+  toggleUserStatus(userId: string, isActive: boolean): Promise<User>;
+  getUserAnalytics(): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    adminUsers: number;
+    subscriptionBreakdown: { [key: string]: number };
+    recentSignups: number;
+  }>;
+  
   // Book operations
   getAllBooks(): Promise<Book[]>;
   getBook(id: string): Promise<Book | undefined>;
@@ -426,6 +444,121 @@ export class DatabaseStorage implements IStorage {
       .where(eq(books.id, bookId))
       .returning();
     return book;
+  }
+
+  // Admin user management operations
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async searchUsers(query: string): Promise<User[]> {
+    return await db.select().from(users)
+      .where(
+        or(
+          ilike(users.firstName, `%${query}%`),
+          ilike(users.lastName, `%${query}%`),
+          ilike(users.email, `%${query}%`)
+        )
+      )
+      .orderBy(desc(users.createdAt));
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    // Delete related data first
+    await db.delete(readingProgress).where(eq(readingProgress.userId, id));
+    await db.delete(bookmarks).where(eq(bookmarks.userId, id));
+    // Delete user
+    await db.delete(users).where(eq(users.id, id));
+  }
+
+  async bulkUpdateUsers(ids: string[], updates: Partial<User>): Promise<void> {
+    await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(or(...ids.map(id => eq(users.id, id))));
+  }
+
+  async bulkDeleteUsers(ids: string[]): Promise<void> {
+    // Delete related data first
+    await db.delete(readingProgress).where(or(...ids.map(id => eq(readingProgress.userId, id))));
+    await db.delete(bookmarks).where(or(...ids.map(id => eq(bookmarks.userId, id))));
+    // Delete users
+    await db.delete(users).where(or(...ids.map(id => eq(users.id, id))));
+  }
+
+  async resetUserPassword(userId: string, newPassword?: string): Promise<{ success: boolean; tempPassword?: string }> {
+    const tempPassword = newPassword || Math.random().toString(36).slice(-8);
+    const resetToken = Math.random().toString(36).slice(-16);
+    const resetExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
+    await db
+      .update(users)
+      .set({ 
+        passwordResetToken: resetToken,
+        passwordResetExpires: resetExpires,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    
+    return { success: true, tempPassword };
+  }
+
+  async updateUserRole(userId: string, role: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async toggleUserStatus(userId: string, isActive: boolean): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async getUserAnalytics(): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    adminUsers: number;
+    subscriptionBreakdown: { [key: string]: number };
+    recentSignups: number;
+  }> {
+    const allUsers = await db.select().from(users);
+    const totalUsers = allUsers.length;
+    const activeUsers = allUsers.filter(user => user.isActive).length;
+    const adminUsers = allUsers.filter(user => user.role === 'admin').length;
+    
+    const subscriptionBreakdown = allUsers.reduce((acc, user) => {
+      acc[user.subscriptionTier || 'free'] = (acc[user.subscriptionTier || 'free'] || 0) + 1;
+      return acc;
+    }, {} as { [key: string]: number });
+    
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentSignups = allUsers.filter(user => 
+      user.createdAt && new Date(user.createdAt) > oneWeekAgo
+    ).length;
+    
+    return {
+      totalUsers,
+      activeUsers,
+      adminUsers,
+      subscriptionBreakdown,
+      recentSignups,
+    };
   }
 }
 

@@ -21,6 +21,7 @@ import { RichTextEditor } from "@/components/RichTextEditor";
 import { ImageUploader } from "@/components/ImageUploader";
 import { PDFUploader } from "@/components/PDFUploader";
 import { CategoryManager } from "@/components/CategoryManager";
+import { UserManagement } from "@/components/UserManagement";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -425,9 +426,10 @@ export default function AdminPanel() {
         </div>
 
         <Tabs defaultValue="upload" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="upload">Upload Books</TabsTrigger>
             <TabsTrigger value="manage">Book Management</TabsTrigger>
+            <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
@@ -759,6 +761,11 @@ export default function AdminPanel() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* User Management Tab */}
+          <TabsContent value="users">
+            <UserManagement />
           </TabsContent>
 
           {/* Categories Tab */}
