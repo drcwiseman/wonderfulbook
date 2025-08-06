@@ -21,6 +21,7 @@ export default function ReaderPage() {
   const { toast } = useToast();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [accessError, setAccessError] = useState<string | null>(null);
+  const [isLoadingPdf, setIsLoadingPdf] = useState(false);
 
   const bookId = params?.bookId;
 
@@ -30,60 +31,82 @@ export default function ReaderPage() {
     enabled: !!bookId,
   });
 
-  // Check access and get PDF stream
-  const checkAccess = useCallback(async () => {
-    if (!bookId || !isAuthenticated || authLoading) return;
+  // Load PDF only once when authenticated and book ID is available
+  useEffect(() => {
+    let isCancelled = false;
 
-    try {
-      const response = await fetch(`/api/stream/${bookId}`, {
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/pdf',
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          setAccessError('Please log in to read this book.');
-          return;
-        }
-        if (response.status === 403) {
-          const errorData = await response.json();
-          setAccessError(errorData.message || 'Access denied. Please upgrade your subscription.');
-          return;
-        }
-        throw new Error(`Failed to load PDF: ${response.statusText}`);
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      setPdfUrl(url);
-      setAccessError(null);
-    } catch (error) {
-      console.error('Error loading PDF:', error);
-      if (isUnauthorizedError(error as Error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
+    const loadPdf = async () => {
+      if (!bookId || !isAuthenticated || authLoading || isLoadingPdf || pdfUrl) {
         return;
       }
-      setAccessError('Failed to load the book. Please try again.');
-    }
-  }, [bookId, isAuthenticated, authLoading, toast]);
 
+      setIsLoadingPdf(true);
+      try {
+        const response = await fetch(`/api/stream/${bookId}`, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/pdf',
+          },
+        });
+
+        if (isCancelled) return;
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            setAccessError('Please log in to read this book.');
+            return;
+          }
+          if (response.status === 403) {
+            const errorData = await response.json();
+            setAccessError(errorData.message || 'Access denied. Please upgrade your subscription.');
+            return;
+          }
+          throw new Error(`Failed to load PDF: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        if (isCancelled) return;
+
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+        setAccessError(null);
+      } catch (error) {
+        if (isCancelled) return;
+        console.error('Error loading PDF:', error);
+        if (isUnauthorizedError(error as Error)) {
+          toast({
+            title: "Unauthorized",
+            description: "You are logged out. Logging in again...",
+            variant: "destructive",
+          });
+          setTimeout(() => {
+            window.location.href = "/api/login";
+          }, 500);
+          return;
+        }
+        setAccessError('Failed to load the book. Please try again.');
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingPdf(false);
+        }
+      }
+    };
+
+    loadPdf();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [bookId, isAuthenticated, authLoading, toast, isLoadingPdf, pdfUrl]);
+
+  // Cleanup PDF URL on unmount
   useEffect(() => {
-    checkAccess();
     return () => {
       if (pdfUrl) {
         URL.revokeObjectURL(pdfUrl);
       }
     };
-  }, [checkAccess, pdfUrl]);
+  }, [pdfUrl]);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -151,10 +174,13 @@ export default function ReaderPage() {
     ],
   });
 
-  if (authLoading || bookLoading) {
+  if (authLoading || bookLoading || isLoadingPdf) {
     return (
       <div className="min-h-screen bg-netflix-black flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full" />
+        <div className="text-center text-white">
+          <div className="animate-spin w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full mx-auto mb-4" />
+          <p>{isLoadingPdf ? 'Loading your book...' : 'Loading...'}</p>
+        </div>
       </div>
     );
   }
@@ -253,14 +279,14 @@ export default function ReaderPage() {
               />
             </div>
           </Worker>
-        ) : (
+        ) : !accessError ? (
           <div className="flex items-center justify-center h-full text-white">
             <div className="text-center">
               <div className="animate-spin w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full mx-auto mb-4" />
               <p>Loading your book...</p>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
