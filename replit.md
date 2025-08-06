@@ -13,6 +13,8 @@ Wonderful Books is a subscription-based digital reading platform, akin to Netfli
 - **Premium PDF Reader**: Built Apple Books-inspired interface with auto-hide controls, dark/light mode, and smooth animations
 - **Version Compatibility**: Resolved PDF.js compatibility issues with matching versions (pdfjs-dist@3.11.174, react-pdf@7.7.1)
 - **Enhanced Error Handling**: Added robust handling for aborted requests and development server interruptions
+- **Login Redirect Fix**: Resolved frozen login panel issue - users now properly redirect to home page after successful authentication
+- **PDF Reader Authentication**: Fixed session-based authentication for PDF streaming and reading progress tracking
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.

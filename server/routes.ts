@@ -322,16 +322,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/progress', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { bookId, pageNumber, totalPages } = req.body;
+      const { bookId, pageNumber, currentPage, totalPages } = req.body;
+      const actualPageNumber = pageNumber || currentPage;
       
-      const progressPercentage = totalPages > 0 ? ((pageNumber / totalPages) * 100).toFixed(2) : "0.00";
+      console.log('Progress update request:', { bookId, pageNumber, currentPage, actualPageNumber, totalPages, userId });
       
-      const currentPageNum = parseInt(pageNumber, 10);
+      const progressPercentage = totalPages > 0 ? ((actualPageNumber / totalPages) * 100).toFixed(2) : "0.00";
+      
+      const currentPageNum = parseInt(actualPageNumber, 10);
       const totalPagesNum = parseInt(totalPages || 0, 10);
       
-      // Validate inputs to prevent NaN
-      if (isNaN(currentPageNum) || isNaN(totalPagesNum)) {
-        return res.status(400).json({ message: "Invalid page numbers" });
+      // Validate inputs to prevent NaN - but be more lenient
+      if (isNaN(currentPageNum) || currentPageNum < 1) {
+        console.log('Invalid currentPageNum:', currentPageNum, 'from actualPageNumber:', actualPageNumber);
+        return res.status(400).json({ message: "Invalid current page number" });
+      }
+      
+      if (isNaN(totalPagesNum) || totalPagesNum < 1) {
+        console.log('Invalid totalPagesNum:', totalPagesNum, 'from totalPages:', totalPages);
+        return res.status(400).json({ message: "Invalid total pages number" });
       }
       
       const progressData = {
