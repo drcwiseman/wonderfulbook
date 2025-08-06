@@ -93,7 +93,7 @@ export default function ReaderPage() {
   return (
     <PremiumPDFReader
       bookId={bookId}
-      bookTitle={book.title}
+      bookTitle={(book as any)?.title || 'Unknown Book'}
       initialPage={initialPage}
       onPageChange={handlePageChange}
       bookmarks={Array.isArray(bookmarks) ? bookmarks : []}

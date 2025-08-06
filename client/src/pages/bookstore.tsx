@@ -307,7 +307,9 @@ function BookCard({ book, layout }: BookCardProps) {
               <img
                 src={book.coverImageUrl || "/api/placeholder/120/160"}
                 alt={book.title}
-                className="w-20 h-28 object-cover rounded-md shadow-md"
+                className="w-20 h-28 object-cover rounded-md shadow-md retina-ready"
+                loading="lazy"
+                decoding="async"
               />
               {!book.hasAccess && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-md">
