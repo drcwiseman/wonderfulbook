@@ -22,8 +22,8 @@ function Router() {
         <>
           <Route path="/" component={Home} />
           <Route path="/book/:id" component={BookDetail} />
+          <Route path="/reader/:id" component={ReaderPage} />
           <Route path="/subscribe" component={Subscribe} />
-          <Route path="/reader/:bookId" component={ReaderPage} />
         </>
       )}
       <Route component={NotFound} />
