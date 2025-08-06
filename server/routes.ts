@@ -1034,8 +1034,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store token in memory with 5-minute expiry (in production, use Redis or database)
       if (!global.pdfTokens) global.pdfTokens = new Map();
-      global.pdfTokens.set(tokenKey, { userId, bookId, expires: Date.now() + 5 * 60 * 1000 });
-
+      const expiryTime = Date.now() + 5 * 60 * 1000;
+      global.pdfTokens.set(tokenKey, { userId, bookId, expires: expiryTime });
+      
+      console.log(`Generated PDF token ${tokenKey} for book ${bookId}, expires: ${new Date(expiryTime)}`);
       res.json({ token });
     } catch (error: any) {
       console.error("Error generating PDF token:", error);
@@ -1102,8 +1104,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!global.pdfTokens) global.pdfTokens = new Map();
       const tokenData = global.pdfTokens.get(tokenKey);
       
-      if (!tokenData || tokenData.expires < Date.now() || tokenData.bookId !== bookId) {
-        return res.status(401).json({ message: "Invalid or expired token" });
+      if (!tokenData) {
+        console.log(`Token not found: ${tokenKey}`);
+        return res.status(401).json({ message: "Token not found" });
+      }
+      
+      if (tokenData.expires < Date.now()) {
+        console.log(`Token expired: ${tokenKey}, expired ${new Date(tokenData.expires)}`);
+        global.pdfTokens.delete(tokenKey);
+        return res.status(401).json({ message: "Token expired" });
+      }
+      
+      if (tokenData.bookId !== bookId) {
+        console.log(`Token book mismatch: expected ${bookId}, got ${tokenData.bookId}`);
+        return res.status(401).json({ message: "Token book mismatch" });
       }
 
       // Get book details
@@ -1126,8 +1140,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Access-Control-Allow-Methods', 'GET');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
       
-      // Clean up used token
-      global.pdfTokens.delete(tokenKey);
+      // Don't clean up token immediately - let it expire naturally
+      // This allows for retry attempts during PDF loading
+      console.log(`PDF token ${tokenKey} used successfully for book ${bookId}`);
       
       // Stream the PDF buffer
       res.send(pdfBuffer);

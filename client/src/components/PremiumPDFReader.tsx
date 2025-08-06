@@ -45,12 +45,20 @@ export function PremiumPDFReader({
 
   // Get PDF access token on mount
   useEffect(() => {
+    let isCancelled = false;
+    
     const getPdfToken = async () => {
       try {
         const response = await apiRequest('POST', `/api/pdf-token/${bookId}`);
+        if (isCancelled) return;
+        
         const { token } = await response.json();
+        if (isCancelled) return;
+        
         setPdfUrl(`/api/stream-token/${token}/${bookId}`);
       } catch (error) {
+        if (isCancelled) return;
+        
         console.error('Error getting PDF token:', error);
         toast({
           title: "Access Error",
@@ -61,6 +69,10 @@ export function PremiumPDFReader({
     };
     
     getPdfToken();
+    
+    return () => {
+      isCancelled = true;
+    };
   }, [bookId, toast]);
 
   // Memoize PDF options and file config to prevent unnecessary reloads
@@ -162,6 +174,12 @@ export function PremiumPDFReader({
   function onDocumentLoadError(error: Error) {
     console.error('Error loading PDF:', error);
     setIsLoading(false);
+    
+    // Don't show error if component is unmounting or signal aborted
+    if (error.message.includes('aborted') || error.message.includes('AbortError')) {
+      console.log('PDF loading was cancelled - this is normal during navigation');
+      return;
+    }
     
     // Check if it's an authentication error
     if (error.message.includes('401') || error.message.includes('Unauthorized')) {
