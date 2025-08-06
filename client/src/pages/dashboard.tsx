@@ -97,8 +97,8 @@ export default function Dashboard() {
     );
   }
 
-  const currentTier = user?.subscriptionTier || 'free';
-  const subscriptionStatus = user?.subscriptionStatus || 'inactive';
+  const currentTier = (user as any)?.subscriptionTier || 'free';
+  const subscriptionStatus = (user as any)?.subscriptionStatus || 'inactive';
   
   // Tier configurations
   const tierConfig = {
@@ -108,7 +108,7 @@ export default function Dashboard() {
   };
 
   const currentConfig = tierConfig[currentTier as keyof typeof tierConfig] || tierConfig.free;
-  const booksRead = user?.booksReadThisMonth || 0;
+  const booksRead = (user as any)?.booksReadThisMonth || 0;
   const progressPercentage = currentTier === 'premium' ? 100 : 
     currentConfig.limit === 'Unlimited' ? 100 : (booksRead / (currentConfig.limit as number)) * 100;
 
@@ -119,11 +119,11 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <div className="h-16 w-16 rounded-full bg-blue-500 flex items-center justify-center text-white text-xl font-semibold">
-              {user?.firstName?.charAt(0) || 'U'}{user?.lastName?.charAt(0) || ''}
+              {(user as any)?.firstName?.charAt(0) || 'U'}{(user as any)?.lastName?.charAt(0) || ''}
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Welcome back, {user?.firstName || 'Reader'}!
+                Welcome back, {(user as any)?.firstName || 'Reader'}!
               </h1>
               <p className="text-gray-600 dark:text-gray-300">
                 Continue your learning journey
@@ -231,9 +231,9 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-                ) : readingHistory.length > 0 ? (
+                ) : Array.isArray(readingHistory) && readingHistory.length > 0 ? (
                   <div className="space-y-4">
-                    {readingHistory.slice(0, 5).map((progress: any) => (
+                    {(readingHistory as any[]).slice(0, 5).map((progress: any) => (
                       <div key={progress.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
                            onClick={() => setLocation(`/reader/${progress.bookId}`)}>
                         <div className="flex-1">
@@ -291,12 +291,12 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-300">Bookmarks</span>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">{bookmarks.length}</span>
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">{Array.isArray(bookmarks) ? bookmarks.length : 0}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-300">Active Since</span>
                   <span className="text-sm text-gray-900 dark:text-white">
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Recently'}
+                    {(user as any)?.createdAt ? new Date((user as any).createdAt).toLocaleDateString() : 'Recently'}
                   </span>
                 </div>
               </CardContent>
@@ -319,9 +319,9 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-                ) : bookmarks.length > 0 ? (
+                ) : Array.isArray(bookmarks) && bookmarks.length > 0 ? (
                   <div className="space-y-3">
-                    {bookmarks.slice(0, 5).map((bookmark: any) => (
+                    {(bookmarks as any[]).slice(0, 5).map((bookmark: any) => (
                       <div key={bookmark.id} className="text-sm">
                         <div className="font-medium text-gray-900 dark:text-white">
                           Page {bookmark.page}
