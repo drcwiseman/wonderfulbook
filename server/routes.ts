@@ -358,16 +358,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Serve uploaded files with proper subdirectory support
-  app.get('/uploads/:subfolder?/:filename', (req, res) => {
+  app.get('/uploads/:subfolder?/:filename?', (req, res) => {
     const subfolder = req.params.subfolder;
     const filename = req.params.filename;
     
     let filePath;
     if (subfolder && filename) {
+      // Two-level path: /uploads/images/file.jpg
       filePath = path.join(process.cwd(), 'uploads', subfolder, filename);
-    } else {
-      // If no subfolder, treat subfolder param as filename
+    } else if (subfolder) {
+      // Single-level path: /uploads/file.jpg
       filePath = path.join(process.cwd(), 'uploads', subfolder);
+    } else {
+      return res.status(404).json({ error: 'File path not specified' });
     }
     
     if (fs.existsSync(filePath)) {
@@ -407,6 +410,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating book:", error);
       res.status(500).json({ message: "Failed to create book" });
+    }
+  });
+
+  // Image upload route for admin
+  app.post('/api/admin/upload-image', isAuthenticated, isAdmin, upload.single('image'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No image file uploaded' });
+      }
+
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(process.cwd(), 'uploads/images');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      const fileExtension = path.extname(req.file.originalname);
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${fileExtension}`;
+      const filePath = path.join(uploadsDir, fileName);
+
+      fs.writeFileSync(filePath, req.file.buffer);
+
+      const imageUrl = `/uploads/images/${fileName}`;
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error('Image upload error:', error);
+      res.status(500).json({ error: 'Failed to upload image' });
     }
   });
 
