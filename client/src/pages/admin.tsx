@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -57,7 +57,6 @@ export default function AdminPanel() {
   const [editDescription, setEditDescription] = useState("");
   const [pdfFile, setPdfFile] = useState("");
 
-
   // Admin authorization check
   const isAdmin = (user as any)?.id === "45814604" || (user as any)?.email === "drcwiseman@gmail.com";
 
@@ -68,12 +67,20 @@ export default function AdminPanel() {
       rating: 4,
       coverImage: "",
       categories: [],
+      fileUrl: "",
     },
   });
 
   const editForm = useForm<EditBookForm>({
     resolver: zodResolver(editBookSchema),
   });
+
+  // Sync pdfFile with form fileUrl
+  useEffect(() => {
+    if (pdfFile) {
+      form.setValue("fileUrl", pdfFile);
+    }
+  }, [pdfFile, form]);
 
   // Fetch all books for management
   const { data: books = [], isLoading: booksLoading } = useQuery({
@@ -234,7 +241,18 @@ export default function AdminPanel() {
   }
 
   const onSubmit = (data: UploadForm) => {
-    createBookMutation.mutate(data);
+    console.log("Form submitted with data:", data);
+    console.log("Description:", description);
+    console.log("PDF File:", pdfFile);
+    console.log("Form errors:", form.formState.errors);
+    
+    // Set the fileUrl from the pdfFile state
+    const formDataWithFile = {
+      ...data,
+      fileUrl: pdfFile
+    };
+    
+    createBookMutation.mutate(formDataWithFile);
   };
 
   const onEditSubmit = (data: EditBookForm) => {
