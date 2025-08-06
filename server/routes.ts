@@ -682,7 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const currentUserId = req.user?.claims?.sub;
+      const currentUserId = (req.user as any)?.claims?.sub;
       
       // Prevent self-deletion
       if (id === currentUserId) {
@@ -700,7 +700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/admin/users/bulk', isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { userIds, updates } = req.body;
-      const currentUserId = req.user?.claims?.sub;
+      const currentUserId = (req.user as any)?.claims?.sub;
       
       // Prevent updating own account if role change
       if (updates.role && userIds.includes(currentUserId)) {
@@ -718,7 +718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/admin/users/bulk', isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { userIds } = req.body;
-      const currentUserId = req.user?.claims?.sub;
+      const currentUserId = (req.user as any)?.claims?.sub;
       
       // Prevent self-deletion
       if (userIds.includes(currentUserId)) {
@@ -759,7 +759,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { role } = req.body;
-      const currentUserId = req.user?.claims?.sub;
+      const currentUserId = (req.user as any)?.claims?.sub;
       
       // Prevent changing own role
       if (id === currentUserId) {

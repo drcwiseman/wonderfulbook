@@ -104,6 +104,10 @@ export function UserManagement() {
   const createForm = useForm<CreateUserForm>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
       role: "user",
       subscriptionTier: "free",
       subscriptionStatus: "active",
@@ -114,6 +118,15 @@ export function UserManagement() {
   // Edit user form
   const editForm = useForm<EditUserForm>({
     resolver: zodResolver(editUserSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      role: "user",
+      subscriptionTier: "free",
+      subscriptionStatus: "active",
+      isActive: true,
+    },
   });
 
   // Password reset form
