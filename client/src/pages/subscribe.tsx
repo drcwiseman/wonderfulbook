@@ -68,6 +68,8 @@ const SubscribeForm = ({ tier }: { tier: string }) => {
 export default function Subscribe() {
   const [clientSecret, setClientSecret] = useState("");
   const [selectedTier, setSelectedTier] = useState<string>("basic");
+  const [isCreatingSubscription, setIsCreatingSubscription] = useState(false);
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
 
@@ -94,6 +96,11 @@ export default function Subscribe() {
   }, [isAuthenticated, toast]);
 
   const handleTierSelection = async (tier: string) => {
+    if (isCreatingSubscription) return; // Prevent multiple clicks
+    
+    setIsCreatingSubscription(true);
+    setLoadingTier(tier);
+    
     if (tier === 'free') {
       try {
         await apiRequest("POST", "/api/create-subscription", { tier: 'free' });
@@ -108,6 +115,9 @@ export default function Subscribe() {
           description: "Failed to activate free trial",
           variant: "destructive",
         });
+      } finally {
+        setIsCreatingSubscription(false);
+        setLoadingTier(null);
       }
       return;
     }
@@ -124,6 +134,9 @@ export default function Subscribe() {
         description: "Failed to create subscription",
         variant: "destructive",
       });
+    } finally {
+      setIsCreatingSubscription(false);
+      setLoadingTier(null);
     }
   };
 
@@ -219,9 +232,17 @@ export default function Subscribe() {
               
               <Button 
                 onClick={() => handleTierSelection('free')}
-                className="w-full bg-trial-gray hover:bg-gray-600 text-white"
+                disabled={isCreatingSubscription}
+                className="w-full bg-trial-gray hover:bg-gray-600 text-white disabled:opacity-50"
               >
-                Start Free Trial
+                {loadingTier === 'free' ? (
+                  <>
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                    Setting up...
+                  </>
+                ) : (
+                  'Start Free Trial'
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -260,9 +281,17 @@ export default function Subscribe() {
               
               <Button 
                 onClick={() => handleTierSelection('basic')}
-                className="w-full bg-basic-purple hover:bg-purple-600 text-white"
+                disabled={isCreatingSubscription}
+                className="w-full bg-basic-purple hover:bg-purple-600 text-white disabled:opacity-50"
               >
-                Choose Basic
+                {loadingTier === 'basic' ? (
+                  <>
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                    Setting up...
+                  </>
+                ) : (
+                  'Choose Basic'
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -301,9 +330,17 @@ export default function Subscribe() {
               
               <Button 
                 onClick={() => handleTierSelection('premium')}
-                className="w-full bg-premium-gold hover:bg-yellow-400 text-netflix-black"
+                disabled={isCreatingSubscription}
+                className="w-full bg-premium-gold hover:bg-yellow-400 text-netflix-black disabled:opacity-50"
               >
-                Choose Premium
+                {loadingTier === 'premium' ? (
+                  <>
+                    <div className="animate-spin w-4 h-4 border-2 border-netflix-black border-t-transparent rounded-full mr-2" />
+                    Setting up...
+                  </>
+                ) : (
+                  'Choose Premium'
+                )}
               </Button>
             </CardContent>
           </Card>
