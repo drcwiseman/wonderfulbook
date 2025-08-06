@@ -10,6 +10,7 @@ import Dashboard from "@/pages/dashboard";
 import BookDetail from "@/pages/book-detail";
 import Subscribe from "@/pages/subscribe";
 import ReaderPage from "@/pages/reader";
+import AdminPanel from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/book/:id" component={BookDetail} />
       <Route path="/subscribe" component={Subscribe} />
       <Route path="/reader/:bookId" component={ReaderPage} />
+      <Route path="/admin/*" component={AdminPanel} />
       <Route component={NotFound} />
     </Switch>
   );

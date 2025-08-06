@@ -298,6 +298,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin middleware
+  const isAdmin = (req: any, res: any, next: any) => {
+    const userId = req.user?.claims?.sub;
+    const userEmail = req.user?.claims?.email;
+    
+    if (userId === "45814604" || userEmail === "drcwiseman@gmail.com") {
+      return next();
+    }
+    
+    return res.status(403).json({ message: "Admin access required" });
+  };
+
+  // Admin routes
+  app.get('/api/admin/books', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const books = await storage.getAllBooks();
+      res.json(books);
+    } catch (error) {
+      console.error("Error fetching books for admin:", error);
+      res.status(500).json({ message: "Failed to fetch books" });
+    }
+  });
+
+  app.get('/api/admin/analytics', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const analytics = await storage.getAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  app.post('/api/admin/upload', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      // TODO: Implement file upload with multer or similar
+      // For now, return success message
+      console.log('Book upload attempted:', req.body);
+      res.json({ message: "Upload functionality will be implemented", id: "placeholder" });
+    } catch (error) {
+      console.error("Error uploading book:", error);
+      res.status(500).json({ message: "Failed to upload book" });
+    }
+  });
+
+  app.patch('/api/admin/books/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const bookId = req.params.id;
+      const updates = req.body;
+      const book = await storage.updateBook(bookId, updates);
+      res.json(book);
+    } catch (error) {
+      console.error("Error updating book:", error);
+      res.status(500).json({ message: "Failed to update book" });
+    }
+  });
+
+  app.patch('/api/admin/books/bulk', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { bookIds, updates } = req.body;
+      await storage.bulkUpdateBooks(bookIds, updates);
+      res.json({ message: "Books updated successfully" });
+    } catch (error) {
+      console.error("Error bulk updating books:", error);
+      res.status(500).json({ message: "Failed to update books" });
+    }
+  });
+
   // Stripe subscription routes
   app.post('/api/create-subscription', isAuthenticated, async (req: any, res) => {
     try {

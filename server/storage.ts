@@ -43,6 +43,16 @@ export interface IStorage {
   updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User>;
   updateUserSubscription(userId: string, tier: string, status: string): Promise<User>;
   getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined>;
+  
+  // Admin operations
+  updateBook(id: string, updates: Partial<Book>): Promise<Book>;
+  bulkUpdateBooks(ids: string[], updates: Partial<Book>): Promise<void>;
+  getAnalytics(): Promise<{
+    totalUsers: number;
+    activeSubscriptions: number;
+    monthlyRevenue: number;
+    conversionRate: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -197,6 +207,97 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBookmark(id: string): Promise<void> {
     await db.delete(bookmarks).where(eq(bookmarks.id, id));
+  }
+
+  // Stripe and subscription operations (these were missing from implementation)
+  async updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        stripeCustomerId,
+        stripeSubscriptionId,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateUserSubscription(userId: string, tier: string, status: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        subscriptionTier: tier,
+        subscriptionStatus: status,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, stripeCustomerId));
+    return user;
+  }
+
+  // Admin operations
+  async updateBook(id: string, updates: Partial<Book>): Promise<Book> {
+    const [book] = await db
+      .update(books)
+      .set(updates)
+      .where(eq(books.id, id))
+      .returning();
+    return book;
+  }
+
+  async bulkUpdateBooks(ids: string[], updates: Partial<Book>): Promise<void> {
+    for (const id of ids) {
+      await db
+        .update(books)
+        .set(updates)
+        .where(eq(books.id, id));
+    }
+  }
+
+  async getAnalytics(): Promise<{
+    totalUsers: number;
+    activeSubscriptions: number;
+    monthlyRevenue: number;
+    conversionRate: number;
+  }> {
+    // Get total users
+    const totalUsersResult = await db.select().from(users);
+    const totalUsers = totalUsersResult.length;
+
+    // Get active subscriptions (users with premium/basic tier)
+    const activeSubscriptionsResult = await db
+      .select()
+      .from(users)
+      .where(or(eq(users.subscriptionTier, 'basic'), eq(users.subscriptionTier, 'premium')));
+    const activeSubscriptions = activeSubscriptionsResult.length;
+
+    // Calculate monthly revenue (basic: £9.99, premium: £19.99)
+    const basicSubscribers = await db
+      .select()
+      .from(users)
+      .where(eq(users.subscriptionTier, 'basic'));
+    const premiumSubscribers = await db
+      .select()
+      .from(users)
+      .where(eq(users.subscriptionTier, 'premium'));
+    
+    const monthlyRevenue = (basicSubscribers.length * 9.99) + (premiumSubscribers.length * 19.99);
+
+    // Calculate conversion rate (active subscriptions / total users)
+    const conversionRate = totalUsers > 0 ? Math.round((activeSubscriptions / totalUsers) * 100) : 0;
+
+    return {
+      totalUsers,
+      activeSubscriptions,
+      monthlyRevenue: Math.round(monthlyRevenue * 100) / 100, // Round to 2 decimal places
+      conversionRate,
+    };
   }
 }
 

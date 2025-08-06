@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2 } from "lucide-react";
@@ -36,7 +36,7 @@ export default function AdminPanel() {
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
 
   // Admin authorization check
-  const isAdmin = user?.id === "45814604" || user?.email === "drcwiseman@gmail.com";
+  const isAdmin = (user as any)?.id === "45814604" || (user as any)?.email === "drcwiseman@gmail.com";
 
   const form = useForm<UploadForm>({
     resolver: zodResolver(uploadSchema),
@@ -200,7 +200,7 @@ export default function AdminPanel() {
                         placeholder="Enter book title"
                       />
                       {form.formState.errors.title && (
-                        <p className="text-sm text-red-500">{form.formState.errors.title.message}</p>
+                        <p className="text-sm text-red-500">{form.formState.errors.title.message as string}</p>
                       )}
                     </div>
 
@@ -212,7 +212,7 @@ export default function AdminPanel() {
                         placeholder="Enter author name"
                       />
                       {form.formState.errors.author && (
-                        <p className="text-sm text-red-500">{form.formState.errors.author.message}</p>
+                        <p className="text-sm text-red-500">{form.formState.errors.author.message as string}</p>
                       )}
                     </div>
 
@@ -267,7 +267,7 @@ export default function AdminPanel() {
                         {...form.register("file")}
                       />
                       {form.formState.errors.file && (
-                        <p className="text-sm text-red-500">{form.formState.errors.file.message}</p>
+                        <p className="text-sm text-red-500">{form.formState.errors.file.message as string}</p>
                       )}
                     </div>
                   </div>
@@ -281,7 +281,7 @@ export default function AdminPanel() {
                       rows={4}
                     />
                     {form.formState.errors.description && (
-                      <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>
+                      <p className="text-sm text-red-500">{form.formState.errors.description.message as string}</p>
                     )}
                   </div>
 
@@ -344,7 +344,7 @@ export default function AdminPanel() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {books.map((book: any) => (
+                    {(books as any[]).map((book: any) => (
                       <div
                         key={book.id}
                         className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -406,7 +406,7 @@ export default function AdminPanel() {
                     <Users className="w-5 h-5 text-blue-600" />
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-300">Total Users</p>
-                      <p className="text-2xl font-bold">{analytics?.totalUsers || 0}</p>
+                      <p className="text-2xl font-bold">{(analytics as any)?.totalUsers || 0}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -417,7 +417,7 @@ export default function AdminPanel() {
                     <TrendingUp className="w-5 h-5 text-green-600" />
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-300">Active Subscriptions</p>
-                      <p className="text-2xl font-bold">{analytics?.activeSubscriptions || 0}</p>
+                      <p className="text-2xl font-bold">{(analytics as any)?.activeSubscriptions || 0}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -428,7 +428,7 @@ export default function AdminPanel() {
                     <DollarSign className="w-5 h-5 text-yellow-600" />
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-300">Monthly Revenue</p>
-                      <p className="text-2xl font-bold">£{analytics?.monthlyRevenue || 0}</p>
+                      <p className="text-2xl font-bold">£{(analytics as any)?.monthlyRevenue || 0}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -439,7 +439,7 @@ export default function AdminPanel() {
                     <Book className="w-5 h-5 text-purple-600" />
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-300">Conversion Rate</p>
-                      <p className="text-2xl font-bold">{analytics?.conversionRate || 0}%</p>
+                      <p className="text-2xl font-bold">{(analytics as any)?.conversionRate || 0}%</p>
                     </div>
                   </div>
                 </CardContent>
