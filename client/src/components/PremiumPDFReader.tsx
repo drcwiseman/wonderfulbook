@@ -41,7 +41,27 @@ export function PremiumPDFReader({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const pdfUrl = `/api/stream/${bookId}`;
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  // Get PDF access token on mount
+  useEffect(() => {
+    const getPdfToken = async () => {
+      try {
+        const response = await apiRequest('POST', `/api/pdf-token/${bookId}`);
+        const { token } = await response.json();
+        setPdfUrl(`/api/stream-token/${token}/${bookId}`);
+      } catch (error) {
+        console.error('Error getting PDF token:', error);
+        toast({
+          title: "Access Error",
+          description: "Failed to get book access. Please try refreshing the page.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    getPdfToken();
+  }, [bookId, toast]);
 
   // Memoize PDF options and file config to prevent unnecessary reloads
   const pdfOptions = useMemo(() => ({
@@ -52,13 +72,16 @@ export function PremiumPDFReader({
     disableStream: false
   }), []);
 
-  const pdfFile = useMemo(() => ({
-    url: pdfUrl,
-    httpHeaders: {
-      'X-Requested-With': 'XMLHttpRequest',
-    },
-    withCredentials: true
-  }), [pdfUrl]);
+  const pdfFile = useMemo(() => {
+    if (!pdfUrl) return null;
+    return {
+      url: pdfUrl,
+      httpHeaders: {
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      withCredentials: false // No credentials needed for token-based access
+    };
+  }, [pdfUrl]);
 
   // Check if current page is bookmarked
   useEffect(() => {
@@ -143,10 +166,14 @@ export function PremiumPDFReader({
     // Check if it's an authentication error
     if (error.message.includes('401') || error.message.includes('Unauthorized')) {
       toast({
-        title: "Authentication Required",
-        description: "Please log in to access this book",
+        title: "Authentication Required", 
+        description: "Please refresh the page to log in again",
         variant: "destructive",
       });
+      // Redirect to login after showing error
+      setTimeout(() => {
+        window.location.href = '/api/login';
+      }, 2000);
     } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
       toast({
         title: "Upgrade Required",
@@ -156,7 +183,7 @@ export function PremiumPDFReader({
     } else {
       toast({
         title: "Error loading book",
-        description: "Failed to load PDF file. Please try refreshing the page.",
+        description: "Connection issue. Please try refreshing the page.",
         variant: "destructive",
       });
     }
@@ -396,15 +423,18 @@ export function PremiumPDFReader({
 
       {/* Main Content */}
       <div className="h-full pt-20 flex items-center justify-center overflow-auto">
-        {isLoading && (
+        {(isLoading || !pdfUrl) && (
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-            <span className={`ml-3 text-lg ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>Loading book...</span>
+            <span className={`ml-3 text-lg ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
+              {!pdfUrl ? 'Getting book access...' : 'Loading book...'}
+            </span>
           </div>
         )}
 
-        <Document
-          file={pdfFile}
+        {pdfFile && (
+          <Document
+            file={pdfFile}
           onLoadSuccess={onDocumentLoadSuccess}
           onLoadError={onDocumentLoadError}
           loading=""
@@ -436,7 +466,8 @@ export function PremiumPDFReader({
               />
             </div>
           )}
-        </Document>
+          </Document>
+        )}
       </div>
 
       {/* Bottom Progress Bar */}

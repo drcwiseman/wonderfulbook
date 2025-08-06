@@ -998,6 +998,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Secure PDF streaming endpoint
+  // Generate temporary access token for PDF streaming
+  app.post("/api/pdf-token/:bookId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { bookId } = req.params;
+      const userId = req.user.claims.sub;
+
+      // Get book details to verify access
+      const book = await storage.getBook(bookId);
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Check subscription tier access
+      const userTier = user?.subscriptionTier || 'free';
+      const canAccess = checkBookAccess(userTier, book.requiredTier || 'free');
+      
+      if (!canAccess) {
+        return res.status(403).json({ 
+          message: `This book requires ${book.requiredTier} subscription. Your current tier: ${userTier}`,
+          requiredTier: book.requiredTier,
+          currentTier: userTier
+        });
+      }
+
+      // Create temporary access token (simple approach for demo)
+      const token = `${userId}-${bookId}-${Date.now()}`;
+      const tokenKey = `pdf_token_${token}`;
+      
+      // Store token in memory with 5-minute expiry (in production, use Redis or database)
+      if (!global.pdfTokens) global.pdfTokens = new Map();
+      global.pdfTokens.set(tokenKey, { userId, bookId, expires: Date.now() + 5 * 60 * 1000 });
+
+      res.json({ token });
+    } catch (error: any) {
+      console.error("Error generating PDF token:", error);
+      res.status(500).json({ message: "Failed to generate access token" });
+    }
+  });
+
   app.get("/api/stream/:bookId", isAuthenticated, async (req: any, res) => {
     try {
       const { bookId } = req.params;
@@ -1043,6 +1088,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
     } catch (error: any) {
       console.error("Error streaming PDF:", error);
+      res.status(500).json({ message: "Failed to stream PDF" });
+    }
+  });
+
+  // Token-based PDF streaming (no authentication middleware)
+  app.get("/api/stream-token/:token/:bookId", async (req, res) => {
+    try {
+      const { token, bookId } = req.params;
+      const tokenKey = `pdf_token_${token}`;
+
+      // Check if token exists and is valid
+      if (!global.pdfTokens) global.pdfTokens = new Map();
+      const tokenData = global.pdfTokens.get(tokenKey);
+      
+      if (!tokenData || tokenData.expires < Date.now() || tokenData.bookId !== bookId) {
+        return res.status(401).json({ message: "Invalid or expired token" });
+      }
+
+      // Get book details
+      const book = await storage.getBook(bookId);
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+
+      // For demo purposes, we'll generate a sample PDF with the book content
+      const pdfBuffer = await generateSamplePDF(book);
+      
+      // Set security headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Disposition', 'inline');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      
+      // Clean up used token
+      global.pdfTokens.delete(tokenKey);
+      
+      // Stream the PDF buffer
+      res.send(pdfBuffer);
+      
+    } catch (error: any) {
+      console.error("Error streaming PDF with token:", error);
       res.status(500).json({ message: "Failed to stream PDF" });
     }
   });
