@@ -32,9 +32,8 @@ export default function Header() {
               <a href="/bookstore" className="text-white hover:text-orange-300 transition-colors font-medium">Book Store</a>
               {isAuthenticated && (
                 <>
+                  <a href="/library" className="text-white hover:text-orange-300 transition-colors font-medium">My Library</a>
                   <a href="/dashboard" className="text-white hover:text-orange-300 transition-colors font-medium">Dashboard</a>
-                  <a href="#my-books" className="text-white hover:text-orange-300 transition-colors font-medium">My Books</a>
-                  <a href="#bookmarks" className="text-white hover:text-orange-300 transition-colors font-medium">Bookmarks</a>
                 </>
               )}
             </div>
@@ -148,8 +147,8 @@ export default function Header() {
               <a href="/bookstore" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">Book Store</a>
               {isAuthenticated && (
                 <>
-                  <a href="#my-books" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">My Books</a>
-                  <a href="#bookmarks" className="block py-2 text-white hover:text-orange-300 text-lg font-medium">Bookmarks</a>
+                  <a href="/library" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">My Library</a>
+                  <a href="/dashboard" className="block py-2 text-white hover:text-orange-300 text-lg font-medium">Dashboard</a>
                 </>
               )}
             </nav>

@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import BookStore from "@/pages/bookstore";
+import Library from "@/pages/library";
 import Dashboard from "@/pages/dashboard";
 import BookDetail from "@/pages/book-detail";
 import Subscribe from "@/pages/subscribe";
@@ -21,6 +22,7 @@ function Router() {
     <Switch>
       <Route path="/">{isLoading || !isAuthenticated ? <Landing /> : <Home />}</Route>
       <Route path="/bookstore" component={BookStore} />
+      <Route path="/library" component={Library} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/book/:id" component={BookDetail} />
       <Route path="/subscribe" component={Subscribe} />

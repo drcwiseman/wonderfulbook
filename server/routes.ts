@@ -71,6 +71,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User reading progress endpoint for library
+  app.get('/api/user/reading-progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const progress = await storage.getUserReadingProgress(userId);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching user reading progress:", error);
+      res.status(500).json({ message: "Failed to fetch reading progress" });
+    }
+  });
+
   app.get('/api/books/:id', async (req, res) => {
     try {
       const book = await storage.getBook(req.params.id);

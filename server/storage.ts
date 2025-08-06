@@ -298,6 +298,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(readingProgress.lastReadAt));
   }
 
+  async getUserReadingProgress(userId: string): Promise<ReadingProgress[]> {
+    return await db
+      .select()
+      .from(readingProgress)
+      .where(eq(readingProgress.userId, userId))
+      .orderBy(desc(readingProgress.lastReadAt));
+  }
+
   // Bookmark operations
   async getUserBookmarks(userId: string, bookId?: string): Promise<Bookmark[]> {
     const conditions = [eq(bookmarks.userId, userId)];
