@@ -1133,23 +1133,8 @@ async function generateSamplePDF(book: any): Promise<Buffer> {
   const PDFKit = await import('pdfkit');
   const PDFDocument = PDFKit.default;
   
-  // Create PDF with proper font settings
-  const doc = new PDFDocument({
-    font: 'Helvetica',
-    size: 'A4',
-    margins: {
-      top: 50,
-      bottom: 50,
-      left: 50,
-      right: 50
-    },
-    info: {
-      Title: book.title,
-      Author: book.author,
-      Subject: book.description,
-      Keywords: book.category
-    }
-  });
+  // Create PDF with basic options only
+  const doc = new PDFDocument();
   
   const chunks: Buffer[] = [];
   doc.on('data', (chunk: Buffer) => chunks.push(chunk));
