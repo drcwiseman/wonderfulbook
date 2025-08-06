@@ -70,20 +70,20 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 text-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 text-gray-900">
       <Header />
       
       {/* Modern Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-br from-rose-400/10 via-orange-400/15 to-amber-400/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-orange-400/5 to-orange-300/10"></div>
         <div 
           className="absolute inset-0 opacity-10"
           style={{
@@ -93,9 +93,9 @@ export default function Home() {
 
         <div className="relative z-10 container mx-auto px-6 text-center">
           <div className="max-w-5xl mx-auto">
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight bg-gradient-to-r from-gray-800 via-orange-600 to-rose-600 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight bg-gradient-to-r from-gray-900 via-orange-600 to-orange-500 bg-clip-text text-transparent">
               Transform Your Mind with
-              <span className="block text-rose-500">Life-Changing Books</span>
+              <span className="block text-orange-500">Life-Changing Books</span>
             </h1>
             
             <p className="text-xl md:text-2xl mb-12 text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -105,25 +105,25 @@ export default function Home() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
-              <Card className="bg-white/80 border-rose-200 backdrop-blur-sm shadow-lg">
+              <Card className="bg-white border-orange-300 backdrop-blur-sm shadow-lg">
                 <CardContent className="p-6 text-center">
-                  <BookOpen className="w-8 h-8 text-rose-500 mx-auto mb-3" />
-                  <div className="text-3xl font-bold text-gray-800 mb-1">1000+</div>
-                  <div className="text-gray-600">Premium Books</div>
+                  <BookOpen className="w-8 h-8 text-orange-500 mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-gray-900 mb-1">1000+</div>
+                  <div className="text-gray-700">Premium Books</div>
                 </CardContent>
               </Card>
-              <Card className="bg-white/80 border-orange-200 backdrop-blur-sm shadow-lg">
+              <Card className="bg-white border-orange-300 backdrop-blur-sm shadow-lg">
                 <CardContent className="p-6 text-center">
                   <Users className="w-8 h-8 text-orange-500 mx-auto mb-3" />
-                  <div className="text-3xl font-bold text-gray-800 mb-1">50K+</div>
-                  <div className="text-gray-600">Active Readers</div>
+                  <div className="text-3xl font-bold text-gray-900 mb-1">50K+</div>
+                  <div className="text-gray-700">Active Readers</div>
                 </CardContent>
               </Card>
-              <Card className="bg-white/80 border-amber-200 backdrop-blur-sm shadow-lg">
+              <Card className="bg-white border-orange-300 backdrop-blur-sm shadow-lg">
                 <CardContent className="p-6 text-center">
-                  <Award className="w-8 h-8 text-amber-500 mx-auto mb-3" />
-                  <div className="text-3xl font-bold text-gray-800 mb-1">4.9★</div>
-                  <div className="text-gray-600">User Rating</div>
+                  <Award className="w-8 h-8 text-orange-500 mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-gray-900 mb-1">4.9★</div>
+                  <div className="text-gray-700">User Rating</div>
                 </CardContent>
               </Card>
             </div>
@@ -133,7 +133,7 @@ export default function Home() {
                 <>
                   <Button 
                     onClick={() => window.location.href = "/dashboard"}
-                    className="bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     <BookOpen className="w-5 h-5 mr-2" />
                     Continue Reading
@@ -141,7 +141,7 @@ export default function Home() {
                   <Button 
                     variant="outline"
                     onClick={() => window.location.href = "#featured"}
-                    className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg backdrop-blur-sm border-white/30"
+                    className="bg-white/10 hover:bg-orange-50 text-orange-600 hover:text-orange-700 px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg backdrop-blur-sm border-orange-400"
                   >
                     <PlayCircle className="w-5 h-5 mr-2" />
                     Explore Library
@@ -151,7 +151,7 @@ export default function Home() {
                 <>
                   <Button 
                     onClick={() => window.location.href = "/api/login"}
-                    className="bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     <Zap className="w-5 h-5 mr-2" />
                     Start Free Trial
@@ -159,7 +159,7 @@ export default function Home() {
                   <Button 
                     variant="outline"
                     onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg backdrop-blur-sm border-white/30"
+                    className="bg-white/10 hover:bg-orange-50 text-orange-600 hover:text-orange-700 px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg backdrop-blur-sm border-orange-400"
                   >
                     View Pricing
                     <ArrowRight className="w-5 h-5 ml-2" />
@@ -175,16 +175,16 @@ export default function Home() {
       {isAuthenticated && (
         <section className="py-8">
           <div className="container mx-auto px-6">
-            <Card className="bg-white/90 border-rose-200 backdrop-blur-sm shadow-lg">
+            <Card className="bg-white border-orange-300 backdrop-blur-sm shadow-lg">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row items-center justify-between">
                   <div className="flex items-center space-x-4 mb-4 md:mb-0">
                     {(user as any)?.subscriptionTier === 'premium' && (
                       <>
-                        <Crown className="w-8 h-8 text-yellow-400" />
+                        <Crown className="w-8 h-8 text-orange-500" />
                         <div>
-                          <div className="text-xl font-bold text-white">Premium Member</div>
-                          <div className="text-gray-300">Unlimited access to all books</div>
+                          <div className="text-xl font-bold text-gray-900">Premium Member</div>
+                          <div className="text-gray-600">Unlimited access to all books</div>
                         </div>
                       </>
                     )}
@@ -218,7 +218,7 @@ export default function Home() {
                     {((user as any)?.subscriptionTier === 'free' || !(user as any)?.subscriptionTier) && (
                       <Button 
                         onClick={() => window.location.href = "/subscribe"}
-                        className="bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600"
+                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
                       >
                         Upgrade Now
                       </Button>
@@ -235,7 +235,7 @@ export default function Home() {
       <section className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
               Discover Our Premium Book Collection
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -253,10 +253,10 @@ export default function Home() {
       </section>
 
       {/* Value Proposition Section */}
-      <section className="py-20 bg-gradient-to-r from-rose-100/50 to-orange-100/50">
+      <section className="py-20 bg-gradient-to-r from-orange-100/50 to-orange-50/50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
               Why Choose Wonderful Books?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -265,37 +265,37 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <Card className="bg-white/90 border-rose-200 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg">
+            <Card className="bg-white border-orange-300 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg">
               <CardHeader className="text-center pb-3">
-                <Shield className="w-12 h-12 text-rose-500 mx-auto mb-4" />
-                <CardTitle className="text-2xl text-gray-800">Curated Quality</CardTitle>
+                <Shield className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+                <CardTitle className="text-2xl text-gray-900">Curated Quality</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed">
                   Every book is hand-selected by our expert team. Only the highest quality content that delivers real value and transformation.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/90 border-orange-200 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg">
+            <Card className="bg-white border-orange-300 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg">
               <CardHeader className="text-center pb-3">
                 <Clock className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-                <CardTitle className="text-2xl text-gray-800">Read Anywhere</CardTitle>
+                <CardTitle className="text-2xl text-gray-900">Read Anywhere</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed">
                   Seamless reading across all your devices. Pick up exactly where you left off, whether on phone, tablet, or computer.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/90 border-amber-200 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg">
+            <Card className="bg-white border-orange-300 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg">
               <CardHeader className="text-center pb-3">
-                <TrendingUp className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-                <CardTitle className="text-2xl text-gray-800">Track Progress</CardTitle>
+                <TrendingUp className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+                <CardTitle className="text-2xl text-gray-900">Track Progress</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed">
                   Advanced analytics show your reading habits, progress, and achievements. Turn reading into a rewarding journey.
                 </p>
               </CardContent>
@@ -308,7 +308,7 @@ export default function Home() {
       <section id="pricing" className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
               Choose Your Reading Journey
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
