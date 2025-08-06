@@ -1,0 +1,148 @@
+🔍 1. ✅ FRONTEND AUDIT
+✅ UI/UX & Responsiveness
+ Does the homepage render correctly on mobile, tablet, and desktop?
+
+ Are book images scaling properly across devices?
+
+ Are hover effects, buttons, and cards working smoothly?
+
+ Are category shelves horizontally scrollable (Netflix-style)?
+
+ Are transitions and animations clean (Framer Motion, etc.)?
+
+✅ Navigation
+ Can a user log in and log out cleanly?
+
+ Can they browse by category?
+
+ Can they access a book detail page from the homepage?
+
+ Are the “Start Trial,” “Subscribe,” or “Read Now” buttons clearly visible and functional?
+
+✅ Reader Page
+ Does /read/:bookId load the correct book?
+
+ Does it remember last page?
+
+ Can the user navigate pages?
+
+ Are bookmarks visible and working?
+
+ Is the toolbar hiding/showing on tap/swipe for mobile?
+
+🔍 2. ✅ BACKEND AUDIT (Express + PostgreSQL)
+✅ API Health
+ GET /api/books returns correct data grouped by category
+
+ GET /api/book/:id returns detailed metadata
+
+ GET /api/stream/:bookId securely streams PDF content only to authorized users
+
+ GET /api/progress/:bookId and POST /api/progress work correctly
+
+ GET /api/bookmarks/:bookId and POST /api/bookmarks are functional
+
+✅ Authentication
+ Is Replit Auth working?
+
+ Are protected routes returning 401 when unauthenticated?
+
+ Is JWT or Replit Auth properly enforced on book reading and subscription endpoints?
+
+✅ Access Control
+ Free users can access only 3 trial books
+
+ Basic users can access 10 books per month
+
+ Premium users have full access
+
+ PDF access route checks the user’s tier correctly
+
+🔍 3. ✅ PDF SECURITY AUDIT
+ PDFs load only through the /api/stream/:bookId route
+
+ Right-click, print, and download are all disabled on the reader
+
+ There are no exposed links to raw PDF files in DevTools
+
+ Access to PDFs without auth returns 401 or 403
+
+🔍 4. ✅ SUBSCRIPTION FLOW (Stripe Integration)
+✅ Stripe Checkout
+ Can a user select and purchase a plan via Stripe?
+
+ Stripe Checkout or Portal loads with correct plan info?
+
+ After payment, user is redirected back and subscription tier updates in DB?
+
+✅ Webhooks
+ Stripe webhook is listening and working for:
+
+checkout.session.completed
+
+invoice.payment_succeeded
+
+customer.subscription.updated
+
+customer.subscription.deleted
+
+ Subscription status and plan are updated in your users or subscriptions table?
+
+🔍 5. ✅ DATABASE INTEGRITY (Drizzle + PostgreSQL)
+ Are the following tables correctly structured and populated?
+
+bash
+Copy
+Edit
+users
+books
+subscriptions
+reading_progress
+bookmarks
+ Are foreign key relationships working (userId → subscriptions, reading_progress, bookmarks)?
+
+ No duplicate or orphaned rows?
+
+ Tier information in books and users is accurate?
+
+🔐 6. ✅ SECURITY CHECKLIST
+ All backend routes that modify data are protected by auth middleware
+
+ API keys (Stripe, etc.) are stored securely in Replit secrets
+
+ No hardcoded test values or tokens are in code
+
+ Sensitive routes (e.g., /api/stream, /api/bookmarks) are not publicly accessible without auth
+
+ Reader does not expose PDF file path in <iframe> or dev tools
+
+ CORS settings are correctly configured for your frontend origin
+
+🚦 7. ✅ PERFORMANCE & SEO
+ Does the app load quickly on first load?
+
+ Are images (book covers) optimized (webp, lazy loaded)?
+
+ No console errors or red warnings in browser dev tools?
+
+ Mobile Lighthouse score is at least 85+?
+
+ Meta title, description, favicon, and manifest file are set?
+
+🌐 8. ✅ DOMAIN & DEPLOYMENT (REPLIT)
+ Is the project hosted via Replit’s public hosting?
+
+ Is HTTPS working properly?
+
+ Custom domain (if any) connected and SSL secured?
+
+ .replit and replit.nix files are configured for production?
+
+✅ FINAL LAUNCH CHECK
+ Create a test user (trial), test plan restrictions
+
+ Create a Stripe test user, subscribe to Basic + Premium
+
+ Log in on mobile and test reading, navigation, bookmarking
+
+ Review visual polish: padding, margins, font size, responsiveness
