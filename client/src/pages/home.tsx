@@ -189,10 +189,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Books Section */}
-      <section id="featured" className="py-16">
-        <FeaturedBooks />
-      </section>
+
 
       {/* Value Proposition Section */}
       <section className="py-20 bg-gradient-to-r from-orange-100/50 to-orange-50/50">
