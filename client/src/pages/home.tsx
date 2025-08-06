@@ -3,178 +3,213 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Star, Play, Plus, Info, ChevronRight, Filter } from "lucide-react";
+import { BookOpen, Star, Play, CheckCircle, Crown, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
-// Category Row Component - Netflix style
-function CategoryRow({ title, books, category }: { title: string; books: any[]; category?: string }) {
-  const categoryBooks = category ? books.filter(book => book.category === category) : books;
-  
-  if (categoryBooks.length === 0) return null;
+// Featured Books Section
+function FeaturedBooks() {
+  const { data: booksData = [] } = useQuery({
+    queryKey: ["/api/books"],
+  });
+
+  const books = Array.isArray(booksData) ? booksData : [];
+  const featuredBooks = books.slice(0, 3);
 
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-white">{title}</h2>
-        <Button variant="ghost" className="text-gray-400 hover:text-white">
-          See All <ChevronRight className="w-4 h-4 ml-1" />
-        </Button>
-      </div>
-      
-      <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-        {categoryBooks.slice(0, 10).map((book: any) => (
-          <BookCard key={book.id} book={book} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Individual Book Card - Netflix style
-function BookCard({ book }: { book: any }) {
-  return (
-    <div className="group relative flex-shrink-0 w-48 cursor-pointer">
-      <div className="relative aspect-[2/3] bg-gray-800 rounded-lg overflow-hidden transition-transform duration-300 group-hover:scale-105">
-        {book.coverImageUrl ? (
-          <img
-            src={book.coverImageUrl}
-            alt={book.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
-            <BookOpen className="w-12 h-12 text-white/80" />
-          </div>
-        )}
+    <div className="py-16">
+      <div className="container mx-auto px-6">
+        <h2 className="text-3xl font-bold text-white mb-8 text-center">
+          Books That Change Lives
+        </h2>
+        <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+          Discover transformational books chosen by experts to unlock your potential
+        </p>
         
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300">
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <Button size="sm" className="bg-white text-black hover:bg-gray-200">
-              <Play className="w-4 h-4 mr-1" />
-              Read
-            </Button>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {featuredBooks.map((book: any) => (
+            <Card key={book.id} className="bg-gray-900 border-gray-800 hover:bg-gray-800 transition-colors">
+              <CardContent className="p-0">
+                <div className="aspect-[3/4] bg-gray-800 rounded-t-lg overflow-hidden">
+                  {book.coverImageUrl ? (
+                    <img
+                      src={book.coverImageUrl}
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
+                      <BookOpen className="w-16 h-16 text-white/80" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    {book.tier && book.tier !== 'free' && (
+                      <Badge className="bg-orange-600 text-white text-xs">
+                        {book.tier === 'premium' ? 'Premium' : 'Popular'}
+                      </Badge>
+                    )}
+                    {book.rating && (
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                        <span className="text-white text-sm">{book.rating}</span>
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="text-white font-semibold mb-2 line-clamp-2">
+                    {book.title}
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-4">by {book.author}</p>
+                  <Button 
+                    onClick={() => window.location.href = `/reader/${book.id}`}
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Start Reading
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        
-        {/* Rating badge */}
-        {book.rating && (
-          <div className="absolute top-2 left-2">
-            <Badge variant="secondary" className="bg-black/70 text-white text-xs">
-              <Star className="w-3 h-3 mr-1" />
-              {book.rating}
-            </Badge>
-          </div>
-        )}
-        
-        {/* Tier badge */}
-        {book.tier && book.tier !== 'free' && (
-          <div className="absolute top-2 right-2">
-            <Badge className="bg-orange-600 text-white text-xs">
-              {book.tier === 'premium' ? 'PREMIUM' : 'BASIC'}
-            </Badge>
-          </div>
-        )}
-      </div>
-      
-      {/* Book info */}
-      <div className="mt-2 space-y-1">
-        <h3 className="text-white font-medium text-sm line-clamp-2 group-hover:text-orange-400 transition-colors">
-          {book.title}
-        </h3>
-        <p className="text-gray-400 text-xs">{book.author}</p>
-        {book.category && (
-          <p className="text-gray-500 text-xs capitalize">{book.category}</p>
-        )}
       </div>
     </div>
   );
 }
 
-// Featured Hero Section
-function FeaturedHero({ book }: { book: any }) {
-  if (!book) return null;
-
+// Pricing Section
+function PricingSection() {
   return (
-    <div className="relative h-[80vh] min-h-[600px] bg-gradient-to-r from-black via-black/90 to-transparent">
-      {/* Background image */}
-      <div className="absolute inset-0">
-        {book.coverImageUrl ? (
-          <img
-            src={book.coverImageUrl}
-            alt={book.title}
-            className="w-full h-full object-cover opacity-30"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-orange-900 to-red-900 opacity-30" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent" />
-      </div>
-      
-      {/* Content */}
-      <div className="relative z-10 container mx-auto px-6 h-full flex items-center">
-        <div className="max-w-2xl">
-          <div className="mb-4">
-            <Badge className="bg-orange-600 text-white mb-2">
-              FEATURED
-            </Badge>
-            {book.category && (
-              <Badge variant="outline" className="border-gray-500 text-gray-300 ml-2">
-                {book.category}
-              </Badge>
-            )}
-          </div>
-          
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 leading-tight">
-            {book.title}
-          </h1>
-          
-          <p className="text-xl text-gray-300 mb-2">
-            by {book.author}
+    <div className="py-20">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-white mb-4">Choose Your Plan</h2>
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            Start with our free trial, then choose the plan that fits your transformation journey
           </p>
-          
-          {book.description && (
-            <p className="text-lg text-gray-400 mb-8 line-clamp-3 max-w-xl">
-              {book.description}
-            </p>
-          )}
-          
-          <div className="flex items-center gap-4 mb-8">
-            {book.rating && (
-              <div className="flex items-center gap-1">
-                <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                <span className="text-white font-medium">{book.rating}</span>
-                <span className="text-gray-400">/ 5</span>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex gap-4">
-            <Button 
-              onClick={() => window.location.href = `/reader/${book.id}`}
-              className="bg-white text-black hover:bg-gray-200 px-8 py-3 text-lg font-semibold"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              Read Now
-            </Button>
-            <Button 
-              variant="outline"
-              className="border-gray-500 text-white hover:bg-gray-800 px-8 py-3 text-lg"
-            >
-              <Info className="w-5 h-5 mr-2" />
-              More Info
-            </Button>
-            <Button 
-              variant="ghost"
-              className="text-white hover:bg-gray-800 px-4 py-3"
-            >
-              <Plus className="w-6 h-6" />
-            </Button>
-          </div>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {/* Free Trial */}
+          <Card className="bg-gray-900 border-gray-700 relative">
+            <CardHeader className="text-center pb-3">
+              <CardTitle className="text-2xl text-white">Free Trial</CardTitle>
+              <div className="text-4xl font-bold text-white mt-4">
+                £0
+                <span className="text-lg font-normal text-gray-400 block">7 days free</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center text-gray-300">
+                  <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                  Access to 3 books
+                </li>
+                <li className="flex items-center text-gray-300">
+                  <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                  Full reading experience
+                </li>
+                <li className="flex items-center text-gray-300">
+                  <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                  No commitment
+                </li>
+              </ul>
+              <Button 
+                onClick={() => window.location.href = "/api/login"}
+                className="w-full bg-gray-700 hover:bg-gray-600 text-white"
+              >
+                Start Free Trial
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Basic Plan */}
+          <Card className="bg-gray-900 border-orange-500 relative">
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+              <Badge className="bg-orange-600 text-white px-4 py-1">Most Popular</Badge>
+            </div>
+            <CardHeader className="text-center pb-3">
+              <CardTitle className="text-2xl text-white">Basic</CardTitle>
+              <div className="text-4xl font-bold text-white mt-4">
+                £9.99
+                <span className="text-lg font-normal text-gray-400 block">per month</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center text-gray-300">
+                  <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                  Access to 50 books monthly
+                </li>
+                <li className="flex items-center text-gray-300">
+                  <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                  Bookmark & annotations
+                </li>
+                <li className="flex items-center text-gray-300">
+                  <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                  Progress tracking
+                </li>
+                <li className="flex items-center text-gray-300">
+                  <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                  Cancel anytime
+                </li>
+              </ul>
+              <Button 
+                onClick={() => window.location.href = "/subscribe"}
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                Get Started
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Premium Plan */}
+          <Card className="bg-gray-900 border-gray-700 relative">
+            <CardHeader className="text-center pb-3">
+              <CardTitle className="text-2xl text-white flex items-center justify-center gap-2">
+                <Crown className="w-6 h-6 text-yellow-400" />
+                Premium
+              </CardTitle>
+              <div className="text-4xl font-bold text-white mt-4">
+                £19.99
+                <span className="text-lg font-normal text-gray-400 block">per month</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center text-gray-300">
+                  <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                  Unlimited access to all books
+                </li>
+                <li className="flex items-center text-gray-300">
+                  <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                  Priority customer support
+                </li>
+                <li className="flex items-center text-gray-300">
+                  <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                  Advanced analytics
+                </li>
+                <li className="flex items-center text-gray-300">
+                  <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                  Early access to new books
+                </li>
+              </ul>
+              <Button 
+                onClick={() => window.location.href = "/subscribe"}
+                className="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-semibold"
+              >
+                Go Premium
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <p className="text-center text-gray-400 mt-8">
+          All plans include secure PDF streaming, mobile access, and the ability to cancel anytime.
+        </p>
       </div>
     </div>
   );
@@ -184,7 +219,7 @@ export default function Home() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
 
-  // Redirect to home if not authenticated
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -199,10 +234,6 @@ export default function Home() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: booksData = [] } = useQuery({
-    queryKey: ["/api/books"],
-  });
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -211,44 +242,62 @@ export default function Home() {
     );
   }
 
-  const books = Array.isArray(booksData) ? booksData : [];
-  const featuredBook = books.find((book: any) => book.rating >= 4.5) || books[0];
-  const categories = ['Self-Improvement', 'Business', 'Psychology', 'Leadership', 'Health'];
-
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
       
-      {/* Featured Hero */}
-      <FeaturedHero book={featuredBook} />
-      
-      {/* Content Rows */}
-      <div className="relative z-10 bg-black pt-8">
-        <div className="container mx-auto px-6 space-y-8">
+      {/* Hero Section */}
+      <section className="relative pt-24 pb-16">
+        <div className="container mx-auto px-6 text-center">
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
+            Transform Your Life
+          </h1>
+          <h2 className="text-4xl md:text-5xl font-bold text-orange-400 mb-8">
+            Through Reading
+          </h2>
+          <p className="text-xl text-gray-400 mb-12 max-w-3xl mx-auto">
+            Unlimited access to thousands of books. Read anywhere, anytime. No downloads required.
+          </p>
           
-          {/* Continue Reading */}
-          {isAuthenticated && (
-            <CategoryRow title="Continue Reading" books={books.slice(0, 5)} />
-          )}
-          
-          {/* Popular Now */}
-          <CategoryRow title="Popular Now" books={books.filter((book: any) => book.rating >= 4.0)} />
-          
-          {/* Category Rows */}
-          {categories.map(category => (
-            <CategoryRow 
-              key={category}
-              title={category}
-              books={books}
-              category={category.toLowerCase()}
-            />
-          ))}
-          
-          {/* All Books */}
-          <CategoryRow title="All Books" books={books} />
-          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <Button 
+              onClick={() => window.location.href = "/api/login"}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 text-lg font-semibold"
+            >
+              <Zap className="w-5 h-5 mr-2" />
+              Start Free Trial
+            </Button>
+            <Button 
+              variant="outline"
+              className="border-gray-500 text-white hover:bg-gray-800 px-8 py-4 text-lg"
+            >
+              Browse Library
+            </Button>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-orange-400 mb-2">171+</div>
+              <div className="text-gray-400">Life-Changing Books</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-orange-400 mb-2">27+</div>
+              <div className="text-gray-400">Curated Categories</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-orange-400 mb-2">∞</div>
+              <div className="text-gray-400">Growth Possibilities</div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Featured Books */}
+      <FeaturedBooks />
+
+      {/* Pricing Section */}
+      <PricingSection />
       
       <Footer />
     </div>
