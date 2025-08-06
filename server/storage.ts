@@ -39,9 +39,49 @@ export interface IStorage {
   getUserBookmarks(userId: string, bookId?: string): Promise<Bookmark[]>;
   createBookmark(bookmark: InsertBookmark): Promise<Bookmark>;
   deleteBookmark(id: string): Promise<void>;
+  
+  // Stripe and subscription operations
+  updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User>;
+  updateUserSubscription(userId: string, tier: string, status: string): Promise<User>;
+  getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
+  // Stripe and subscription operations
+  async updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User> {
+    const updateData: any = { stripeCustomerId, updatedAt: new Date() };
+    if (stripeSubscriptionId !== undefined) {
+      updateData.stripeSubscriptionId = stripeSubscriptionId;
+    }
+    
+    const [user] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateUserSubscription(userId: string, tier: string, status: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        subscriptionTier: tier,
+        subscriptionStatus: status,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.stripeCustomerId, stripeCustomerId));
+    return user;
+  }
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

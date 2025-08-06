@@ -168,7 +168,7 @@ export default function Dashboard() {
                     <div className="flex space-x-2">
                       <Button
                         size="sm"
-                        onClick={() => createSubscriptionMutation.mutate('basic')}
+                        onClick={() => setLocation('/subscribe?tier=basic')}
                         disabled={createSubscriptionMutation.isPending}
                       >
                         Upgrade to Basic
@@ -176,7 +176,7 @@ export default function Dashboard() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => createSubscriptionMutation.mutate('premium')}
+                        onClick={() => setLocation('/subscribe?tier=premium')}
                         disabled={createSubscriptionMutation.isPending}
                       >
                         Go Premium

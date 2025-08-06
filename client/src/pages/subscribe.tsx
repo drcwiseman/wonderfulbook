@@ -64,9 +64,18 @@ const SubscribeForm = ({ tier }: { tier: string }) => {
 
 export default function Subscribe() {
   const [clientSecret, setClientSecret] = useState("");
-  const [selectedTier, setSelectedTier] = useState<string>("");
+  const [selectedTier, setSelectedTier] = useState<string>("basic");
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Get tier from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const tier = urlParams.get('tier');
+    if (tier && ['basic', 'premium'].includes(tier)) {
+      handleTierSelection(tier);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
