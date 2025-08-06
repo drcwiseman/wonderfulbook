@@ -254,14 +254,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Alternative bookmark route with bookId in path for React Query compatibility
+  app.get('/api/bookmarks/:bookId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId } = req.params;
+      console.log('Fetching bookmarks via path for user:', userId, 'book:', bookId);
+      const bookmarks = await storage.getUserBookmarks(userId, bookId);
+      res.json(bookmarks);
+    } catch (error) {
+      console.error("Error fetching bookmarks:", error);
+      res.status(500).json({ message: "Failed to fetch bookmarks" });
+    }
+  });
+
   app.post('/api/bookmarks', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log('Creating bookmark for user:', userId, 'data:', req.body);
       const bookmarkData = {
         ...req.body,
         userId,
       };
       const bookmark = await storage.createBookmark(bookmarkData);
+      console.log('Bookmark created successfully:', bookmark.id);
       res.json(bookmark);
     } catch (error) {
       console.error("Error creating bookmark:", error);
@@ -271,7 +287,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/bookmarks/:id', isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      console.log('Deleting bookmark:', req.params.id, 'for user:', userId);
       await storage.deleteBookmark(req.params.id);
+      console.log('Bookmark deleted successfully:', req.params.id);
       res.json({ message: "Bookmark deleted successfully" });
     } catch (error) {
       console.error("Error deleting bookmark:", error);
