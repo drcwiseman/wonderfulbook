@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
+import Dashboard from "@/pages/dashboard";
 import BookDetail from "@/pages/book-detail";
 import Subscribe from "@/pages/subscribe";
 import ReaderPage from "@/pages/reader";
@@ -17,6 +18,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/">{isLoading || !isAuthenticated ? <Landing /> : <Home />}</Route>
+      <Route path="/dashboard" component={Dashboard} />
       <Route path="/book/:id" component={BookDetail} />
       <Route path="/subscribe" component={Subscribe} />
       <Route path="/reader/:bookId" component={ReaderPage} />

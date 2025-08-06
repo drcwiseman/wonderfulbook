@@ -96,11 +96,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { bookId, currentPage, totalPages, progressPercentage } = req.body;
       
+      const currentPageNum = parseInt(currentPage, 10);
+      const totalPagesNum = parseInt(totalPages, 10);
+      
+      // Validate inputs to prevent NaN
+      if (isNaN(currentPageNum) || isNaN(totalPagesNum)) {
+        return res.status(400).json({ message: "Invalid page numbers" });
+      }
+      
       const progressData = {
         userId,
         bookId,
-        currentPage: parseInt(currentPage, 10),
-        totalPages: parseInt(totalPages, 10),
+        currentPage: currentPageNum,
+        totalPages: totalPagesNum,
         progressPercentage: String(progressPercentage),
         lastReadAt: new Date(),
       };
@@ -121,11 +129,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const progressPercentage = totalPages > 0 ? ((pageNumber / totalPages) * 100).toFixed(2) : "0.00";
       
+      const currentPageNum = parseInt(pageNumber, 10);
+      const totalPagesNum = parseInt(totalPages || 0, 10);
+      
+      // Validate inputs to prevent NaN
+      if (isNaN(currentPageNum) || isNaN(totalPagesNum)) {
+        return res.status(400).json({ message: "Invalid page numbers" });
+      }
+      
       const progressData = {
         userId,
         bookId,
-        currentPage: parseInt(pageNumber, 10),
-        totalPages: parseInt(totalPages || 0, 10),
+        currentPage: currentPageNum,
+        totalPages: totalPagesNum,
         progressPercentage,
         lastReadAt: new Date(),
       };
@@ -162,6 +178,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching last read page:", error);
       res.status(500).json({ message: "Failed to fetch last read page" });
+    }
+  });
+
+  // Dashboard API endpoint
+  app.get('/api/user/dashboard', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get reading statistics
+      const readingHistory = await storage.getUserReadingHistory(userId);
+      const bookmarks = await storage.getUserBookmarks(userId);
+      
+      res.json({
+        user,
+        readingHistory: readingHistory.slice(0, 10), // Last 10 books
+        bookmarks: bookmarks.slice(0, 10), // Recent bookmarks
+        stats: {
+          booksInProgress: readingHistory.length,
+          totalBookmarks: bookmarks.length,
+          currentTier: user.subscriptionTier || 'free',
+          subscriptionStatus: user.subscriptionStatus || 'inactive'
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard data" });
+    }
+  });
+
+  // Get reading history
+  app.get('/api/reading-history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const history = await storage.getUserReadingHistory(userId);
+      
+      // Fetch book details for each progress entry
+      const historyWithBooks = await Promise.all(
+        history.map(async (progress) => {
+          const book = await storage.getBook(progress.bookId);
+          return {
+            ...progress,
+            book
+          };
+        })
+      );
+      
+      res.json(historyWithBooks);
+    } catch (error) {
+      console.error("Error fetching reading history:", error);
+      res.status(500).json({ message: "Failed to fetch reading history" });
     }
   });
 
