@@ -13,7 +13,7 @@ function BookShowcaseForLanding() {
     queryKey: ["/api/books"],
   });
 
-  const showcaseBooks = books.slice(0, 6); // Show first 6 books
+  const showcaseBooks = (books as any[]).slice(0, 6); // Show first 6 books
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-6xl mx-auto">
@@ -48,13 +48,13 @@ function BookShowcaseForLanding() {
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-900 via-red-900 to-amber-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 text-gray-800">
       <Header />
       
       {/* Modern Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-800/30 via-red-800/30 to-amber-800/40"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-rose-400/10 via-orange-400/15 to-amber-400/10"></div>
         <div 
           className="absolute inset-0 opacity-10"
           style={{
@@ -64,37 +64,37 @@ export default function Landing() {
 
         <div className="relative z-10 container mx-auto px-6 text-center">
           <div className="max-w-5xl mx-auto">
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight bg-gradient-to-r from-white via-orange-100 to-amber-100 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight bg-gradient-to-r from-gray-800 via-orange-600 to-rose-600 bg-clip-text text-transparent">
               Transform Your Mind with
-              <span className="block text-orange-300">Life-Changing Books</span>
+              <span className="block text-rose-500">Life-Changing Books</span>
             </h1>
             
-            <p className="text-xl md:text-2xl mb-12 text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl mb-12 text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Access thousands of carefully curated self-improvement and educational books. 
               Read anywhere, grow everywhere. Join thousands of readers transforming their lives daily.
             </p>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
-              <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+              <Card className="bg-white/80 border-rose-200 backdrop-blur-sm shadow-lg">
                 <CardContent className="p-6 text-center">
-                  <BookOpen className="w-8 h-8 text-orange-400 mx-auto mb-3" />
-                  <div className="text-3xl font-bold text-white mb-1">1000+</div>
-                  <div className="text-gray-400">Premium Books</div>
+                  <BookOpen className="w-8 h-8 text-rose-500 mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-gray-800 mb-1">1000+</div>
+                  <div className="text-gray-600">Premium Books</div>
                 </CardContent>
               </Card>
-              <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+              <Card className="bg-white/80 border-orange-200 backdrop-blur-sm shadow-lg">
                 <CardContent className="p-6 text-center">
-                  <Users className="w-8 h-8 text-amber-400 mx-auto mb-3" />
-                  <div className="text-3xl font-bold text-white mb-1">50K+</div>
-                  <div className="text-gray-400">Active Readers</div>
+                  <Users className="w-8 h-8 text-orange-500 mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-gray-800 mb-1">50K+</div>
+                  <div className="text-gray-600">Active Readers</div>
                 </CardContent>
               </Card>
-              <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+              <Card className="bg-white/80 border-amber-200 backdrop-blur-sm shadow-lg">
                 <CardContent className="p-6 text-center">
-                  <Award className="w-8 h-8 text-yellow-300 mx-auto mb-3" />
-                  <div className="text-3xl font-bold text-white mb-1">4.9★</div>
-                  <div className="text-gray-400">User Rating</div>
+                  <Award className="w-8 h-8 text-amber-500 mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-gray-800 mb-1">4.9★</div>
+                  <div className="text-gray-600">User Rating</div>
                 </CardContent>
               </Card>
             </div>
@@ -102,7 +102,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 onClick={() => window.location.href = "/api/login"}
-                className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <Zap className="w-5 h-5 mr-2" />
                 Start Free Trial
@@ -124,10 +124,10 @@ export default function Landing() {
       <section className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
               Discover Our Premium Book Collection
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Handpicked titles from world-renowned authors and thought leaders. Experience the quality that sets us apart.
             </p>
           </div>
@@ -142,13 +142,13 @@ export default function Landing() {
       </section>
 
       {/* Value Proposition Section */}
-      <section className="py-20 bg-gradient-to-r from-orange-900/20 to-red-900/20">
+      <section className="py-20 bg-gradient-to-r from-rose-100/50 to-orange-100/50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
               Why Choose Wonderful Books?
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               We've crafted the perfect reading experience for modern learners and book enthusiasts
             </p>
           </div>
@@ -197,10 +197,10 @@ export default function Landing() {
       <section id="pricing" className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-transparent">
               Choose Your Reading Journey
             </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Flexible plans designed for every type of reader. Start free, upgrade anytime.
             </p>
           </div>
@@ -275,7 +275,7 @@ export default function Landing() {
                 </div>
                 <Button 
                   onClick={() => window.location.href = "/api/login"}
-                  className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white mt-6"
+                  className="w-full bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white mt-6"
                 >
                   Choose Basic
                 </Button>
