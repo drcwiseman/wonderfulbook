@@ -279,7 +279,7 @@ export default function BookDetail() {
                   <Badge variant="secondary" className="mb-4">{book.category}</Badge>
                   
                   <Button 
-                    onClick={() => setLocation(`/reader/${id}`)}
+                    onClick={() => setLocation(`/reader/${params?.id}`)}
                     className="w-full bg-netflix-red hover:bg-red-700 text-white mb-4"
                   >
                     Read Now
