@@ -54,9 +54,15 @@ interface User {
   subscriptionTier: string;
   subscriptionStatus: string;
   isActive: boolean;
-  booksReadThisMonth: number;
+  booksReadThisMonth?: number;
   createdAt: string;
+  updatedAt?: string;
   lastLoginAt?: string;
+  profileImageUrl?: string;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: string;
 }
 
 export function UserManagement() {
@@ -68,10 +74,13 @@ export function UserManagement() {
   const queryClient = useQueryClient();
 
   // Fetch users
-  const { data: users = [], isLoading } = useQuery({
+  const { data: usersResponse, isLoading } = useQuery({
     queryKey: ["/api/admin/users", searchQuery],
     queryFn: () => apiRequest("GET", `/api/admin/users${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}`),
   });
+
+  // Ensure users is always an array
+  const users = Array.isArray(usersResponse) ? usersResponse : [];
 
   // Fetch user analytics
   const { data: userAnalytics } = useQuery({
@@ -550,7 +559,10 @@ export function UserManagement() {
                     <TableCell>
                       <div>
                         <div className="font-medium">
-                          {user.firstName} {user.lastName}
+                          {(user.firstName || user.lastName) 
+                            ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
+                            : user.email.split('@')[0]
+                          }
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {user.email}
@@ -558,24 +570,24 @@ export function UserManagement() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getRoleBadge(user.role)}>
-                        {user.role}
+                      <Badge className={getRoleBadge(user.role || "user")}>
+                        {user.role || "user"}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getSubscriptionBadge(user.subscriptionTier, user.subscriptionStatus)}>
-                        {user.subscriptionTier}
+                      <Badge className={getSubscriptionBadge(user.subscriptionTier || "free", user.subscriptionStatus || "active")}>
+                        {user.subscriptionTier || "free"}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Switch
-                        checked={user.isActive}
+                        checked={user.isActive !== false}
                         onCheckedChange={(isActive) => 
                           toggleStatusMutation.mutate({ userId: user.id, isActive })
                         }
                       />
                     </TableCell>
-                    <TableCell>{user.booksReadThisMonth}</TableCell>
+                    <TableCell>{user.booksReadThisMonth || 0}</TableCell>
                     <TableCell>
                       {new Date(user.createdAt).toLocaleDateString()}
                     </TableCell>
