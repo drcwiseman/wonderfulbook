@@ -268,8 +268,9 @@ export default function Home() {
               Start Free Trial
             </Button>
             <Button 
+              onClick={() => window.location.href = "/dashboard"}
               variant="outline"
-              className="border-gray-500 text-white hover:bg-gray-800 px-8 py-4 text-lg"
+              className="border-gray-500 text-white hover:bg-gray-800 px-8 py-4 text-lg font-semibold"
             >
               Browse Library
             </Button>
@@ -278,7 +279,7 @@ export default function Home() {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="text-center">
-              <div className="text-4xl font-bold text-orange-400 mb-2">171+</div>
+              <div className="text-4xl font-bold text-orange-400 mb-2">200+</div>
               <div className="text-gray-400">Life-Changing Books</div>
             </div>
             <div className="text-center">
