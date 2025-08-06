@@ -5,6 +5,9 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertBookSchema } from "@shared/schema";
 import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -298,6 +301,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Configure multer for file uploads
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'));
+      }
+    },
+  });
+
   // Admin middleware
   const isAdmin = (req: any, res: any, next: any) => {
     const userId = req.user?.claims?.sub;
@@ -309,6 +328,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     return res.status(403).json({ message: "Admin access required" });
   };
+
+  // Admin image upload route
+  app.post('/api/admin/upload-image', isAuthenticated, isAdmin, upload.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      // For now, we'll save to a simple uploads directory
+      // In production, you'd want to use cloud storage
+      const uploadsDir = path.join(process.cwd(), 'uploads');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      const fileExtension = path.extname(req.file.originalname);
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${fileExtension}`;
+      const filePath = path.join(uploadsDir, fileName);
+
+      fs.writeFileSync(filePath, req.file.buffer);
+
+      const imageUrl = `/uploads/${fileName}`;
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error('Image upload error:', error);
+      res.status(500).json({ error: 'Failed to upload image' });
+    }
+  });
+
+  // Serve uploaded files
+  app.get('/uploads/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(process.cwd(), 'uploads', filename);
+    
+    if (fs.existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      res.status(404).json({ error: 'File not found' });
+    }
+  });
 
   // Admin routes
   app.get('/api/admin/books', isAuthenticated, isAdmin, async (req: any, res) => {
@@ -328,6 +387,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching analytics:", error);
       res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // Create new book with enhanced features
+  app.post('/api/admin/books', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const validatedData = insertBookSchema.parse(req.body);
+      const book = await storage.createBook(validatedData);
+      res.json(book);
+    } catch (error) {
+      console.error("Error creating book:", error);
+      res.status(500).json({ message: "Failed to create book" });
     }
   });
 

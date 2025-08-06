@@ -14,7 +14,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2 } from "lucide-react";
+import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X } from "lucide-react";
+import { RichTextEditor } from "@/components/RichTextEditor";
+import { ImageUploader } from "@/components/ImageUploader";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 
 const uploadSchema = z.object({
@@ -24,16 +27,31 @@ const uploadSchema = z.object({
   category: z.string().min(1, "Category is required"),
   tier: z.enum(["free", "basic", "premium"]),
   rating: z.number().min(1).max(5),
+  coverImage: z.string().optional(),
   file: z.any().refine((file) => file?.length > 0, "PDF file is required"),
 });
 
+const editBookSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  author: z.string().min(1, "Author is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  category: z.string().min(1, "Category is required"),
+  tier: z.enum(["free", "basic", "premium"]),
+  rating: z.number().min(1).max(5),
+  coverImage: z.string().optional(),
+  isVisible: z.boolean().optional(),
+});
+
 type UploadForm = z.infer<typeof uploadSchema>;
+type EditBookForm = z.infer<typeof editBookSchema>;
 
 export default function AdminPanel() {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
+  const [editingBook, setEditingBook] = useState<any>(null);
+  const [description, setDescription] = useState("");
 
   // Admin authorization check
   const isAdmin = (user as any)?.id === "45814604" || (user as any)?.email === "drcwiseman@gmail.com";
@@ -43,7 +61,12 @@ export default function AdminPanel() {
     defaultValues: {
       tier: "free",
       rating: 4,
+      coverImage: "",
     },
+  });
+
+  const editForm = useForm<EditBookForm>({
+    resolver: zodResolver(editBookSchema),
   });
 
   // Fetch all books for management
@@ -58,45 +81,83 @@ export default function AdminPanel() {
     enabled: isAdmin,
   });
 
-  // Upload mutation
-  const uploadMutation = useMutation({
+  // Create book mutation
+  const createBookMutation = useMutation({
     mutationFn: async (data: UploadForm) => {
-      const formData = new FormData();
-      formData.append("title", data.title);
-      formData.append("author", data.author);
-      formData.append("description", data.description);
-      formData.append("category", data.category);
-      formData.append("tier", data.tier);
-      formData.append("rating", data.rating.toString());
-      formData.append("file", data.file[0]);
-
-      const response = await fetch("/api/admin/upload", {
-        method: "POST",
-        body: formData,
+      return apiRequest("POST", "/api/admin/books", {
+        title: data.title,
+        author: data.author,
+        description: description,
+        category: data.category,
+        tier: data.tier,
+        rating: data.rating,
+        coverImage: data.coverImage,
+        fileUrl: "placeholder.pdf", // For now, placeholder until file upload is implemented
       });
-
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
-
-      return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Book uploaded successfully!",
+        description: "Book created successfully!",
       });
       form.reset();
+      setDescription("");
       queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
     },
     onError: (error: any) => {
       toast({
-        title: "Upload Failed",
+        title: "Creation Failed",
         description: error.message,
         variant: "destructive",
       });
     },
   });
+
+  // Edit book mutation
+  const editBookMutation = useMutation({
+    mutationFn: async (data: EditBookForm & { id: string }) => {
+      return apiRequest("PATCH", `/api/admin/books/${data.id}`, {
+        title: data.title,
+        author: data.author,
+        description: data.description,
+        category: data.category,
+        tier: data.tier,
+        rating: data.rating,
+        coverImage: data.coverImage,
+        isVisible: data.isVisible,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Book updated successfully!",
+      });
+      setEditingBook(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle edit book
+  const handleEditBook = (book: any) => {
+    setEditingBook(book);
+    editForm.reset({
+      title: book.title,
+      author: book.author,
+      description: book.description,
+      category: book.category,
+      tier: book.tier,
+      rating: book.rating,
+      coverImage: book.coverImage || "",
+      isVisible: book.isVisible,
+    });
+  };
 
   // Toggle book visibility
   const toggleVisibilityMutation = useMutation({
@@ -149,7 +210,13 @@ export default function AdminPanel() {
   }
 
   const onSubmit = (data: UploadForm) => {
-    uploadMutation.mutate(data);
+    createBookMutation.mutate(data);
+  };
+
+  const onEditSubmit = (data: EditBookForm) => {
+    if (editingBook) {
+      editBookMutation.mutate({ ...data, id: editingBook.id });
+    }
   };
 
   const handleBulkTierUpdate = (tier: string) => {
@@ -215,7 +282,29 @@ export default function AdminPanel() {
                         <p className="text-sm text-red-500">{form.formState.errors.author.message as string}</p>
                       )}
                     </div>
+                  </div>
 
+                  {/* Image Upload */}
+                  <ImageUploader
+                    value={form.watch("coverImage")}
+                    onChange={(imageUrl) => form.setValue("coverImage", imageUrl)}
+                    label="Cover Image"
+                  />
+
+                  {/* Rich Text Description */}
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <RichTextEditor
+                      content={description}
+                      onChange={setDescription}
+                      placeholder="Enter book description with rich formatting..."
+                    />
+                    {description.length < 10 && (
+                      <p className="text-sm text-red-500">Description must be at least 10 characters</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="category">Category</Label>
                       <Select onValueChange={(value) => form.setValue("category", value)}>
@@ -272,25 +361,12 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      {...form.register("description")}
-                      placeholder="Enter book description..."
-                      rows={4}
-                    />
-                    {form.formState.errors.description && (
-                      <p className="text-sm text-red-500">{form.formState.errors.description.message as string}</p>
-                    )}
-                  </div>
-
                   <Button
                     type="submit"
-                    disabled={uploadMutation.isPending}
+                    disabled={createBookMutation.isPending}
                     className="w-full md:w-auto"
                   >
-                    {uploadMutation.isPending ? "Uploading..." : "Upload Book"}
+                    {createBookMutation.isPending ? "Creating..." : "Create Book"}
                   </Button>
                 </form>
               </CardContent>
@@ -381,6 +457,13 @@ export default function AdminPanel() {
                           <Button
                             size="sm"
                             variant="ghost"
+                            onClick={() => handleEditBook(book)}
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             onClick={() => toggleVisibilityMutation.mutate({
                               bookId: book.id,
                               visible: !book.visible
@@ -461,6 +544,112 @@ export default function AdminPanel() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Book Dialog */}
+        <Dialog open={!!editingBook} onOpenChange={() => setEditingBook(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Book</DialogTitle>
+              <DialogDescription>
+                Update book information and settings
+              </DialogDescription>
+            </DialogHeader>
+            {editingBook && (
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-title">Title</Label>
+                    <Input
+                      id="edit-title"
+                      {...editForm.register("title")}
+                      placeholder="Enter book title"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-author">Author</Label>
+                    <Input
+                      id="edit-author"
+                      {...editForm.register("author")}
+                      placeholder="Enter author name"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea
+                    {...editForm.register("description")}
+                    placeholder="Enter book description..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-category">Category</Label>
+                    <Select onValueChange={(value) => editForm.setValue("category", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="self-improvement">Self Improvement</SelectItem>
+                        <SelectItem value="business">Business</SelectItem>
+                        <SelectItem value="productivity">Productivity</SelectItem>
+                        <SelectItem value="psychology">Psychology</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                        <SelectItem value="leadership">Leadership</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-tier">Subscription Tier</Label>
+                    <Select onValueChange={(value) => editForm.setValue("tier", value as any)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select tier" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free Trial</SelectItem>
+                        <SelectItem value="basic">Basic (£9.99)</SelectItem>
+                        <SelectItem value="premium">Premium (£19.99)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-rating">Rating (1-5)</Label>
+                    <Input
+                      id="edit-rating"
+                      type="number"
+                      min="1"
+                      max="5"
+                      {...editForm.register("rating", { valueAsNumber: true })}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-visible"
+                    checked={editForm.watch("isVisible")}
+                    onCheckedChange={(checked) => editForm.setValue("isVisible", !!checked)}
+                  />
+                  <Label htmlFor="edit-visible">Book is visible to users</Label>
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setEditingBook(null)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={editBookMutation.isPending}>
+                    {editBookMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
