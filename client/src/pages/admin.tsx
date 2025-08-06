@@ -348,10 +348,16 @@ export default function AdminPanel() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <Card className="w-96">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 space-y-4">
             <p className="text-center text-gray-600 dark:text-gray-300">
               Please log in to access the admin panel.
             </p>
+            <Button 
+              className="w-full" 
+              onClick={() => window.location.href = '/api/login'}
+            >
+              Log In
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -829,7 +835,13 @@ export default function AdminPanel() {
               </DialogDescription>
             </DialogHeader>
             {editingBook && (
-              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <form 
+                onSubmit={(e) => {
+                  console.log("Form onSubmit triggered");
+                  editForm.handleSubmit(onEditSubmit)(e);
+                }} 
+                className="space-y-4"
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-title">Title</Label>
@@ -945,7 +957,16 @@ export default function AdminPanel() {
                   <Button type="button" variant="outline" onClick={() => setEditingBook(null)}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={editBookMutation.isPending}>
+                  <Button 
+                    type="submit" 
+                    disabled={editBookMutation.isPending}
+                    onClick={(e) => {
+                      console.log("Save Changes button clicked");
+                      console.log("Form valid:", editForm.formState.isValid);
+                      console.log("Form errors:", editForm.formState.errors);
+                      console.log("Form values:", editForm.getValues());
+                    }}
+                  >
                     {editBookMutation.isPending ? "Saving..." : "Save Changes"}
                   </Button>
                 </DialogFooter>
