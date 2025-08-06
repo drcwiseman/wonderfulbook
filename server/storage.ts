@@ -61,6 +61,7 @@ export interface IStorage {
   // Admin operations
   updateBook(id: string, updates: Partial<Book>): Promise<Book>;
   bulkUpdateBooks(ids: string[], updates: Partial<Book>): Promise<void>;
+  toggleFeatured(bookId: string, isFeatured: boolean): Promise<Book>;
   getAnalytics(): Promise<{
     totalUsers: number;
     activeSubscriptions: number;
@@ -416,6 +417,15 @@ export class DatabaseStorage implements IStorage {
   async removeBookCategory(bookId: string, categoryId: string): Promise<void> {
     await db.delete(bookCategories)
       .where(and(eq(bookCategories.bookId, bookId), eq(bookCategories.categoryId, categoryId)));
+  }
+
+  async toggleFeatured(bookId: string, isFeatured: boolean): Promise<Book> {
+    const [book] = await db
+      .update(books)
+      .set({ isFeatured, updatedAt: new Date() })
+      .where(eq(books.id, bookId))
+      .returning();
+    return book;
   }
 }
 

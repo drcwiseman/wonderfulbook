@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X, AlertTriangle } from "lucide-react";
+import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X, AlertTriangle, Star } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RichTextEditor } from "@/components/RichTextEditor";
@@ -32,6 +32,7 @@ const uploadSchema = z.object({
   rating: z.number().min(1).max(5),
   coverImage: z.string().optional(),
   fileUrl: z.string().min(1, "PDF file is required"),
+  isFeatured: z.boolean().optional(),
 });
 
 const editBookSchema = z.object({
@@ -43,6 +44,7 @@ const editBookSchema = z.object({
   rating: z.number().min(1).max(5),
   coverImage: z.string().optional(),
   isVisible: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
 });
 
 type UploadForm = z.infer<typeof uploadSchema>;
@@ -173,6 +175,7 @@ export default function AdminPanel() {
         rating: data.rating,
         coverImage: data.coverImage || "",
         fileUrl: pdfFile,
+        isFeatured: data.isFeatured || false,
       });
     },
     onSuccess: () => {
@@ -210,6 +213,7 @@ export default function AdminPanel() {
         rating: data.rating,
         coverImage: data.coverImage,
         isVisible: data.isVisible,
+        isFeatured: data.isFeatured,
       });
     },
     onSuccess: () => {
@@ -243,6 +247,7 @@ export default function AdminPanel() {
       rating: book.rating,
       coverImage: book.coverImage || "",
       isVisible: book.isVisible,
+      isFeatured: book.isFeatured || false,
     });
   };
 
@@ -253,6 +258,27 @@ export default function AdminPanel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+    },
+  });
+
+  // Toggle featured status
+  const toggleFeaturedMutation = useMutation({
+    mutationFn: async ({ bookId, isFeatured }: { bookId: string; isFeatured: boolean }) => {
+      return apiRequest("PATCH", `/api/admin/books/${bookId}/featured`, { isFeatured });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Featured status updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update featured status",
+        variant: "destructive",
+      });
     },
   });
 
@@ -502,7 +528,18 @@ export default function AdminPanel() {
                       />
                     </div>
 
+                  </div>
 
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="featured"
+                      checked={form.watch("isFeatured") || false}
+                      onCheckedChange={(checked) => form.setValue("isFeatured", checked as boolean)}
+                    />
+                    <Label htmlFor="featured" className="flex items-center space-x-2">
+                      <Star className="w-4 h-4 text-yellow-500" />
+                      <span>Mark as Featured (will appear on home page)</span>
+                    </Label>
                   </div>
 
                   <Button
@@ -640,6 +677,24 @@ export default function AdminPanel() {
                           }>
                             {book.tier}
                           </Badge>
+                          {book.isFeatured && (
+                            <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600">
+                              <Star className="w-3 h-3 mr-1" />
+                              Featured
+                            </Badge>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => toggleFeaturedMutation.mutate({
+                              bookId: book.id,
+                              isFeatured: !book.isFeatured
+                            })}
+                            disabled={toggleFeaturedMutation.isPending}
+                            className={book.isFeatured ? "text-yellow-600 hover:text-yellow-700" : "text-gray-400 hover:text-yellow-600"}
+                          >
+                            <Star className={`w-4 h-4 ${book.isFeatured ? "fill-current" : ""}`} />
+                          </Button>
                           <Button
                             size="sm"
                             variant="ghost"
@@ -841,13 +896,27 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="edit-visible"
-                    checked={editForm.watch("isVisible")}
-                    onCheckedChange={(checked) => editForm.setValue("isVisible", !!checked)}
-                  />
-                  <Label htmlFor="edit-visible">Book is visible to users</Label>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-visible"
+                      checked={editForm.watch("isVisible")}
+                      onCheckedChange={(checked) => editForm.setValue("isVisible", !!checked)}
+                    />
+                    <Label htmlFor="edit-visible">Book is visible to users</Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-featured"
+                      checked={editForm.watch("isFeatured") || false}
+                      onCheckedChange={(checked) => editForm.setValue("isFeatured", !!checked)}
+                    />
+                    <Label htmlFor="edit-featured" className="flex items-center space-x-2">
+                      <Star className="w-4 h-4 text-yellow-500" />
+                      <span>Mark as Featured (will appear on home page)</span>
+                    </Label>
+                  </div>
                 </div>
 
                 <DialogFooter>

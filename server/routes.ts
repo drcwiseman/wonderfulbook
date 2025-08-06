@@ -508,6 +508,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Toggle featured status
+  app.patch('/api/admin/books/:id/featured', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { isFeatured } = req.body;
+      
+      const book = await storage.toggleFeatured(id, isFeatured);
+      res.json(book);
+    } catch (error) {
+      console.error('Error toggling featured status:', error);
+      res.status(500).json({ message: 'Failed to toggle featured status' });
+    }
+  });
+
   // Delete single book
   app.delete('/api/admin/books/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
