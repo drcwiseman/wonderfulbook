@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterData } from "@shared/schema";
@@ -18,6 +18,7 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const form = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
@@ -74,7 +75,7 @@ export default function Register() {
             </div>
             <div className="space-y-3">
               <Button
-                onClick={() => window.location.href = '/auth/login'}
+                onClick={() => setLocation('/auth/login')}
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white"
               >
                 Go to Sign In

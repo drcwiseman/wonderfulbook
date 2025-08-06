@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginData } from "@shared/schema";
@@ -18,6 +18,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -39,7 +40,11 @@ export default function Login() {
       });
       // Invalidate user query to refetch user data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      // Redirect will be handled by the auth state change
+      
+      // Redirect to home page after successful login
+      setTimeout(() => {
+        setLocation("/");
+      }, 500);
     },
     onError: (error: any) => {
       toast({
