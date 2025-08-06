@@ -32,6 +32,7 @@ export default function Header() {
               <a href="#categories" className="text-white hover:text-gray-300 transition-colors">Categories</a>
               {isAuthenticated && (
                 <>
+                  <a href="/dashboard" className="text-white hover:text-gray-300 transition-colors">Dashboard</a>
                   <a href="#my-books" className="text-white hover:text-gray-300 transition-colors">My Books</a>
                   <a href="#bookmarks" className="text-white hover:text-gray-300 transition-colors">Bookmarks</a>
                 </>
