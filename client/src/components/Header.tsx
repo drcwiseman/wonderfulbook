@@ -26,15 +26,15 @@ export default function Header() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-netflix-black via-netflix-black/90 to-transparent">
         <nav className="flex items-center justify-between px-4 md:px-8 py-4">
           <div className="flex items-center space-x-8">
-            <a href="/" className="text-netflix-red text-2xl font-bold hover:text-orange-400 transition-colors">Wonderful Books</a>
+            <div className="text-netflix-red text-2xl font-bold">Wonderful Books</div>
             <div className="hidden md:flex space-x-6">
               <a href="/" className="text-white hover:text-gray-300 transition-colors">Home</a>
-              <a href="/dashboard" className="text-white hover:text-gray-300 transition-colors">Browse Books</a>
+              <a href="#categories" className="text-white hover:text-gray-300 transition-colors">Categories</a>
               {isAuthenticated && (
                 <>
                   <a href="/dashboard" className="text-white hover:text-gray-300 transition-colors">Dashboard</a>
-                  <a href="/dashboard" className="text-white hover:text-gray-300 transition-colors">My Books</a>
-                  <a href="/dashboard" className="text-white hover:text-gray-300 transition-colors">Bookmarks</a>
+                  <a href="#my-books" className="text-white hover:text-gray-300 transition-colors">My Books</a>
+                  <a href="#bookmarks" className="text-white hover:text-gray-300 transition-colors">Bookmarks</a>
                 </>
               )}
             </div>
@@ -95,18 +95,6 @@ export default function Header() {
                 >
                   Logout
                 </Button>
-                
-                {/* Admin Panel Link - Only show for admin users */}
-                {(user as any)?.id === "45814604" && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-yellow-400 hover:text-yellow-300"
-                    onClick={() => window.location.href = '/admin'}
-                  >
-                    Admin
-                  </Button>
-                )}
               </div>
             ) : (
               <Button

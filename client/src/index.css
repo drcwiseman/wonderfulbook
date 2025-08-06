@@ -2,17 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Netflix-style scrollbar hiding */
-@layer utilities {
-  .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
-  }
-}
-
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);
