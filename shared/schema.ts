@@ -9,6 +9,7 @@ import {
   integer,
   decimal,
   boolean,
+  unique,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -68,7 +69,9 @@ export const readingProgress = pgTable("reading_progress", {
   lastReadAt: timestamp("last_read_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  unique().on(table.userId, table.bookId)
+]);
 
 // User bookmarks
 export const bookmarks = pgTable("bookmarks", {
