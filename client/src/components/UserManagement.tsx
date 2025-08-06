@@ -83,16 +83,17 @@ export function UserManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [resettingPasswordFor, setResettingPasswordFor] = useState<User | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch users
   const { data: usersResponse, isLoading, refetch } = useQuery({
-    queryKey: ["/api/admin/users", searchQuery],
+    queryKey: ["/api/admin/users", searchQuery, refreshKey],
     queryFn: () => apiRequest("GET", `/api/admin/users${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}`),
     staleTime: 0, // Always refetch
-    gcTime: 0, // Don't cache (renamed from cacheTime in TanStack Query v5)
-    refetchOnMount: true,
+    gcTime: 0, // Don't cache
+    refetchOnMount: "always",
     refetchOnWindowFocus: true,
   });
 
@@ -155,6 +156,7 @@ export function UserManagement() {
       });
       setShowCreateDialog(false);
       createForm.reset();
+      setRefreshKey(prev => prev + 1);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-analytics"] });
     },
@@ -178,9 +180,9 @@ export function UserManagement() {
         description: "User updated successfully!",
       });
       setEditingUser(null);
+      setRefreshKey(prev => prev + 1);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-analytics"] });
-      refetch(); // Force immediate refetch
     },
     onError: (error: any) => {
       toast({
@@ -201,9 +203,9 @@ export function UserManagement() {
         title: "Success",
         description: "User deleted successfully!",
       });
+      setRefreshKey(prev => prev + 1);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-analytics"] });
-      refetch(); // Force immediate refetch
     },
     onError: (error: any) => {
       toast({
@@ -228,9 +230,9 @@ export function UserManagement() {
         description: "Users updated successfully!",
       });
       setSelectedUsers([]);
+      setRefreshKey(prev => prev + 1);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-analytics"] });
-      refetch(); // Force immediate refetch
     },
     onError: (error: any) => {
       toast({
@@ -254,9 +256,9 @@ export function UserManagement() {
         description: "Users deleted successfully!",
       });
       setSelectedUsers([]);
+      setRefreshKey(prev => prev + 1);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-analytics"] });
-      refetch(); // Force immediate refetch
     },
     onError: (error: any) => {
       toast({
@@ -467,7 +469,10 @@ export function UserManagement() {
                 />
               </div>
             </div>
-            <Button variant="outline" onClick={() => refetch()}>
+            <Button variant="outline" onClick={() => {
+              setRefreshKey(prev => prev + 1);
+              refetch();
+            }}>
               <TrendingUp className="h-4 w-4 mr-2" />
               Refresh
             </Button>
