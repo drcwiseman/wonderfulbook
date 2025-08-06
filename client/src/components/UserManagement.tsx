@@ -124,7 +124,9 @@ export function UserManagement() {
     usersArray: users,
     usersCount: users.length,
     isLoading,
-    refreshKey
+    refreshKey,
+    responseType: typeof usersResponse,
+    isArray: Array.isArray(usersResponse)
   });
 
   // Fetch user analytics
@@ -654,8 +656,8 @@ export function UserManagement() {
             </div>
           ) : (
             <div>
-              <div className="p-4 bg-blue-50 text-sm">
-                Debug: Found {users.length} users
+              <div className="p-4 bg-green-50 border border-green-200 text-sm font-medium">
+                ✅ {users.length} users loaded - Edit buttons should be visible in Action column
               </div>
               <Table>
               <TableHeader>
@@ -719,27 +721,37 @@ export function UserManagement() {
                     <TableCell>
                       {new Date(user.createdAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right min-w-[120px]">
                       <div className="flex justify-end gap-1">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleEditUser(user)}
+                          className="bg-blue-50 hover:bg-blue-100"
+                          title="Edit User"
                         >
                           <Edit2 className="h-4 w-4" />
+                          <span className="ml-1 text-xs">Edit</span>
                         </Button>
                         
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => setResettingPasswordFor(user)}
+                          className="bg-yellow-50 hover:bg-yellow-100"
+                          title="Reset Password"
                         >
                           <Key className="h-4 w-4" />
                         </Button>
                         
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="bg-red-50 hover:bg-red-100"
+                              title="Delete User"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
