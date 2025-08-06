@@ -321,6 +321,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Serve test file for demonstration
+  app.get('/test-reader', (req, res) => {
+    res.sendFile(__dirname + '/../test-pdf-reader.html');
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

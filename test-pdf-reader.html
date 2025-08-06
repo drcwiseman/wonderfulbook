@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Reader Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .book-card {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .book-card:hover {
+            transform: scale(1.05);
+        }
+        .status {
+            background: #444;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .read-btn {
+            background: #e50914;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .read-btn:hover {
+            background: #d40813;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Secure PDF Reader Test</h1>
+        <div class="status" id="status">Loading books...</div>
+        <div class="book-grid" id="bookGrid"></div>
+    </div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const bookGrid = document.getElementById('bookGrid');
+
+        // Test the books API
+        fetch('/api/books')
+            .then(response => response.json())
+            .then(books => {
+                statusDiv.innerHTML = `✅ Found ${books.length} books in database`;
+                
+                books.slice(0, 6).forEach(book => {
+                    const bookCard = document.createElement('div');
+                    bookCard.className = 'book-card';
+                    bookCard.innerHTML = `
+                        <img src="${book.coverImageUrl}" alt="${book.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px;">
+                        <h3 style="margin: 10px 0 5px 0; font-size: 14px;">${book.title}</h3>
+                        <p style="margin: 0; font-size: 12px; color: #ccc;">by ${book.author}</p>
+                        <p style="margin: 5px 0; font-size: 11px; color: #999;">Tier: ${book.requiredTier}</p>
+                        <button class="read-btn" onclick="testPDFStream('${book.id}', '${book.title}')">
+                            🔓 Test Read Access
+                        </button>
+                    `;
+                    bookGrid.appendChild(bookCard);
+                });
+            })
+            .catch(error => {
+                statusDiv.innerHTML = `❌ Error loading books: ${error.message}`;
+            });
+
+        // Test PDF streaming
+        function testPDFStream(bookId, title) {
+            statusDiv.innerHTML = `🔄 Testing PDF access for "${title}"...`;
+            
+            fetch(`/api/stream/${bookId}`)
+                .then(response => {
+                    if (response.status === 401) {
+                        statusDiv.innerHTML = `🔐 Authentication required - Click "Log In" in the app to test PDF reading`;
+                        return;
+                    }
+                    if (response.status === 403) {
+                        response.json().then(data => {
+                            statusDiv.innerHTML = `🚫 Access denied: ${data.message}`;
+                        });
+                        return;
+                    }
+                    if (response.ok) {
+                        response.blob().then(blob => {
+                            const url = URL.createObjectURL(blob);
+                            statusDiv.innerHTML = `✅ PDF loaded successfully! Opening secure reader...`;
+                            
+                            // Open PDF in new window (this simulates the reader)
+                            const newWindow = window.open('', '_blank');
+                            newWindow.document.write(`
+                                <html>
+                                    <head>
+                                        <title>🔒 Secure Reader: ${title}</title>
+                                        <style>
+                                            body { margin: 0; background: #1a1a1a; font-family: Arial, sans-serif; }
+                                            .header { background: #333; color: white; padding: 15px; display: flex; justify-content: between; }
+                                            .security-notice { color: #e50914; font-size: 12px; }
+                                            iframe { width: 100%; height: calc(100vh - 60px); border: none; }
+                                        </style>
+                                        <script>
+                                            // Security measures (same as in React component)
+                                            document.addEventListener('contextmenu', e => e.preventDefault());
+                                            document.addEventListener('keydown', e => {
+                                                if (e.key === 'F12' || 
+                                                    (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                                                    (e.ctrlKey && e.key === 'u') ||
+                                                    (e.ctrlKey && e.key === 's') ||
+                                                    (e.ctrlKey && e.key === 'p')) {
+                                                    e.preventDefault();
+                                                }
+                                            });
+                                        </script>
+                                    </head>
+                                    <body>
+                                        <div class="header">
+                                            <div>🔒 Secure Reader: ${title}</div>
+                                            <div class="security-notice">Protected Content - Download Disabled</div>
+                                        </div>
+                                        <iframe src="${url}"></iframe>
+                                    </body>
+                                </html>
+                            `);
+                        });
+                    } else {
+                        statusDiv.innerHTML = `❌ Error: ${response.status} - ${response.statusText}`;
+                    }
+                })
+                .catch(error => {
+                    statusDiv.innerHTML = `❌ Network error: ${error.message}`;
+                });
+        }
+
+        // Show authentication status
+        fetch('/api/auth/user')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Not authenticated');
+                }
+            })
+            .then(user => {
+                statusDiv.innerHTML += ` | ✅ Logged in as user: ${user.email || 'Unknown'}`;
+            })
+            .catch(() => {
+                statusDiv.innerHTML += ` | 🔐 Not logged in - <a href="/api/login" style="color: #e50914;">Click here to log in</a>`;
+            });
+    </script>
+</body>
+</html>
