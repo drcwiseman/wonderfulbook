@@ -21,6 +21,8 @@ export function PDFUploader({ value, onChange, label = "PDF File", className = "
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    
+    console.log('PDF file selected:', file.name, file.type, file.size);
 
     // Validate file type
     if (file.type !== 'application/pdf') {
@@ -52,10 +54,12 @@ export function PDFUploader({ value, onChange, label = "PDF File", className = "
       const response = await fetch('/api/admin/upload-pdf', {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Include cookies for authentication
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
+        throw new Error(errorData.error || errorData.message || 'Upload failed');
       }
 
       const result = await response.json();
@@ -67,11 +71,11 @@ export function PDFUploader({ value, onChange, label = "PDF File", className = "
         title: "Upload successful",
         description: "PDF uploaded successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
       toast({
         title: "Upload failed",
-        description: "Failed to upload PDF. Please try again.",
+        description: error.message || "Failed to upload PDF. Please try again.",
         variant: "destructive",
       });
       setFileName('');
@@ -91,12 +95,19 @@ export function PDFUploader({ value, onChange, label = "PDF File", className = "
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
+    console.log('PDF dropped:', file?.name, file?.type);
     if (file && file.type === 'application/pdf') {
       // Create a fake input event
       const fakeEvent = {
         target: { files: [file] }
       } as any;
       handleFileSelect(fakeEvent);
+    } else if (file) {
+      toast({
+        title: "Invalid file type",
+        description: "Please drop a PDF file",
+        variant: "destructive",
+      });
     }
   };
 
