@@ -218,3 +218,36 @@
   border-radius: 8px;
   overflow: hidden;
 }
+
+/* Additional Apple Books styling */
+.rpv-core__inner-page {
+  background: white !important;
+  border-radius: 8px;
+}
+
+.dark .rpv-core__inner-page {
+  background: rgb(31 41 55) !important;
+}
+
+/* Smooth transitions for all PDF elements */
+.rpv-core__viewer * {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hide scrollbars in full reading mode */
+.rpv-core__viewer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.rpv-core__viewer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rpv-core__viewer::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.dark .rpv-core__viewer::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
