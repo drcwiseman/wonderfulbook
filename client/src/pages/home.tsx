@@ -171,65 +171,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* User Status Card */}
-      {isAuthenticated && (
-        <section className="py-8">
-          <div className="container mx-auto px-6">
-            <Card className="bg-white border-orange-300 backdrop-blur-sm shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row items-center justify-between">
-                  <div className="flex items-center space-x-4 mb-4 md:mb-0">
-                    {(user as any)?.subscriptionTier === 'premium' && (
-                      <>
-                        <Crown className="w-8 h-8 text-orange-500" />
-                        <div>
-                          <div className="text-xl font-bold text-gray-900">Premium Member</div>
-                          <div className="text-gray-600">Unlimited access to all books</div>
-                        </div>
-                      </>
-                    )}
-                    {(user as any)?.subscriptionTier === 'basic' && (
-                      <>
-                        <Star className="w-8 h-8 text-purple-400" />
-                        <div>
-                          <div className="text-xl font-bold text-white">Basic Member</div>
-                          <div className="text-gray-300">10 books per month</div>
-                        </div>
-                      </>
-                    )}
-                    {((user as any)?.subscriptionTier === 'free' || !(user as any)?.subscriptionTier) && (
-                      <>
-                        <Zap className="w-8 h-8 text-gray-400" />
-                        <div>
-                          <div className="text-xl font-bold text-white">Free Trial</div>
-                          <div className="text-gray-300">3 books available</div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => window.location.href = "/dashboard"}
-                      className="border-gray-400 text-white hover:bg-white/10"
-                    >
-                      Dashboard
-                    </Button>
-                    {((user as any)?.subscriptionTier === 'free' || !(user as any)?.subscriptionTier) && (
-                      <Button 
-                        onClick={() => window.location.href = "/subscribe"}
-                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-                      >
-                        Upgrade Now
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-      )}
+
 
       {/* Book Showcase Section */}
       <section className="py-20">
