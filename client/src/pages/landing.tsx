@@ -101,22 +101,22 @@ export default function Landing() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                onClick={() => window.location.href = "/api/login"}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <Zap className="w-5 h-5 mr-2" />
-                Continue with Replit
-              </Button>
               <Link href="/auth/register">
                 <Button 
-                  variant="outline"
-                  className="bg-white/10 hover:bg-white/20 text-orange-600 px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg backdrop-blur-sm border-orange-300 hover:bg-orange-50"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  Create Account
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <Zap className="w-5 h-5 mr-2" />
+                  Start Free Trial
                 </Button>
               </Link>
+              <Button 
+                variant="outline"
+                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                className="bg-white/10 hover:bg-white/20 text-gray-700 px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg backdrop-blur-sm border-gray-300 hover:bg-gray-50"
+              >
+                View Pricing
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
             </div>
             <div className="mt-6 text-center">
               <Link href="/auth/login" className="text-orange-600 hover:text-orange-500 font-medium text-lg">

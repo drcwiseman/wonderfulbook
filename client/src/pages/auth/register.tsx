@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Eye, EyeOff, BookOpen, Chrome, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, BookOpen, CheckCircle } from "lucide-react";
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
@@ -111,33 +111,11 @@ export default function Register() {
           <CardHeader className="space-y-2 text-center">
             <CardTitle className="text-2xl">Create Account</CardTitle>
             <CardDescription>
-              Choose your preferred registration method
+              Create your account to start your reading journey
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Social Registration Options */}
-            <div className="space-y-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12 text-base font-medium border-2 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950"
-                onClick={() => window.location.href = '/api/login'}
-              >
-                <Chrome className="h-5 w-5 mr-3" />
-                Continue with Replit
-              </Button>
-            </div>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
-                  Or register with email
-                </span>
-              </div>
-            </div>
 
             {/* Email Registration Form */}
             <Form {...form}>
