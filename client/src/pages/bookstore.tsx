@@ -19,6 +19,7 @@ import {
   Clock
 } from "lucide-react";
 import { Book } from "@shared/schema";
+import { SEOHead, seoConfigs } from "@/components/SEOHead";
 
 interface BookWithAccess extends Book {
   hasAccess: boolean;
@@ -133,6 +134,7 @@ export default function BookStore() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-orange-50/30 pt-20">
+      <SEOHead {...seoConfigs.bookstore} />
       {/* Hero Section */}
       <section className="relative py-16 px-6">
         <div className="container mx-auto max-w-7xl">

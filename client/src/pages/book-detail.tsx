@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Star, Bookmark, Book, ArrowLeft } from "lucide-react";
 import type { Book as BookType, ReadingProgress, Bookmark as BookmarkType } from "@shared/schema";
+import { SEOHead, getBookSEO } from "@/components/SEOHead";
 
 export default function BookDetail() {
   const [, params] = useRoute("/book/:id");
@@ -194,7 +195,7 @@ export default function BookDetail() {
                     ))}
                     <span className="ml-2 text-gray-300">{book.rating}</span>
                   </div>
-                  <Badge variant="secondary">{book.category}</Badge>
+                  <Badge variant="secondary">{book.requiredTier || 'free'}</Badge>
                 </div>
                 
                 <p className="text-gray-300 mb-8 leading-relaxed">
@@ -223,6 +224,7 @@ export default function BookDetail() {
 
   return (
     <div className="min-h-screen bg-netflix-black text-white">
+      {book && <SEOHead {...getBookSEO(book)} />}
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <Button

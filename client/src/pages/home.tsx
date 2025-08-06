@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Crown, Star, Zap, BookOpen, Users, TrendingUp, CheckCircle, ArrowRight, PlayCircle, Award, Shield, Clock } from "lucide-react";
 import FeaturedBooks from "@/components/FeaturedBooks";
 import { useQuery } from "@tanstack/react-query";
+import { SEOHead, seoConfigs } from "@/components/SEOHead";
 
 // Book Showcase Component
 function BookShowcaseSection() {
@@ -78,6 +79,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 text-gray-900">
+      <SEOHead {...seoConfigs.home} />
       <Header />
       
       {/* Modern Hero Section */}

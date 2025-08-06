@@ -10,6 +10,7 @@ import path from "path";
 import fs from "fs";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import { registerSEORoutes } from "./routes-seo";
 
 // Local authentication middleware
 const isAuthenticated = (req: any, res: any, next: any) => {
@@ -116,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create a session for local auth users
-      req.session.user = {
+      (req.session as any).user = {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
@@ -1216,9 +1217,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tokenKey = `pdf_token_${token}`;
       
       // Store token in memory with 5-minute expiry (in production, use Redis or database)
-      if (!global.pdfTokens) global.pdfTokens = new Map();
+      if (!(global as any).pdfTokens) (global as any).pdfTokens = new Map();
       const expiryTime = Date.now() + 5 * 60 * 1000;
-      global.pdfTokens.set(tokenKey, { userId, bookId, expires: expiryTime });
+      (global as any).pdfTokens.set(tokenKey, { userId, bookId, expires: expiryTime });
       
       console.log(`Generated PDF token ${tokenKey} for book ${bookId}, expires: ${new Date(expiryTime)}`);
       res.json({ token });
@@ -1319,8 +1320,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tokenKey = `pdf_token_${token}`;
 
       // Check if token exists and is valid
-      if (!global.pdfTokens) global.pdfTokens = new Map();
-      const tokenData = global.pdfTokens.get(tokenKey);
+      if (!(global as any).pdfTokens) (global as any).pdfTokens = new Map();
+      const tokenData = (global as any).pdfTokens.get(tokenKey);
       
       if (!tokenData) {
         console.log(`Token not found: ${tokenKey}`);
@@ -1329,7 +1330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (tokenData.expires < Date.now()) {
         console.log(`Token expired: ${tokenKey}, expired ${new Date(tokenData.expires)}`);
-        global.pdfTokens.delete(tokenKey);
+        (global as any).pdfTokens.delete(tokenKey);
         return res.status(401).json({ message: "Token expired" });
       }
       
@@ -1468,6 +1469,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch categories" });
     }
   });
+
+  // Register SEO routes
+  registerSEORoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
