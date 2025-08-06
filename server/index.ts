@@ -38,6 +38,14 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+  
+  // Initialize email scheduler for automated campaigns
+  try {
+    const { emailScheduler } = await import('./emailScheduler.js');
+    await emailScheduler.initialize();
+  } catch (error) {
+    console.error('Failed to initialize email scheduler:', error);
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

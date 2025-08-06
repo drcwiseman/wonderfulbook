@@ -6,6 +6,8 @@ import {
   categories,
   bookCategories,
   subscriptionPlans,
+  emailPreferences,
+  emailLogs,
   type User,
   type UpsertUser,
   type Book,
@@ -20,6 +22,11 @@ import {
   type InsertBookCategory,
   type SubscriptionPlan,
   type InsertSubscriptionPlan,
+  type EmailPreferences,
+  type InsertEmailPreferences,
+  type UpdateEmailPreferences,
+  type EmailLog,
+  type InsertEmailLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, ilike } from "drizzle-orm";
@@ -109,6 +116,20 @@ export interface IStorage {
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(categoryId: string, updates: Partial<InsertCategory>): Promise<Category>;
   deleteCategory(categoryId: string): Promise<void>;
+
+  // Email preferences operations
+  getEmailPreferences(userId: string, email: string): Promise<EmailPreferences>;
+  updateEmailPreferences(userId: string, updates: UpdateEmailPreferences): Promise<EmailPreferences>;
+  findEmailPreferencesByToken(token: string): Promise<EmailPreferences | undefined>;
+
+  // Email logging operations
+  logEmail(logData: InsertEmailLog): Promise<EmailLog>;
+  getEmailLogs(options: {
+    limit?: number;
+    offset?: number;
+    status?: string;
+    emailType?: string;
+  }): Promise<EmailLog[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -807,6 +828,120 @@ export class DatabaseStorage implements IStorage {
       return plans as SubscriptionPlan[];
     } catch (error) {
       console.error("Error fetching active subscription plans:", error);
+      return [];
+    }
+  }
+
+  // Email preferences operations
+  async getEmailPreferences(userId: string, email: string): Promise<EmailPreferences> {
+    try {
+      let [preferences] = await db
+        .select()
+        .from(emailPreferences)
+        .where(eq(emailPreferences.userId, userId));
+
+      if (!preferences) {
+        // Create default preferences with unique unsubscribe token
+        const crypto = await import('crypto');
+        const unsubscribeToken = crypto.randomBytes(32).toString('hex');
+        
+        const newPreferences: InsertEmailPreferences = {
+          userId,
+          email,
+          unsubscribeToken,
+          marketingEmails: true,
+          trialReminders: true,
+          subscriptionUpdates: true,
+          isUnsubscribedAll: false,
+        };
+
+        [preferences] = await db
+          .insert(emailPreferences)
+          .values(newPreferences)
+          .returning();
+      }
+
+      return preferences as EmailPreferences;
+    } catch (error) {
+      console.error("Error getting email preferences:", error);
+      throw error;
+    }
+  }
+
+  async updateEmailPreferences(userId: string, updates: UpdateEmailPreferences): Promise<EmailPreferences> {
+    try {
+      const [preferences] = await db
+        .update(emailPreferences)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(emailPreferences.userId, userId))
+        .returning();
+
+      if (!preferences) {
+        throw new Error("Email preferences not found");
+      }
+
+      return preferences as EmailPreferences;
+    } catch (error) {
+      console.error("Error updating email preferences:", error);
+      throw error;
+    }
+  }
+
+  async findEmailPreferencesByToken(token: string): Promise<EmailPreferences | undefined> {
+    try {
+      const [preferences] = await db
+        .select()
+        .from(emailPreferences)
+        .where(eq(emailPreferences.unsubscribeToken, token));
+      return preferences as EmailPreferences | undefined;
+    } catch (error) {
+      console.error("Error finding email preferences by token:", error);
+      return undefined;
+    }
+  }
+
+  // Email logging operations
+  async logEmail(logData: InsertEmailLog): Promise<EmailLog> {
+    try {
+      const [log] = await db.insert(emailLogs).values(logData).returning();
+      return log as EmailLog;
+    } catch (error) {
+      console.error("Error logging email:", error);
+      throw error;
+    }
+  }
+
+  async getEmailLogs(options: {
+    limit?: number;
+    offset?: number;
+    status?: string;
+    emailType?: string;
+  }): Promise<EmailLog[]> {
+    try {
+      // Apply filters
+      const conditions = [];
+      if (options.status) {
+        conditions.push(eq(emailLogs.status, options.status));
+      }
+      if (options.emailType) {
+        conditions.push(eq(emailLogs.emailType, options.emailType));
+      }
+
+      let baseQuery = db.select().from(emailLogs);
+      
+      if (conditions.length > 0) {
+        baseQuery = baseQuery.where(and(...conditions)) as any;
+      }
+
+      // Apply sorting, pagination
+      const logs = await baseQuery
+        .orderBy(desc(emailLogs.createdAt))
+        .limit(options.limit || 50)
+        .offset(options.offset || 0);
+
+      return logs as EmailLog[];
+    } catch (error) {
+      console.error("Error fetching email logs:", error);
       return [];
     }
   }

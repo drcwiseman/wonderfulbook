@@ -322,6 +322,60 @@ export const updateSubscriptionPlanSchema = z.object({
   displayOrder: z.number().min(1, "Display order must be positive").optional(),
 });
 
+// Email preferences table for unsubscribe handling
+export const emailPreferences = pgTable("email_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  email: varchar("email").notNull(),
+  unsubscribeToken: varchar("unsubscribe_token").notNull().unique(),
+  marketingEmails: boolean("marketing_emails").default(true),
+  trialReminders: boolean("trial_reminders").default(true),
+  subscriptionUpdates: boolean("subscription_updates").default(true),
+  isUnsubscribedAll: boolean("is_unsubscribed_all").default(false),
+  unsubscribedAt: timestamp("unsubscribed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  userEmailIndex: index("idx_user_email_prefs").on(table.userId, table.email),
+  tokenIndex: index("idx_unsubscribe_token").on(table.unsubscribeToken),
+}));
+
+// Email logs table for tracking sent emails
+export const emailLogs = pgTable("email_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  email: varchar("email").notNull(),
+  emailType: varchar("email_type").notNull(), // trial_reminder, conversion_success, cancellation, etc.
+  subject: text("subject").notNull(),
+  status: varchar("status").notNull(), // sent, failed, queued
+  errorMessage: text("error_message"),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  userEmailTypeIndex: index("idx_user_email_type").on(table.userId, table.emailType),
+  statusIndex: index("idx_email_status").on(table.status),
+  sentAtIndex: index("idx_sent_at").on(table.sentAt),
+}));
+
+// Email preferences schemas
+export const insertEmailPreferencesSchema = createInsertSchema(emailPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateEmailPreferencesSchema = z.object({
+  marketingEmails: z.boolean().optional(),
+  trialReminders: z.boolean().optional(),
+  subscriptionUpdates: z.boolean().optional(),
+  isUnsubscribedAll: z.boolean().optional(),
+});
+
+export const insertEmailLogSchema = createInsertSchema(emailLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -338,3 +392,8 @@ export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Category = typeof categories.$inferSelect;
 export type InsertBookCategory = z.infer<typeof insertBookCategorySchema>;
 export type BookCategory = typeof bookCategories.$inferSelect;
+export type EmailPreferences = typeof emailPreferences.$inferSelect;
+export type InsertEmailPreferences = z.infer<typeof insertEmailPreferencesSchema>;
+export type UpdateEmailPreferences = z.infer<typeof updateEmailPreferencesSchema>;
+export type EmailLog = typeof emailLogs.$inferSelect;
+export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;

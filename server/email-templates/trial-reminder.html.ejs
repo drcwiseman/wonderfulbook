@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Trial is Ending Soon - Wonderful Books</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .highlight-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .highlight-box .days-left {
+            font-size: 36px;
+            font-weight: 700;
+            color: #ff6600;
+            margin: 0 0 10px 0;
+        }
+        .highlight-box .trial-end {
+            font-size: 16px;
+            color: #856404;
+            margin: 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+            color: white !important;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 25px 0;
+            transition: transform 0.2s ease;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        .benefits {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        .benefits h3 {
+            color: #ff6600;
+            margin: 0 0 15px 0;
+            font-size: 20px;
+        }
+        .benefits ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .benefits li {
+            margin: 8px 0;
+            color: #555;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 25px 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer a {
+            color: #ff6600;
+            text-decoration: none;
+        }
+        .social-links {
+            margin: 15px 0;
+        }
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #999;
+            font-size: 18px;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 0 10px;
+                border-radius: 0;
+            }
+            .header, .content, .footer {
+                padding: 25px 20px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .highlight-box .days-left {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Wonderful Books</h1>
+            <p>Your premium reading experience</p>
+        </div>
+        
+        <div class="content">
+            <h2>Hi <%= firstName %>,</h2>
+            
+            <p>We hope you've been enjoying your free trial of Wonderful Books! We wanted to give you a friendly reminder that your trial is coming to an end soon.</p>
+            
+            <div class="highlight-box">
+                <div class="days-left"><%= daysLeft %> day<%= daysLeft !== 1 ? 's' : '' %></div>
+                <p class="trial-end">left in your free trial (ends <%= trialEndDate %>)</p>
+            </div>
+            
+            <p style="text-align: center;">
+                <strong>Don't let your reading journey end here!</strong><br>
+                Upgrade now to continue accessing our entire library of transformational books.
+            </p>
+            
+            <div style="text-align: center;">
+                <a href="<%= upgradeUrl %>" class="cta-button">Continue Reading - Upgrade Now</a>
+            </div>
+            
+            <div class="benefits">
+                <h3>🌟 Why upgrade to Premium?</h3>
+                <ul>
+                    <li><strong>Unlimited Access</strong> - Read as many books as you want</li>
+                    <li><strong>Exclusive Content</strong> - Access to premium titles and new releases</li>
+                    <li><strong>Advanced Features</strong> - Bookmarks, progress sync, and more</li>
+                    <li><strong>Ad-Free Experience</strong> - Focus on what matters: your growth</li>
+                    <li><strong>Support Authors</strong> - Help us bring you more amazing content</li>
+                </ul>
+            </div>
+            
+            <p>We believe in the power of books to transform lives, and we'd love to continue being part of your journey.</p>
+            
+            <p>If you have any questions about upgrading or need help with anything, just reply to this email - we're here to help!</p>
+            
+            <p>Happy reading,<br>
+            <strong>The Wonderful Books Team</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>
+                <strong>Wonderful Books</strong><br>
+                Transforming lives through the power of reading
+            </p>
+            
+            <div class="social-links">
+                <a href="#">📧</a>
+                <a href="#">🌐</a>
+                <a href="#">📱</a>
+            </div>
+            
+            <p>
+                You're receiving this email because you have an active trial with us.<br>
+                <a href="<%= unsubscribeUrl %>">Unsubscribe</a> | 
+                <a href="mailto:books@thekingdomclub.org">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -15,6 +15,7 @@ import Subscribe from "@/pages/subscribe";
 import ReaderPage from "@/pages/reader";
 import AdminPanel from "@/pages/admin";
 import AdminSubscriptionPlans from "@/pages/admin/subscription-plans";
+import AdminEmailManagement from "@/pages/AdminEmailManagement";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import ForgotPassword from "@/pages/auth/forgot-password";
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/reader/:bookId" component={ReaderPage} />
       <Route path="/admin" component={AdminPanel} />
       <Route path="/admin/subscription-plans" component={AdminSubscriptionPlans} />
+      <Route path="/admin/email-management" component={AdminEmailManagement} />
       {/* Authentication routes - available whether logged in or not */}
       <Route path="/auth/login" component={Login} />
       <Route path="/auth/register" component={Register} />

@@ -1,0 +1,58 @@
+Build a complete email automation and reminder system for a subscription-based PDF streaming platform. The system must use a private SMTP server (not third-party APIs like SendGrid). It should include scheduled trial reminders, conversion success notifications, cancellation emails, unsubscribe handling, and a set of professional templates. The platform is built in Node.js and hosted on Replit.
+
+📬 SMTP Configuration:
+Use the following credentials:
+makefile
+CopyEdit
+SMTP_HOST: mail.thekingdomclub.org  
+SMTP_PORT: 465  
+SMTP_USER: books@thekingdomclub.org  
+SMTP_PASS: @@Brave@@2017  
+SMTP_FROM_EMAIL: books@thekingdomclub.org  
+SMTP_FROM_NAME: Wonderfulbooks.net  
+
+📦 System Requirements:
+✅ 1. Email Delivery Module
+* Use nodemailer to send emails via the private SMTP server
+* Load SMTP credentials from .env
+* Send HTML + plain text email versions
+* Set up sender name and email correctly
+✅ 2. Email Templates
+* Create modular HTML templates for:
+    * Trial Expiry Reminder (3 and 1 day before)
+    * Conversion Confirmation (user successfully subscribed)
+    * Cancellation Confirmation
+* Use EJS or Handlebars to inject dynamic user data (e.g., name, days left)
+* Add unsubscribe footer in each template
+✅ 3. Email Scheduler
+* Use node-cron or agenda to run automated jobs (e.g., daily at 10 AM)
+* Example logic:
+    * Fetch users with trials expiring in 3 or 1 days
+    * Send relevant email using the correct template
+✅ 4. Unsubscribe Handling
+* Generate an unsubscribe link with a token or email param
+* Create a basic route /unsubscribe?email=example@email.com
+* When a user unsubscribes, update a user_preferences table
+* Prevent further non-essential emails to unsubscribed users
+✅ 5. Optional Admin Controls (Bonus)
+* Log email status (sent, failed)
+* Enable manual campaign triggering
+* Preview templates before sending
+
+🔧 Tech Stack
+* Backend: Node.js (Express)
+* Email: Nodemailer (SMTP with TLS/SSL)
+* Scheduler: node-cron
+* Templating: EJS or MJML
+* Database: Supabase or PostgreSQL for user info and preferences
+* Environment Variables: Stored in .env
+
+✅ Deliverables:
+* Working sendEmail function with SMTP via Nodemailer
+* HTML + Text email templates with dynamic content
+* Automated email reminders with scheduling
+* Email delivery logs to console (or DB optional)
+* Basic unsubscribe handling system
+* Fully commented, clean code
+
+Bonus: Add generateEmailPreview(type, user) function to preview email HTML for admin or development.

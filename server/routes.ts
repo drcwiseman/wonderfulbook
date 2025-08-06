@@ -1420,12 +1420,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'customer.subscription.updated':
         case 'customer.subscription.created':
           const subscription = event.data.object as Stripe.Subscription;
-          // Update user subscription status based on Stripe event
-          // This would need proper user lookup by customer ID
+          
+          // Find user by Stripe customer ID
+          const customer = await stripe.customers.retrieve(subscription.customer as string);
+          if (customer.deleted) break;
+          
+          const user = await storage.getUserByEmail((customer as Stripe.Customer).email!);
+          if (!user) break;
+
+          // Update subscription status
+          const status = subscription.status === 'active' ? 'active' : 'inactive';
+          const tier = subscription.items.data[0]?.price?.unit_amount === 599 ? 'basic' : 'premium';
+          
+          await storage.updateUserSubscription(user.id, tier, status);
+
+          // Send conversion success email for new active subscriptions
+          if (subscription.status === 'active' && event.type === 'customer.subscription.created') {
+            try {
+              const { emailScheduler } = await import('./emailScheduler');
+              const planName = tier === 'basic' ? 'Basic Plan' : 'Premium Plan';
+              const planPrice = tier === 'basic' ? '£5.99/month' : '£9.99/month';
+              
+              await emailScheduler.sendConversionEmail(user.id, planName, planPrice);
+            } catch (error) {
+              console.error('Failed to send conversion email:', error);
+            }
+          }
           break;
         
         case 'customer.subscription.deleted':
-          // Handle subscription cancellation
+          const cancelledSubscription = event.data.object as Stripe.Subscription;
+          
+          // Find user by Stripe customer ID
+          const cancelledCustomer = await stripe.customers.retrieve(cancelledSubscription.customer as string);
+          if (cancelledCustomer.deleted) break;
+          
+          const cancelledUser = await storage.getUserByEmail((cancelledCustomer as Stripe.Customer).email!);
+          if (!cancelledUser) break;
+
+          // Update subscription status to cancelled
+          await storage.updateUserSubscription(cancelledUser.id, 'free', 'cancelled');
+
+          // Send cancellation confirmation email
+          try {
+            const { emailScheduler } = await import('./emailScheduler');
+            const previousTier = cancelledUser.subscriptionTier === 'basic' ? 'Basic Plan' : 'Premium Plan';
+            const endDate = new Date(cancelledSubscription.current_period_end * 1000).toLocaleDateString();
+            
+            await emailScheduler.sendCancellationEmail(cancelledUser.id, previousTier, endDate);
+          } catch (error) {
+            console.error('Failed to send cancellation email:', error);
+          }
+          break;
+
+        case 'invoice.payment_succeeded':
+          // Optional: Send receipt or renewal confirmation emails
+          break;
+
+        case 'invoice.payment_failed':
+          // Optional: Send payment failure notification emails
           break;
       }
 
@@ -1838,6 +1891,193 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error cleaning up expired selections:", error);
       res.status(500).json({ message: "Failed to cleanup expired selections" });
+    }
+  });
+
+  // Email automation routes
+  
+  // Unsubscribe route (public access)
+  app.get('/unsubscribe', async (req: any, res) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token) {
+        return res.status(400).send(`
+          <html>
+            <head><title>Invalid Unsubscribe Link</title></head>
+            <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+              <h1>Invalid Unsubscribe Link</h1>
+              <p>The unsubscribe link is invalid or has expired.</p>
+            </body>
+          </html>
+        `);
+      }
+
+      const preferences = await storage.findEmailPreferencesByToken(token);
+      
+      if (!preferences) {
+        return res.status(404).send(`
+          <html>
+            <head><title>Unsubscribe Link Not Found</title></head>
+            <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+              <h1>Link Not Found</h1>
+              <p>This unsubscribe link was not found or has already been used.</p>
+            </body>
+          </html>
+        `);
+      }
+
+      // Update preferences to unsubscribe from all emails
+      await storage.updateEmailPreferences(preferences.userId, {
+        isUnsubscribedAll: true,
+        unsubscribedAt: new Date(),
+      });
+
+      res.send(`
+        <html>
+          <head>
+            <title>Successfully Unsubscribed - Wonderful Books</title>
+            <style>
+              body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f8f9fa; }
+              .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .success { color: #28a745; font-size: 48px; margin-bottom: 20px; }
+              h1 { color: #333; margin-bottom: 20px; }
+              p { color: #666; line-height: 1.6; margin-bottom: 15px; }
+              .brand { color: #ff6600; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="success">✅</div>
+              <h1>Successfully Unsubscribed</h1>
+              <p>You have been unsubscribed from all <span class="brand">Wonderful Books</span> emails.</p>
+              <p>We're sorry to see you go! If you change your mind, you can update your email preferences in your account settings.</p>
+              <p>Thank you for being part of our reading community.</p>
+            </div>
+          </body>
+        </html>
+      `);
+    } catch (error) {
+      console.error('Error processing unsubscribe:', error);
+      res.status(500).send(`
+        <html>
+          <head><title>Error</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1>Error</h1>
+            <p>An error occurred while processing your request. Please try again later.</p>
+          </body>
+        </html>
+      `);
+    }
+  });
+
+  // Email preferences management (authenticated users)
+  app.get('/api/email-preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const preferences = await storage.getEmailPreferences(userId, req.user.email);
+      res.json(preferences);
+    } catch (error) {
+      console.error('Error fetching email preferences:', error);
+      res.status(500).json({ message: 'Failed to fetch email preferences' });
+    }
+  });
+
+  app.put('/api/email-preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const updates = req.body;
+      
+      // Validate updates
+      const validKeys = ['marketingEmails', 'trialReminders', 'subscriptionUpdates', 'isUnsubscribedAll'];
+      const filteredUpdates = Object.keys(updates)
+        .filter(key => validKeys.includes(key))
+        .reduce((obj: any, key) => {
+          obj[key] = updates[key];
+          return obj;
+        }, {});
+
+      await storage.updateEmailPreferences(userId, filteredUpdates);
+      res.json({ message: 'Email preferences updated successfully' });
+    } catch (error) {
+      console.error('Error updating email preferences:', error);
+      res.status(500).json({ message: 'Failed to update email preferences' });
+    }
+  });
+
+  // Admin email management routes
+  
+  // Email scheduler status
+  app.get('/api/admin/email-scheduler/status', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { emailScheduler } = await import('./emailScheduler');
+      const status = emailScheduler.getStatus();
+      res.json(status);
+    } catch (error) {
+      console.error('Error getting email scheduler status:', error);
+      res.status(500).json({ message: 'Failed to get scheduler status' });
+    }
+  });
+
+  // Manually trigger trial reminder
+  app.post('/api/admin/email-scheduler/trigger-trial-reminder', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { daysFromNow } = req.body;
+      
+      if (!daysFromNow || ![1, 3].includes(parseInt(daysFromNow))) {
+        return res.status(400).json({ message: 'daysFromNow must be 1 or 3' });
+      }
+
+      const { emailScheduler } = await import('./emailScheduler');
+      const results = await emailScheduler.triggerTrialReminderManually(parseInt(daysFromNow));
+      
+      res.json({
+        message: `Trial reminder campaign completed`,
+        results
+      });
+    } catch (error) {
+      console.error('Error triggering trial reminder:', error);
+      res.status(500).json({ message: 'Failed to trigger trial reminder' });
+    }
+  });
+
+  // Email logs for admin
+  app.get('/api/admin/email-logs', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { limit = 50, offset = 0, status, emailType } = req.query;
+      const logs = await storage.getEmailLogs({
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+        status: status as string,
+        emailType: emailType as string,
+      });
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching email logs:', error);
+      res.status(500).json({ message: 'Failed to fetch email logs' });
+    }
+  });
+
+  // Email preview for development/testing
+  app.get('/api/admin/email-preview/:templateType', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { templateType } = req.params;
+      const { firstName = 'John', lastName = 'Doe', email = 'preview@example.com' } = req.query;
+      
+      const { emailService } = await import('./emailService');
+      const preview = await emailService.generateEmailPreview(templateType, {
+        firstName: firstName as string,
+        lastName: lastName as string,
+        email: email as string,
+      });
+      
+      // Return HTML by default, add ?format=text for text version
+      const format = req.query.format === 'text' ? 'text' : 'html';
+      res.setHeader('Content-Type', format === 'html' ? 'text/html' : 'text/plain');
+      res.send(preview[format]);
+    } catch (error) {
+      console.error('Error generating email preview:', error);
+      res.status(500).json({ message: 'Failed to generate email preview' });
     }
   });
 
