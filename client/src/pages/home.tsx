@@ -2,16 +2,12 @@ import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
-import HeroSection from "@/components/HeroSection";
-import FeaturedBooks from "@/components/FeaturedBooks";
-import CategoriesSection from "@/components/CategoriesSection";
-import RecommendationsSection from "@/components/RecommendationsSection";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Star, Zap, Link } from "lucide-react";
-import PricingSection from "@/components/PricingSection";
+import { Crown, Star, Zap, BookOpen, Users, TrendingUp, CheckCircle, ArrowRight, PlayCircle, Award, Shield, Clock } from "lucide-react";
+import FeaturedBooks from "@/components/FeaturedBooks";
 
 export default function Home() {
   const { toast } = useToast();
@@ -34,72 +30,365 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-netflix-black flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-netflix-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white">
       <Header />
-      <HeroSection />
       
-      {/* Quick Subscription Status */}
-      {isAuthenticated && (
-        <div className="container mx-auto px-4 py-6">
-          <Card className="bg-netflix-gray border-gray-600">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  {(user as any)?.subscriptionTier === 'premium' && (
-                    <>
-                      <Crown className="w-5 h-5 text-premium-gold" />
-                      <span className="text-white font-medium">Premium Plan - Unlimited Access</span>
-                    </>
-                  )}
-                  {(user as any)?.subscriptionTier === 'basic' && (
-                    <>
-                      <Star className="w-5 h-5 text-basic-purple" />
-                      <span className="text-white font-medium">Basic Plan - 10 Books per Month</span>
-                    </>
-                  )}
-                  {((user as any)?.subscriptionTier === 'free' || !(user as any)?.subscriptionTier) && (
-                    <>
-                      <Zap className="w-5 h-5 text-trial-gray" />
-                      <span className="text-white font-medium">Free Trial - 3 Books Available</span>
-                    </>
-                  )}
-                </div>
-                <div className="flex items-center space-x-2">
+      {/* Modern Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-black/50"></div>
+        <div 
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')",
+          }}
+        ></div>
+
+        <div className="relative z-10 container mx-auto px-6 text-center">
+          <div className="max-w-5xl mx-auto">
+            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
+              Transform Your Mind with
+              <span className="block text-blue-400">Life-Changing Books</span>
+            </h1>
+            
+            <p className="text-xl md:text-2xl mb-12 text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Access thousands of carefully curated self-improvement and educational books. 
+              Read anywhere, grow everywhere. Join thousands of readers transforming their lives daily.
+            </p>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
+              <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                <CardContent className="p-6 text-center">
+                  <BookOpen className="w-8 h-8 text-blue-400 mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-white mb-1">1000+</div>
+                  <div className="text-gray-400">Premium Books</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                <CardContent className="p-6 text-center">
+                  <Users className="w-8 h-8 text-green-400 mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-white mb-1">50K+</div>
+                  <div className="text-gray-400">Active Readers</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+                <CardContent className="p-6 text-center">
+                  <Award className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-white mb-1">4.9★</div>
+                  <div className="text-gray-400">User Rating</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {isAuthenticated ? (
+                <>
                   <Button 
-                    variant="outline" 
-                    size="sm"
                     onClick={() => window.location.href = "/dashboard"}
-                    className="border-gray-500 text-white hover:bg-gray-700"
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
-                    View Dashboard
+                    <BookOpen className="w-5 h-5 mr-2" />
+                    Continue Reading
                   </Button>
-                  {((user as any)?.subscriptionTier === 'free' || !(user as any)?.subscriptionTier) && (
-                    <Button 
-                      size="sm"
-                      onClick={() => window.location.href = "/subscribe"}
-                      className="bg-netflix-red hover:bg-red-700"
-                    >
-                      Upgrade Plan
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.location.href = "#featured"}
+                    className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg backdrop-blur-sm border-white/30"
+                  >
+                    <PlayCircle className="w-5 h-5 mr-2" />
+                    Explore Library
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    onClick={() => window.location.href = "/api/login"}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <Zap className="w-5 h-5 mr-2" />
+                    Start Free Trial
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg backdrop-blur-sm border-white/30"
+                  >
+                    View Pricing
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
+      </section>
+
+      {/* User Status Card */}
+      {isAuthenticated && (
+        <section className="py-8">
+          <div className="container mx-auto px-6">
+            <Card className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-blue-500/30 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row items-center justify-between">
+                  <div className="flex items-center space-x-4 mb-4 md:mb-0">
+                    {(user as any)?.subscriptionTier === 'premium' && (
+                      <>
+                        <Crown className="w-8 h-8 text-yellow-400" />
+                        <div>
+                          <div className="text-xl font-bold text-white">Premium Member</div>
+                          <div className="text-gray-300">Unlimited access to all books</div>
+                        </div>
+                      </>
+                    )}
+                    {(user as any)?.subscriptionTier === 'basic' && (
+                      <>
+                        <Star className="w-8 h-8 text-purple-400" />
+                        <div>
+                          <div className="text-xl font-bold text-white">Basic Member</div>
+                          <div className="text-gray-300">10 books per month</div>
+                        </div>
+                      </>
+                    )}
+                    {((user as any)?.subscriptionTier === 'free' || !(user as any)?.subscriptionTier) && (
+                      <>
+                        <Zap className="w-8 h-8 text-gray-400" />
+                        <div>
+                          <div className="text-xl font-bold text-white">Free Trial</div>
+                          <div className="text-gray-300">3 books available</div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.location.href = "/dashboard"}
+                      className="border-gray-400 text-white hover:bg-white/10"
+                    >
+                      Dashboard
+                    </Button>
+                    {((user as any)?.subscriptionTier === 'free' || !(user as any)?.subscriptionTier) && (
+                      <Button 
+                        onClick={() => window.location.href = "/subscribe"}
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      >
+                        Upgrade Now
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
       )}
-      
-      <FeaturedBooks />
-      <PricingSection />
-      <CategoriesSection />
-      <RecommendationsSection />
+
+      {/* Featured Books Section */}
+      <section id="featured" className="py-16">
+        <FeaturedBooks />
+      </section>
+
+      {/* Value Proposition Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-900/20 to-purple-900/20">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Why Choose Wonderful Books?
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              We've crafted the perfect reading experience for modern learners and book enthusiasts
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <Card className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 border-blue-500/30 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
+              <CardHeader className="text-center pb-3">
+                <Shield className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                <CardTitle className="text-2xl text-white">Curated Quality</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300 leading-relaxed">
+                  Every book is hand-selected by our expert team. Only the highest quality content that delivers real value and transformation.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 border-purple-500/30 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
+              <CardHeader className="text-center pb-3">
+                <Clock className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                <CardTitle className="text-2xl text-white">Read Anywhere</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300 leading-relaxed">
+                  Seamless reading across all your devices. Pick up exactly where you left off, whether on phone, tablet, or computer.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-500/30 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
+              <CardHeader className="text-center pb-3">
+                <TrendingUp className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                <CardTitle className="text-2xl text-white">Track Progress</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300 leading-relaxed">
+                  Advanced analytics show your reading habits, progress, and achievements. Turn reading into a rewarding journey.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Modern Pricing Section */}
+      <section id="pricing" className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+              Choose Your Reading Journey
+            </h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Flexible plans designed for every type of reader. Start free, upgrade anytime.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Free Plan */}
+            <Card className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 border-gray-600/30 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
+              <CardHeader className="text-center pb-6">
+                <Zap className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <CardTitle className="text-2xl text-white mb-2">Free Trial</CardTitle>
+                <div className="text-4xl font-bold text-white mb-2">£0</div>
+                <div className="text-gray-400">Forever</div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">3 featured books</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">Basic reading features</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">Progress tracking</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">All devices</span>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => window.location.href = "/api/login"}
+                  className="w-full bg-gray-600 hover:bg-gray-700 text-white mt-6"
+                >
+                  Start Free Trial
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Basic Plan */}
+            <Card className="bg-gradient-to-br from-purple-800/40 to-purple-900/40 border-purple-500/50 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 relative">
+              <CardHeader className="text-center pb-6">
+                <Star className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                <CardTitle className="text-2xl text-white mb-2">Basic Plan</CardTitle>
+                <div className="text-4xl font-bold text-white mb-2">£9.99</div>
+                <div className="text-purple-300">per month</div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">10 books per month</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">All reading features</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">Progress & bookmarks</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">Offline reading</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">Customer support</span>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => window.location.href = "/subscribe?tier=basic"}
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white mt-6"
+                >
+                  Choose Basic
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Premium Plan */}
+            <Card className="bg-gradient-to-br from-yellow-800/40 to-yellow-900/40 border-yellow-500/50 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 relative">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-bold px-4 py-1">
+                  MOST POPULAR
+                </Badge>
+              </div>
+              <CardHeader className="text-center pb-6 pt-8">
+                <Crown className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+                <CardTitle className="text-2xl text-white mb-2">Premium Plan</CardTitle>
+                <div className="text-4xl font-bold text-white mb-2">£19.99</div>
+                <div className="text-yellow-300">per month</div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">Unlimited books</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">All premium features</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">Advanced analytics</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">Priority support</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">Exclusive early access</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                    <span className="text-gray-300">Multi-device sync</span>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => window.location.href = "/subscribe?tier=premium"}
+                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold mt-6"
+                >
+                  Choose Premium
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       <Footer />
     </div>
   );
