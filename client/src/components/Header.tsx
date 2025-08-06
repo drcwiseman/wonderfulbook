@@ -3,11 +3,37 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Menu, X } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Header() {
   const { user, isAuthenticated } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/auth/logout");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Logged out successfully",
+        description: "You have been signed out of your account.",
+      });
+      window.location.href = "/";
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Logout failed",
+        description: error.message || "Something went wrong during logout.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,6 +45,10 @@ export default function Header() {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
   };
 
   return (
@@ -89,10 +119,11 @@ export default function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => window.location.href = "/api/logout"}
+                  onClick={handleLogout}
+                  disabled={logoutMutation.isPending}
                   className="text-white hover:text-orange-400"
                 >
-                  Logout
+                  {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
                 </Button>
               </div>
             ) : (

@@ -2,13 +2,22 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@shared/schema";
 import { insertBookSchema, insertCategorySchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+
+// Local authentication middleware
+const isAuthenticated = (req: any, res: any, next: any) => {
+  if (req.session && req.session.user) {
+    return next();
+  }
+  return res.status(401).json({ message: "Unauthorized" });
+};
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -21,13 +30,33 @@ console.log('Using Stripe secret key starting with:', actualSecretKey?.substring
 const stripe = new Stripe(actualSecretKey!);
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+  // Session configuration for local authentication
+  app.set("trust proxy", 1);
+  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const pgStore = connectPg(session);
+  const sessionStore = new pgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: false,
+    ttl: sessionTtl,
+    tableName: "sessions",
+  });
+  
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'local-auth-secret',
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: false, // Set to true in production with HTTPS
+      maxAge: sessionTtl,
+    },
+  }));
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -76,22 +105,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create a session for local auth users
-      // Simulate the Replit auth session structure
-      req.login({
-        claims: { sub: user.id, email: user.email },
-        access_token: 'local_auth_token',
-        expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-      }, (err) => {
-        if (err) {
-          console.error('Session creation error:', err);
-          return res.status(500).json({ message: "Login failed" });
-        }
-        res.json({ message: "Login successful", user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName } });
+      req.session.user = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName
+      };
+      
+      res.json({ 
+        message: "Login successful", 
+        user: { 
+          id: user.id, 
+          email: user.email, 
+          firstName: user.firstName, 
+          lastName: user.lastName 
+        } 
       });
     } catch (error: any) {
       console.error('Login error:', error);
       res.status(400).json({ message: error.message || "Login failed" });
     }
+  });
+
+  // Logout route
+  app.post('/api/auth/logout', (req: any, res) => {
+    req.session.destroy((err: any) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({ message: 'Logout failed' });
+      }
+      res.json({ message: 'Logout successful' });
+    });
   });
 
   app.post('/api/auth/forgot-password', async (req, res) => {
