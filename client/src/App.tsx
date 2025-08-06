@@ -8,6 +8,7 @@ import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import BookDetail from "@/pages/book-detail";
 import Subscribe from "@/pages/subscribe";
+import ReaderPage from "@/pages/reader";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/book/:id" component={BookDetail} />
           <Route path="/subscribe" component={Subscribe} />
+          <Route path="/reader/:bookId" component={ReaderPage} />
         </>
       )}
       <Route component={NotFound} />

@@ -271,6 +271,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Secure PDF streaming endpoint
+  app.get("/api/stream/:bookId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { bookId } = req.params;
+      const userId = req.user.claims.sub;
+
+      // Get book details
+      const book = await storage.getBook(bookId);
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Check subscription tier access
+      const userTier = user.subscriptionTier || 'free';
+      const canAccess = checkBookAccess(userTier, book.requiredTier);
+      
+      if (!canAccess) {
+        return res.status(403).json({ 
+          message: `This book requires ${book.requiredTier} subscription. Your current tier: ${userTier}`,
+          requiredTier: book.requiredTier,
+          currentTier: userTier
+        });
+      }
+
+      // For demo purposes, we'll generate a sample PDF with the book content
+      const pdfBuffer = await generateSamplePDF(book);
+      
+      // Set security headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Disposition', 'inline'); // Prevent download dialog
+      
+      // Stream the PDF buffer
+      res.send(pdfBuffer);
+      
+    } catch (error: any) {
+      console.error("Error streaming PDF:", error);
+      res.status(500).json({ message: "Failed to stream PDF" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Helper function to check book access based on subscription tier
+function checkBookAccess(userTier: string, requiredTier: string): boolean {
+  const tierHierarchy = {
+    'free': 0,
+    'basic': 1,
+    'premium': 2
+  };
+  
+  const userLevel = tierHierarchy[userTier as keyof typeof tierHierarchy] ?? 0;
+  const requiredLevel = tierHierarchy[requiredTier as keyof typeof tierHierarchy] ?? 0;
+  
+  return userLevel >= requiredLevel;
+}
+
+// Helper function to generate a sample PDF for demo purposes
+async function generateSamplePDF(book: any): Promise<Buffer> {
+  // In a real application, you would fetch the actual PDF from secure storage
+  // For demo purposes, we'll create a simple PDF with book information
+  
+  const PDFDocument = require('pdfkit');
+  const doc = new PDFDocument();
+  const chunks: Buffer[] = [];
+
+  doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+  
+  return new Promise((resolve) => {
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    
+    // Add book content to PDF
+    doc.fontSize(24).text(book.title, 50, 50);
+    doc.fontSize(16).text(`by ${book.author}`, 50, 90);
+    doc.moveDown(2);
+    doc.fontSize(12).text(book.description, 50, 150, { width: 500 });
+    
+    // Add some sample content
+    doc.moveDown(2);
+    doc.text('Chapter 1: Introduction', 50, doc.y, { underline: true });
+    doc.moveDown();
+    doc.text(`This is a sample preview of "${book.title}". In a production environment, this would contain the actual book content securely streamed from your storage system.`, 50, doc.y, { width: 500 });
+    
+    doc.moveDown(2);
+    doc.text('Sample Content:', 50, doc.y, { underline: true });
+    doc.moveDown();
+    
+    // Add multiple pages of sample content
+    for (let i = 1; i <= 5; i++) {
+      if (i > 1) doc.addPage();
+      doc.text(`Page ${i}`, 50, 50);
+      doc.moveDown();
+      doc.text(`This is page ${i} of the sample content for "${book.title}". `, 50, doc.y);
+      doc.text('In a real implementation, this would be the actual book content loaded from secure storage with proper access controls based on the user\'s subscription tier.', 50, doc.y + 20, { width: 500 });
+    }
+    
+    doc.end();
+  });
 }
