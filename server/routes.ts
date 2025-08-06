@@ -1130,8 +1130,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Dynamic pricing - create products and prices as needed
       const tierConfig = {
-        basic: { amount: 999, name: 'Basic Plan' }, // £9.99
-        premium: { amount: 1999, name: 'Premium Plan' } // £19.99
+        basic: { amount: 599, name: 'Basic Plan' }, // £5.99
+        premium: { amount: 999, name: 'Premium Plan' } // £9.99
       };
 
       if (tier === 'free') {
@@ -1527,6 +1527,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching active categories:", error);
       res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  // Book Selection API endpoints for Netflix-style book locking
+  
+  // Get user's currently selected books
+  app.get('/api/user/selected-books', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { bookSelectionService } = await import("./bookSelectionService");
+      const selectedBooks = await bookSelectionService.getUserSelectedBooks(userId);
+      res.json(selectedBooks);
+    } catch (error) {
+      console.error("Error fetching selected books:", error);
+      res.status(500).json({ message: "Failed to fetch selected books" });
+    }
+  });
+
+  // Check if user can select more books
+  app.get('/api/user/can-select-books', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { bookSelectionService } = await import("./bookSelectionService");
+      const canSelect = await bookSelectionService.canSelectMoreBooks(userId);
+      res.json(canSelect);
+    } catch (error) {
+      console.error("Error checking book selection availability:", error);
+      res.status(500).json({ message: "Failed to check book selection" });
+    }
+  });
+
+  // Select a book (Free Trial: 7 days, Basic: 30 days cycle)
+  app.post('/api/user/select-book', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { bookId } = req.body;
+      
+      if (!bookId) {
+        return res.status(400).json({ message: "Book ID is required" });
+      }
+
+      const { bookSelectionService } = await import("./bookSelectionService");
+      const result = await bookSelectionService.selectBook(userId, bookId);
+      
+      if (result.success) {
+        res.json({ message: result.message });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error("Error selecting book:", error);
+      res.status(500).json({ message: "Failed to select book" });
+    }
+  });
+
+  // Check if user has access to a specific book
+  app.get('/api/user/book-access/:bookId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { bookId } = req.params;
+      
+      const { bookSelectionService } = await import("./bookSelectionService");
+      const hasAccess = await bookSelectionService.hasBookAccess(userId, bookId);
+      res.json({ hasAccess });
+    } catch (error) {
+      console.error("Error checking book access:", error);
+      res.status(500).json({ message: "Failed to check book access" });
+    }
+  });
+
+  // Get available books for selection (excluding already selected)
+  app.get('/api/user/available-books', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { bookSelectionService } = await import("./bookSelectionService");
+      const availableBooks = await bookSelectionService.getAvailableBooksForSelection(userId);
+      res.json(availableBooks);
+    } catch (error) {
+      console.error("Error fetching available books:", error);
+      res.status(500).json({ message: "Failed to fetch available books" });
+    }
+  });
+
+  // Admin endpoint to reset basic user's books (for testing billing cycles)
+  app.post('/api/admin/reset-user-books/:userId', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { bookSelectionService } = await import("./bookSelectionService");
+      await bookSelectionService.resetBasicUserBooks(userId);
+      res.json({ message: "User books reset successfully" });
+    } catch (error) {
+      console.error("Error resetting user books:", error);
+      res.status(500).json({ message: "Failed to reset user books" });
+    }
+  });
+
+  // Cleanup expired selections (should be run by a cron job in production)
+  app.post('/api/admin/cleanup-expired', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { bookSelectionService } = await import("./bookSelectionService");
+      await bookSelectionService.expireOldSelections();
+      res.json({ message: "Expired selections cleaned up successfully" });
+    } catch (error) {
+      console.error("Error cleaning up expired selections:", error);
+      res.status(500).json({ message: "Failed to cleanup expired selections" });
     }
   });
 

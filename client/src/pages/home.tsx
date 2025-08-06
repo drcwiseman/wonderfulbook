@@ -305,15 +305,15 @@ export default function Home() {
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
-                    <span className="text-gray-700">Access to 3 books for 7 days</span>
+                    <span className="text-gray-700">Select 3 books of your choice</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
-                    <span className="text-gray-700">Basic reading features</span>
+                    <span className="text-gray-700">7-day access period</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
-                    <span className="text-gray-700">Progress tracking</span>
+                    <span className="text-gray-700">Unlimited reads during trial</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
@@ -349,19 +349,19 @@ export default function Home() {
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
-                    <span className="text-gray-700">10 books per month</span>
+                    <span className="text-gray-700">Select 10 books per month</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">30-day lock-in period</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">Monthly reset on billing cycle</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
                     <span className="text-gray-700">All reading features</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
-                    <span className="text-gray-700">Progress & bookmarks</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
-                    <span className="text-gray-700">Offline reading</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
@@ -394,7 +394,15 @@ export default function Home() {
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
-                    <span className="text-gray-800">Unlimited books</span>
+                    <span className="text-gray-800">Unlimited access to all books</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
+                    <span className="text-gray-800">No selection required</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
+                    <span className="text-gray-800">Entire library available</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
@@ -402,15 +410,7 @@ export default function Home() {
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
-                    <span className="text-gray-800">Advanced analytics</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
                     <span className="text-gray-800">Priority support</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
-                    <span className="text-gray-800">Exclusive early access</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />

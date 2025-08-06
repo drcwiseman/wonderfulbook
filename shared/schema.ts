@@ -88,6 +88,36 @@ export const books = pgTable("books", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// User's selected books with lock periods
+export const userSelectedBooks = pgTable("user_selected_books", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  subscriptionTier: varchar("subscription_tier").notNull(), // free, basic, premium
+  selectedAt: timestamp("selected_at").defaultNow(),
+  lockedUntil: timestamp("locked_until").notNull(), // When access expires
+  billingCycleStart: timestamp("billing_cycle_start"), // For basic plan monthly reset
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  uniqueActiveUserBook: unique("unique_active_user_book").on(table.userId, table.bookId, table.isActive),
+}));
+
+// User subscription cycles for tracking monthly resets
+export const userSubscriptionCycles = pgTable("user_subscription_cycles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  subscriptionTier: varchar("subscription_tier").notNull(),
+  cycleStart: timestamp("cycle_start").notNull(),
+  cycleEnd: timestamp("cycle_end").notNull(),
+  booksSelectedCount: integer("books_selected_count").default(0),
+  maxBooks: integer("max_books").notNull(), // Book limit for this cycle
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // User reading progress
 export const readingProgress = pgTable("reading_progress", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -122,6 +152,12 @@ export const categories = pgTable("categories", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Type exports for the new tables
+export type UserSelectedBook = typeof userSelectedBooks.$inferSelect;
+export type InsertUserSelectedBook = typeof userSelectedBooks.$inferInsert;
+export type UserSubscriptionCycle = typeof userSubscriptionCycles.$inferSelect;
+export type InsertUserSubscriptionCycle = typeof userSubscriptionCycles.$inferInsert;
 
 // Junction table for many-to-many relationship between books and categories
 export const bookCategories = pgTable("book_categories", {

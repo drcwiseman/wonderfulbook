@@ -38,19 +38,20 @@ export const defaultSubscriptionPlans: SubscriptionPlan[] = [
   {
     id: "basic",
     name: "Basic Plan",
-    price: "£9.99",
-    priceAmount: 999, // 999 pence
+    price: "£5.99",
+    priceAmount: 599, // 599 pence 
     currency: "GBP", 
     period: "per month",
     description: "Great for regular readers",
     bookLimit: 10,
     features: [
-      "Access to 10 books per month",
+      "Select 10 books per month",
+      "30-day lock-in period",
+      "Monthly reset on billing cycle", 
       "All reading features",
       "Progress tracking & bookmarks", 
       "Mobile & desktop access",
-      "Customer support",
-      "Offline reading"
+      "Customer support"
     ],
     isActive: true,
     displayOrder: 2
@@ -58,14 +59,16 @@ export const defaultSubscriptionPlans: SubscriptionPlan[] = [
   {
     id: "premium",
     name: "Premium Plan", 
-    price: "£19.99",
-    priceAmount: 1999, // 1999 pence
+    price: "£9.99",
+    priceAmount: 999, // 999 pence
     currency: "GBP",
     period: "per month",
     description: "Best value for book lovers",
     bookLimit: -1, // unlimited
     features: [
       "Unlimited access to all books",
+      "No selection required",
+      "Entire library available",
       "All premium features",
       "Advanced analytics",
       "Priority customer support", 

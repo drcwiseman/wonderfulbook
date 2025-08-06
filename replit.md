@@ -16,7 +16,9 @@ Wonderful Books is a subscription-based digital reading platform, akin to Netfli
 - **Login Redirect Fix**: Resolved frozen login panel issue - users now properly redirect to home page after successful authentication
 - **PDF Reader Authentication**: Fixed session-based authentication for PDF streaming and reading progress tracking
 - **Admin Subscription Management**: Built comprehensive admin interface for managing subscription plans with full CRUD operations
+- **Netflix-Style Book Selection System**: Implemented sophisticated book locking and time-based access control with database schema for user_selected_books and user_subscription_cycles tables
 - **Updated Subscription Structure**: Free Trial (3 books, 7 days free) → Basic Plan (£5.99/month, 10 books) → Premium Plan (£9.99/month, unlimited)
+- **Book Selection API**: Created comprehensive API endpoints for book selection, access control, and billing cycle management
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -39,6 +41,9 @@ Authentication is exclusively managed through a local email-based system with bc
 
 ### Payment Processing
 Stripe is integrated for full payment processing, subscription management (7-day Free Trial: 3 books, Basic Plan: £5.99/month for 10 books, Premium Plan: £9.99/month unlimited), and webhook handling for subscription status updates. Admin interface provides complete control over subscription pricing and book access limits.
+
+### Book Selection and Access Control
+Netflix-style book selection system with time-based locking and billing cycle management. Free Trial users select 3 books locked for 7 days. Basic Plan users select 10 books locked for 30-day billing cycles with monthly resets. Premium users have unlimited access to entire library without selection requirements. System tracks user_selected_books and user_subscription_cycles with automatic expiration and cleanup mechanisms.
 
 ### Database Services
 Neon Database provides PostgreSQL hosting, utilizing WebSocket-based connections for serverless environments via `@neondatabase/serverless`.
