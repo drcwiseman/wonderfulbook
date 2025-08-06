@@ -301,74 +301,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // For demo purposes, return a simple PDF buffer
-      const pdfBuffer = Buffer.from(`%PDF-1.4
-1 0 obj
-<<
-/Type /Catalog
-/Pages 2 0 R
->>
-endobj
-
-2 0 obj
-<<
-/Type /Pages
-/Kids [3 0 R]
-/Count 1
->>
-endobj
-
-3 0 obj
-<<
-/Type /Page
-/Parent 2 0 R
-/MediaBox [0 0 612 792]
-/Contents 4 0 R
-/Resources <<
-/Font <<
-/F1 5 0 R
->>
->>
->>
-endobj
-
-4 0 obj
-<<
-/Length 44
->>
-stream
-BT
-/F1 18 Tf
-50 700 Td
-(${book.title}) Tj
-ET
-endstream
-endobj
-
-5 0 obj
-<<
-/Type /Font
-/Subtype /Type1
-/BaseFont /Helvetica
->>
-endobj
-
-xref
-0 6
-0000000000 65535 f 
-0000000010 00000 n 
-0000000053 00000 n 
-0000000095 00000 n 
-0000000267 00000 n 
-0000000363 00000 n 
-trailer
-<<
-/Size 6
-/Root 1 0 R
->>
-startxref
-441
-%%EOF`);
+      // Generate a proper PDF using pdfkit
+      const pdfBuffer = await generateSamplePDF(book);
       
       // Set security headers
       res.setHeader('Content-Type', 'application/pdf');
@@ -412,10 +346,8 @@ function checkBookAccess(userTier: string, requiredTier: string): boolean {
 
 // Helper function to generate a sample PDF for demo purposes
 async function generateSamplePDF(book: any): Promise<Buffer> {
-  // In a real application, you would fetch the actual PDF from secure storage
-  // For demo purposes, we'll create a simple PDF with book information
-  
-  const PDFDocument = require('pdfkit');
+  // Import PDFKit dynamically to avoid module issues
+  const PDFDocument = (await import('pdfkit')).default;
   const doc = new PDFDocument();
   const chunks: Buffer[] = [];
 

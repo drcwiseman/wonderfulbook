@@ -52,8 +52,17 @@ export default function ReaderPage() {
         if (isCancelled) return;
 
         if (!response.ok) {
+          console.error('PDF fetch failed:', response.status, response.statusText);
           if (response.status === 401) {
-            setAccessError('Please log in to read this book.');
+            // Session expired, redirect to login
+            toast({
+              title: "Session Expired",
+              description: "Please log in again to continue reading.",
+              variant: "destructive",
+            });
+            setTimeout(() => {
+              window.location.href = "/api/login";
+            }, 1000);
             return;
           }
           if (response.status === 403) {
