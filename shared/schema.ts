@@ -171,10 +171,8 @@ export const bulkUserUpdateSchema = z.object({
 
 // Local authentication schemas
 export const registerSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
   username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
