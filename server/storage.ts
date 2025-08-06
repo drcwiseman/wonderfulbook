@@ -6,29 +6,26 @@ import {
   type User,
   type UpsertUser,
   type Book,
-  type InsertBook,
   type ReadingProgress,
   type InsertReadingProgress,
   type Bookmark,
   type InsertBookmark,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, like, or } from "drizzle-orm";
+import { eq, and, desc, or, ilike } from "drizzle-orm";
 
+// Interface for storage operations
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  updateUserStripeInfo(userId: string, customerId: string, subscriptionId: string): Promise<User>;
-  updateUserSubscription(userId: string, tier: string, status: string): Promise<User>;
   
   // Book operations
   getAllBooks(): Promise<Book[]>;
+  getBook(id: string): Promise<Book | undefined>;
   getBooksByCategory(category: string): Promise<Book[]>;
   getFeaturedBooks(): Promise<Book[]>;
   searchBooks(query: string): Promise<Book[]>;
-  getBook(id: string): Promise<Book | undefined>;
-  createBook(book: InsertBook): Promise<Book>;
   
   // Reading progress operations
   getReadingProgress(userId: string, bookId: string): Promise<ReadingProgress | undefined>;
@@ -47,6 +44,27 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // User operations (mandatory for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
   // Stripe and subscription operations
   async updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User> {
     const updateData: any = { stripeCustomerId, updatedAt: new Date() };
@@ -82,62 +100,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.stripeCustomerId, stripeCustomerId));
     return user;
   }
-  // User operations
-  async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
-  }
-
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    // For Replit auth, we need to handle the user ID from claims
-    const userDataWithId = {
-      ...userData,
-      id: (userData as any).id || userData.email, // Fallback to email as ID
-    };
-    
-    const [user] = await db
-      .insert(users)
-      .values(userDataWithId)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userDataWithId,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
-  }
-
-  async updateUserStripeInfo(userId: string, customerId: string, subscriptionId: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subscriptionId,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
-
-  async updateUserSubscription(userId: string, tier: string, status: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({
-        subscriptionTier: tier,
-        subscriptionStatus: status,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
 
   // Book operations
   async getAllBooks(): Promise<Book[]> {
     return await db.select().from(books).orderBy(desc(books.createdAt));
+  }
+
+  async getBook(id: string): Promise<Book | undefined> {
+    const [book] = await db.select().from(books).where(eq(books.id, id));
+    return book;
   }
 
   async getBooksByCategory(category: string): Promise<Book[]> {
@@ -154,21 +125,11 @@ export class DatabaseStorage implements IStorage {
       .from(books)
       .where(
         or(
-          like(books.title, `%${query}%`),
-          like(books.author, `%${query}%`),
-          like(books.description, `%${query}%`)
+          ilike(books.title, `%${query}%`),
+          ilike(books.author, `%${query}%`),
+          ilike(books.description, `%${query}%`)
         )
       );
-  }
-
-  async getBook(id: string): Promise<Book | undefined> {
-    const [book] = await db.select().from(books).where(eq(books.id, id));
-    return book;
-  }
-
-  async createBook(book: InsertBook): Promise<Book> {
-    const [newBook] = await db.insert(books).values(book).returning();
-    return newBook;
   }
 
   // Reading progress operations
@@ -180,15 +141,17 @@ export class DatabaseStorage implements IStorage {
     return progress;
   }
 
-  async upsertReadingProgress(progress: InsertReadingProgress): Promise<ReadingProgress> {
+  async upsertReadingProgress(progressData: InsertReadingProgress): Promise<ReadingProgress> {
     const [result] = await db
       .insert(readingProgress)
-      .values(progress)
+      .values(progressData)
       .onConflictDoUpdate({
         target: [readingProgress.userId, readingProgress.bookId],
         set: {
-          ...progress,
-          updatedAt: new Date(),
+          currentPage: progressData.currentPage,
+          totalPages: progressData.totalPages,
+          progressPercentage: progressData.progressPercentage,
+          lastReadAt: new Date(),
         },
       })
       .returning();
