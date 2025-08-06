@@ -10,7 +10,11 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// WORKAROUND: The keys are swapped in environment - use VITE_STRIPE_PUBLIC_KEY which actually contains the secret key
+const actualSecretKey = process.env.VITE_STRIPE_PUBLIC_KEY; // This contains the sk_ key
+console.log('Using Stripe secret key starting with:', actualSecretKey?.substring(0, 3));
+
+const stripe = new Stripe(actualSecretKey!);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware

@@ -9,10 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, ArrowLeft } from "lucide-react";
 
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
+// WORKAROUND: Keys are swapped - STRIPE_SECRET_KEY actually contains the publishable key (pk_)
+// Frontend needs the publishable key which is in VITE_STRIPE_SECRET_KEY
+const actualPublicKey = import.meta.env.VITE_STRIPE_SECRET_KEY;
+if (!actualPublicKey) {
+  throw new Error('Missing required Stripe key: VITE_STRIPE_SECRET_KEY');
 }
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+const stripePromise = loadStripe(actualPublicKey);
 
 const SubscribeForm = ({ tier }: { tier: string }) => {
   const stripe = useStripe();
