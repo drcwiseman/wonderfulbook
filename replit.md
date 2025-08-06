@@ -1,7 +1,7 @@
 # Wonderful Books
 
 ## Overview
-Wonderful Books is a subscription-based digital reading platform, akin to Netflix, offering unlimited access to a curated collection of self-improvement and educational books. It features a tiered subscription model (Free Trial, Basic, Premium), comprehensive reading functionalities like progress tracking, bookmarks, personalized recommendations, and a robust admin panel for content and user management. The platform aims to provide a seamless, engaging reading experience with a focus on self-development literature.
+Wonderful Books is a subscription-based digital reading platform, akin to Netflix, offering access to a curated collection of self-improvement and educational books. It features a 3-tiered subscription model with a 7-day free trial (3 books), Basic Plan (£5.99/month for 10 books), and Premium Plan (£9.99/month for unlimited books). The platform includes comprehensive reading functionalities like progress tracking, bookmarks, an Apple Books-inspired PDF reader, and a robust admin panel for subscription and content management. The platform aims to provide a premium, engaging reading experience with a focus on transformational literature using easyJet's signature bright orange and clean white design.
 
 ## Recent Updates (August 2025)
 - **Complete Replit OAuth Removal**: Successfully removed all Replit OAuth dependencies and converted to exclusive local authentication
@@ -33,12 +33,12 @@ The backend is a Node.js Express server with a RESTful API design. It uses Postg
 PostgreSQL serves as the primary database, storing user profiles, subscription details, book metadata, reading progress, bookmarks, and session information. Drizzle Kit is used for database migrations and schema management.
 
 ### Authentication and Authorization  
-Authentication is exclusively managed through a local email-based system with bcrypt password hashing (12 salt rounds), email verification, and secure password reset functionality. Replit OAuth has been completely removed from the system. Server-side sessions are stored in PostgreSQL with 1-week expiration. Authorization middleware protects routes and injects user context, ensuring secure access to features and content, including a secured admin panel.
+Authentication is exclusively managed through a local email-based system with bcrypt password hashing (12 salt rounds), email verification, and secure password reset functionality. Replit OAuth has been completely removed from the system. Server-side sessions are stored in PostgreSQL with 1-week expiration. Authorization middleware protects routes and injects user context, ensuring secure access to features and content. The admin panel (prophetclimate@yahoo.com) provides comprehensive subscription management with full CRUD operations for pricing, book limits, and plan features.
 
 ## External Dependencies
 
 ### Payment Processing
-Stripe is integrated for full payment processing, subscription management (Free Trial, Basic, Premium tiers), and webhook handling for subscription status updates.
+Stripe is integrated for full payment processing, subscription management (7-day Free Trial: 3 books, Basic Plan: £5.99/month for 10 books, Premium Plan: £9.99/month unlimited), and webhook handling for subscription status updates. Admin interface provides complete control over subscription pricing and book access limits.
 
 ### Database Services
 Neon Database provides PostgreSQL hosting, utilizing WebSocket-based connections for serverless environments via `@neondatabase/serverless`.
