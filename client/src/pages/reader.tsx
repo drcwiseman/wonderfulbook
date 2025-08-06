@@ -76,7 +76,15 @@ export default function ReaderPage() {
         const blob = await response.blob();
         if (isCancelled) return;
 
+        console.log('PDF blob received:', blob.size, 'bytes, type:', blob.type);
+        
+        // Verify it's actually a PDF
+        if (blob.type !== 'application/pdf' && blob.size === 0) {
+          throw new Error('Invalid PDF received from server');
+        }
+
         const url = URL.createObjectURL(blob);
+        console.log('PDF URL created:', url);
         setPdfUrl(url);
         setAccessError(null);
       } catch (error) {
@@ -284,7 +292,13 @@ export default function ReaderPage() {
               <Viewer
                 fileUrl={pdfUrl}
                 plugins={[defaultLayoutPluginInstance]}
-                theme="dark"
+                onDocumentLoad={(e) => {
+                  console.log('PDF document loaded successfully:', e.doc.numPages, 'pages');
+                }}
+                onLoadError={(error) => {
+                  console.error('PDF load error:', error);
+                  setAccessError('Failed to load PDF. The file may be corrupted.');
+                }}
               />
             </div>
           </Worker>

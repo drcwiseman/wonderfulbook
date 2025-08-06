@@ -346,41 +346,63 @@ function checkBookAccess(userTier: string, requiredTier: string): boolean {
 
 // Helper function to generate a sample PDF for demo purposes
 async function generateSamplePDF(book: any): Promise<Buffer> {
-  // Import PDFKit dynamically to avoid module issues
-  const PDFDocument = (await import('pdfkit')).default;
-  const doc = new PDFDocument();
-  const chunks: Buffer[] = [];
+  try {
+    // Import PDFKit dynamically to avoid module issues
+    const PDFDocument = (await import('pdfkit')).default;
+    const doc = new PDFDocument({
+      margins: { top: 50, bottom: 50, left: 50, right: 50 }
+    });
+    const chunks: Buffer[] = [];
 
-  doc.on('data', (chunk: Buffer) => chunks.push(chunk));
-  
-  return new Promise((resolve) => {
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('data', (chunk: Buffer) => chunks.push(chunk));
     
-    // Add book content to PDF
-    doc.fontSize(24).text(book.title, 50, 50);
-    doc.fontSize(16).text(`by ${book.author}`, 50, 90);
-    doc.moveDown(2);
-    doc.fontSize(12).text(book.description, 50, 150, { width: 500 });
-    
-    // Add some sample content
-    doc.moveDown(2);
-    doc.text('Chapter 1: Introduction', 50, doc.y, { underline: true });
-    doc.moveDown();
-    doc.text(`This is a sample preview of "${book.title}". In a production environment, this would contain the actual book content securely streamed from your storage system.`, 50, doc.y, { width: 500 });
-    
-    doc.moveDown(2);
-    doc.text('Sample Content:', 50, doc.y, { underline: true });
-    doc.moveDown();
-    
-    // Add multiple pages of sample content
-    for (let i = 1; i <= 5; i++) {
-      if (i > 1) doc.addPage();
-      doc.text(`Page ${i}`, 50, 50);
+    return new Promise((resolve, reject) => {
+      doc.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        console.log('PDF generated:', buffer.length, 'bytes');
+        resolve(buffer);
+      });
+      
+      doc.on('error', (error) => {
+        console.error('PDF generation error:', error);
+        reject(error);
+      });
+      
+      // Add book content to PDF
+      doc.fontSize(24).text(book.title, { align: 'center' });
+      doc.moveDown(0.5);
+      doc.fontSize(16).text(`by ${book.author}`, { align: 'center' });
+      doc.moveDown(2);
+      doc.fontSize(12).text(book.description, { width: 500, align: 'justify' });
+      
+      // Add some sample content
+      doc.moveDown(2);
+      doc.fontSize(14).text('Chapter 1: Introduction', { underline: true });
       doc.moveDown();
-      doc.text(`This is page ${i} of the sample content for "${book.title}". `, 50, doc.y);
-      doc.text('In a real implementation, this would be the actual book content loaded from secure storage with proper access controls based on the user\'s subscription tier.', 50, doc.y + 20, { width: 500 });
-    }
-    
-    doc.end();
-  });
+      doc.fontSize(12).text(`This is a sample preview of "${book.title}". In a production environment, this would contain the actual book content securely streamed from your storage system.`, { width: 500, align: 'justify' });
+      
+      doc.moveDown(2);
+      doc.fontSize(14).text('Sample Content:', { underline: true });
+      doc.moveDown();
+      
+      // Add multiple pages of sample content
+      for (let i = 1; i <= 5; i++) {
+        if (i > 1) doc.addPage();
+        doc.fontSize(16).text(`Page ${i}`, { align: 'center' });
+        doc.moveDown(2);
+        doc.fontSize(12).text(`This is page ${i} of the sample content for "${book.title}". `, { width: 500 });
+        doc.moveDown();
+        doc.text('In a real implementation, this would be the actual book content loaded from secure storage with proper access controls based on the user\'s subscription tier.', { width: 500, align: 'justify' });
+        
+        // Add some more content to make it look like a real book
+        doc.moveDown();
+        doc.text('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', { width: 500, align: 'justify' });
+      }
+      
+      doc.end();
+    });
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw error;
+  }
 }
