@@ -10,7 +10,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface PremiumPDFReaderProps {
   bookId: string;
@@ -124,7 +124,7 @@ export function PremiumPDFReader({
     setIsLoading(false);
     toast({
       title: "Error loading book",
-      description: "Please try refreshing the page",
+      description: "Please check your internet connection and try again",
       variant: "destructive",
     });
   }
@@ -376,19 +376,37 @@ export function PremiumPDFReader({
           onLoadError={onDocumentLoadError}
           loading=""
           className="flex items-center justify-center"
+          options={{
+            cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/cmaps/`,
+            cMapPacked: true,
+            standardFontDataUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/standard_fonts/`,
+          }}
         >
-          <div className="transition-all duration-300 ease-in-out">
-            <Page
-              pageNumber={pageNumber}
-              scale={scale}
-              renderTextLayer={true}
-              renderAnnotationLayer={false}
-              className={`shadow-2xl transition-all duration-500 ease-out ${
-                isDarkMode ? 'shadow-black/50' : 'shadow-gray-400/30'
-              } hover:shadow-3xl transform hover:scale-[1.02]`}
-              canvasBackground={isDarkMode ? '#1f2937' : 'white'}
-            />
-          </div>
+          {numPages && (
+            <div className="transition-all duration-300 ease-in-out">
+              <Page
+                pageNumber={pageNumber}
+                scale={scale}
+                renderTextLayer={true}
+                renderAnnotationLayer={false}
+                className={`shadow-2xl transition-all duration-500 ease-out ${
+                  isDarkMode ? 'shadow-black/50' : 'shadow-gray-400/30'
+                } hover:shadow-3xl transform hover:scale-[1.02]`}
+                canvasBackground={isDarkMode ? '#1f2937' : 'white'}
+                loading={
+                  <div className={`flex items-center justify-center p-8 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mr-3"></div>
+                    Loading page...
+                  </div>
+                }
+                error={
+                  <div className={`flex items-center justify-center p-8 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+                    Failed to load page
+                  </div>
+                }
+              />
+            </div>
+          )}
         </Document>
       </div>
 
