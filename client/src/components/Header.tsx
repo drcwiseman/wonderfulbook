@@ -136,16 +136,6 @@ export default function Header() {
           </div>
           
           <div className="p-4">
-            <form onSubmit={handleSearch} className="mb-6">
-              <Input
-                type="text"
-                placeholder="Search books..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-gray-800 text-white border-gray-600 focus:ring-orange-500"
-              />
-            </form>
-            
             <nav className="space-y-4">
               <a href="/" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">Home</a>
               <a href="/bookstore" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">Book Store</a>
