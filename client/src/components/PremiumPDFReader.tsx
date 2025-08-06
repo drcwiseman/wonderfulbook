@@ -9,10 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-// Configure PDF.js - disable worker for Vite compatibility
-pdfjs.GlobalWorkerOptions.workerSrc = '';
-// @ts-ignore - pdfjs type definitions don't include this
-pdfjs.disableWorker = true;
+// Configure PDF.js with a working CDN that supports CORS
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface PremiumPDFReaderProps {
   bookId: string;
@@ -47,9 +45,9 @@ export function PremiumPDFReader({
 
   // Memoize PDF options and file config to prevent unnecessary reloads
   const pdfOptions = useMemo(() => ({
-    disableWorker: true,
-    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+    cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/cmaps/`,
     cMapPacked: true,
+    standardFontDataUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/standard_fonts/`
   }), []);
 
   const pdfFile = useMemo(() => ({
