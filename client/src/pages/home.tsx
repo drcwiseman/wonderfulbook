@@ -260,35 +260,35 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Free Plan */}
-            <Card className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 border-gray-600/30 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300">
+            <Card className="bg-white border-2 border-gray-200 hover:border-orange-200 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
               <CardHeader className="text-center pb-6">
-                <Zap className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <CardTitle className="text-2xl text-white mb-2">Free Trial</CardTitle>
-                <div className="text-4xl font-bold text-white mb-2">£0</div>
-                <div className="text-gray-400">Forever</div>
+                <Zap className="w-12 h-12 text-orange-400 mx-auto mb-4" />
+                <CardTitle className="text-2xl text-gray-900 mb-2">Free Trial</CardTitle>
+                <div className="text-4xl font-bold text-gray-900 mb-2">£0</div>
+                <div className="text-gray-500">Forever</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">3 featured books</span>
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">3 featured books</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">Basic reading features</span>
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">Basic reading features</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">Progress tracking</span>
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">Progress tracking</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">All devices</span>
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">All devices</span>
                   </div>
                 </div>
                 <Button 
                   onClick={() => window.location.href = "/api/login"}
-                  className="w-full bg-gray-600 hover:bg-gray-700 text-white mt-6"
+                  className="w-full bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white mt-6 font-semibold"
                 >
                   Start Free Trial
                 </Button>
@@ -296,39 +296,39 @@ export default function Home() {
             </Card>
 
             {/* Basic Plan */}
-            <Card className="bg-gradient-to-br from-purple-800/40 to-purple-900/40 border-purple-500/50 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 relative">
+            <Card className="bg-white border-2 border-orange-300 hover:border-orange-400 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 relative shadow-lg hover:shadow-xl">
               <CardHeader className="text-center pb-6">
-                <Star className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                <CardTitle className="text-2xl text-white mb-2">Basic Plan</CardTitle>
-                <div className="text-4xl font-bold text-white mb-2">£9.99</div>
-                <div className="text-purple-300">per month</div>
+                <Star className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+                <CardTitle className="text-2xl text-gray-900 mb-2">Basic Plan</CardTitle>
+                <div className="text-4xl font-bold text-orange-600 mb-2">£9.99</div>
+                <div className="text-orange-500">per month</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">10 books per month</span>
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">10 books per month</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">All reading features</span>
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">All reading features</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">Progress & bookmarks</span>
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">Progress & bookmarks</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">Offline reading</span>
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">Offline reading</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">Customer support</span>
+                    <CheckCircle className="w-5 h-5 text-orange-500 mr-3" />
+                    <span className="text-gray-700">Customer support</span>
                   </div>
                 </div>
                 <Button 
                   onClick={() => window.location.href = "/subscribe?tier=basic"}
-                  className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white mt-6"
+                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white mt-6 font-semibold"
                 >
                   Choose Basic
                 </Button>
@@ -336,48 +336,48 @@ export default function Home() {
             </Card>
 
             {/* Premium Plan */}
-            <Card className="bg-gradient-to-br from-yellow-800/40 to-yellow-900/40 border-yellow-500/50 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 relative">
+            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-400 hover:border-orange-500 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 relative shadow-xl">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-bold px-4 py-1">
+                <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold px-4 py-1 shadow-lg">
                   MOST POPULAR
                 </Badge>
               </div>
               <CardHeader className="text-center pb-6 pt-8">
-                <Crown className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-                <CardTitle className="text-2xl text-white mb-2">Premium Plan</CardTitle>
-                <div className="text-4xl font-bold text-white mb-2">£19.99</div>
-                <div className="text-yellow-300">per month</div>
+                <Crown className="w-12 h-12 text-orange-600 mx-auto mb-4" />
+                <CardTitle className="text-2xl text-gray-900 mb-2">Premium Plan</CardTitle>
+                <div className="text-4xl font-bold text-orange-600 mb-2">£19.99</div>
+                <div className="text-orange-500">per month</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">Unlimited books</span>
+                    <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
+                    <span className="text-gray-800">Unlimited books</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">All premium features</span>
+                    <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
+                    <span className="text-gray-800">All premium features</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">Advanced analytics</span>
+                    <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
+                    <span className="text-gray-800">Advanced analytics</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">Priority support</span>
+                    <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
+                    <span className="text-gray-800">Priority support</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">Exclusive early access</span>
+                    <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
+                    <span className="text-gray-800">Exclusive early access</span>
                   </div>
                   <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                    <span className="text-gray-300">Multi-device sync</span>
+                    <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
+                    <span className="text-gray-800">Multi-device sync</span>
                   </div>
                 </div>
                 <Button 
                   onClick={() => window.location.href = "/subscribe?tier=premium"}
-                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold mt-6"
+                  className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-bold mt-6 shadow-lg"
                 >
                   Choose Premium
                 </Button>
