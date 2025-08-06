@@ -1,0 +1,106 @@
+Create a buttery-smooth, mobile/desktop responsive PDF reading experience that mimics the design, feel, and fluidity of Apple Books — with full reading utilities, gesture responsiveness, and beautiful UI.
+
+📍 REQUIRED FUNCTIONALITIES
+📖 1. Polished Reading Experience
+Fullscreen reader layout (/read/:bookId)
+
+Smooth page flipping (support both swipe gestures and buttons)
+
+Zoom in/out support (pinch or double tap on mobile)
+
+Page number display (e.g. Page 5 / 200)
+
+Scroll mode and Single page mode toggle (like Apple Books)
+
+Responsive for:
+
+Mobile portrait
+
+Tablet landscape
+
+Desktop fullscreen
+
+🔖 2. Bookmarking System
+Add/remove bookmark on any page
+
+Sidebar for viewing all bookmarks
+
+Bookmarks stored per user/book in DB:
+
+POST /api/bookmarks → { userId, bookId, page }
+
+GET /api/bookmarks/:bookId
+
+Optional: Add a title or note per bookmark
+
+Toggle bookmark icon on/off on current page
+
+🔁 3. Reading Progress Tracking
+Auto-save current page on scroll/flip
+
+POST /api/progress → { userId, bookId, currentPage }
+
+GET /api/progress/:bookId → resume to saved page
+
+Works silently in background; no clicks needed
+
+🛡️ 4. Security Protections
+Load PDFs via /api/stream/:bookId only — no direct links
+
+Disable:
+
+Right-click
+
+Print
+
+Text selection
+
+Download or save-as
+
+Prevent browser default PDF tools
+
+Secure content with JWT-based route guard
+
+🎨 5. User Interface (Like Apple Books)
+Clean white reader background
+
+Soft shadows and high contrast for readability
+
+Top floating toolbar with:
+
+Book title
+
+Back button
+
+Page input / current page
+
+Bottom toolbar with:
+
+Bookmark toggle
+
+Scroll/single-page toggle
+
+Light/Dark mode toggle (optional)
+
+Sidebar drawer for:
+
+Bookmarks
+
+Table of contents (optional future)
+
+Use:
+
+TailwindCSS for mobile-first styling
+
+Framer Motion for transitions
+
+Shadcn UI for buttons, drawers, toggles
+
+📱 MOBILE-FIRST ENHANCEMENTS
+Swipe gestures to change page
+
+Pinch-to-zoom and double-tap zoom
+
+Scroll lock or velocity-sensitive scroll
+
+“Tap to toggle toolbar” like Apple Books
