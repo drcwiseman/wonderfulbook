@@ -207,8 +207,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mobile-grid max-w-6xl mx-auto">
-            <Card className="bg-white border-4 border-orange-400 hover:border-orange-600 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto justify-items-center">
+            <Card className="bg-white border-4 border-orange-400 hover:border-orange-600 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl w-full max-w-sm mx-auto">
               <CardHeader className="text-center pb-4 px-6 pt-8">
                 <Shield className="w-14 h-14 sm:w-16 sm:h-16 text-orange-600 mx-auto mb-4" />
                 <CardTitle className="text-xl sm:text-2xl text-black font-black mb-2">Curated Quality</CardTitle>
@@ -220,7 +220,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="bg-white border-4 border-orange-400 hover:border-orange-600 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl">
+            <Card className="bg-white border-4 border-orange-400 hover:border-orange-600 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl w-full max-w-sm mx-auto">
               <CardHeader className="text-center pb-4 px-6 pt-8">
                 <Clock className="w-14 h-14 sm:w-16 sm:h-16 text-orange-600 mx-auto mb-4" />
                 <CardTitle className="text-xl sm:text-2xl text-black font-black mb-2">Read Anywhere</CardTitle>
@@ -232,7 +232,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="bg-white border-4 border-orange-400 hover:border-orange-600 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl">
+            <Card className="bg-white border-4 border-orange-400 hover:border-orange-600 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl w-full max-w-sm mx-auto">
               <CardHeader className="text-center pb-4 px-6 pt-8">
                 <TrendingUp className="w-14 h-14 sm:w-16 sm:h-16 text-orange-600 mx-auto mb-4" />
                 <CardTitle className="text-xl sm:text-2xl text-black font-black mb-2">Track Progress</CardTitle>
