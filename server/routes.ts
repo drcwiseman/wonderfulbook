@@ -317,10 +317,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateUserStripeInfo(userId, customer.id, '');
       }
 
-      // Price IDs for different tiers (these would need to be set up in Stripe Dashboard)
-      const priceIds = {
-        basic: process.env.STRIPE_BASIC_PRICE_ID || 'price_basic',
-        premium: process.env.STRIPE_PREMIUM_PRICE_ID || 'price_premium',
+      // Dynamic pricing - create products and prices as needed
+      const tierConfig = {
+        basic: { amount: 999, name: 'Basic Plan' }, // £9.99
+        premium: { amount: 1999, name: 'Premium Plan' } // £19.99
       };
 
       if (tier === 'free') {
@@ -329,10 +329,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ message: "Free trial activated" });
       }
 
+      const config = tierConfig[tier as keyof typeof tierConfig];
+      if (!config) {
+        return res.status(400).json({ error: { message: 'Invalid tier' } });
+      }
+
+      // Create or get product
+      const products = await stripe.products.list({
+        limit: 100,
+      });
+      
+      let product = products.data.find(p => p.name === config.name);
+      if (!product) {
+        product = await stripe.products.create({
+          name: config.name,
+          description: `Wonderful Books ${config.name}`,
+        });
+      }
+
+      // Create or get price
+      const prices = await stripe.prices.list({
+        product: product.id,
+        limit: 100,
+      });
+      
+      let price = prices.data.find(p => p.unit_amount === config.amount && p.currency === 'gbp');
+      if (!price) {
+        price = await stripe.prices.create({
+          product: product.id,
+          unit_amount: config.amount,
+          currency: 'gbp',
+          recurring: { interval: 'month' },
+        });
+      }
+
       const subscription = await stripe.subscriptions.create({
         customer: customer.id,
         items: [{
-          price: priceIds[tier as keyof typeof priceIds],
+          price: price.id,
         }],
         payment_behavior: 'default_incomplete',
         expand: ['latest_invoice.payment_intent'],
