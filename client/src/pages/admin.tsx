@@ -45,6 +45,7 @@ export default function AdminPanel() {
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [pdfFile, setPdfFile] = useState("");
+  const [activeTab, setActiveTab] = useState("analytics");
 
   // Admin authorization check
   const isAdmin = (user as any)?.id === "45814604" || (user as any)?.email === "drcwiseman@gmail.com";
@@ -182,7 +183,12 @@ export default function AdminPanel() {
 
         {/* Main Navigation Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-blue-200 dark:border-blue-700">
+          <Card 
+            className={`cursor-pointer hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-blue-200 dark:border-blue-700 ${
+              activeTab === "analytics" ? "ring-2 ring-blue-500 shadow-lg" : ""
+            }`}
+            onClick={() => setActiveTab("analytics")}
+          >
             <CardContent className="p-6 text-center">
               <BarChart3 className="w-8 h-8 mx-auto mb-3 text-blue-600 dark:text-blue-400" />
               <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Analytics</h3>
@@ -190,7 +196,12 @@ export default function AdminPanel() {
             </CardContent>
           </Card>
           
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 border-green-200 dark:border-green-700">
+          <Card 
+            className={`cursor-pointer hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 border-green-200 dark:border-green-700 ${
+              activeTab === "content" ? "ring-2 ring-green-500 shadow-lg" : ""
+            }`}
+            onClick={() => setActiveTab("content")}
+          >
             <CardContent className="p-6 text-center">
               <Library className="w-8 h-8 mx-auto mb-3 text-green-600 dark:text-green-400" />
               <h3 className="font-semibold text-green-900 dark:text-green-100 mb-1">Content Library</h3>
@@ -198,7 +209,12 @@ export default function AdminPanel() {
             </CardContent>
           </Card>
           
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 border-purple-200 dark:border-purple-700">
+          <Card 
+            className={`cursor-pointer hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 border-purple-200 dark:border-purple-700 ${
+              activeTab === "users" ? "ring-2 ring-purple-500 shadow-lg" : ""
+            }`}
+            onClick={() => setActiveTab("users")}
+          >
             <CardContent className="p-6 text-center">
               <UserCheck className="w-8 h-8 mx-auto mb-3 text-purple-600 dark:text-purple-400" />
               <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-1">User Management</h3>
@@ -206,7 +222,12 @@ export default function AdminPanel() {
             </CardContent>
           </Card>
           
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 border-orange-200 dark:border-orange-700">
+          <Card 
+            className={`cursor-pointer hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 border-orange-200 dark:border-orange-700 ${
+              activeTab === "settings" ? "ring-2 ring-orange-500 shadow-lg" : ""
+            }`}
+            onClick={() => setActiveTab("settings")}
+          >
             <CardContent className="p-6 text-center">
               <Settings className="w-8 h-8 mx-auto mb-3 text-orange-600 dark:text-orange-400" />
               <h3 className="font-semibold text-orange-900 dark:text-orange-100 mb-1">Platform Settings</h3>
@@ -215,7 +236,7 @@ export default function AdminPanel() {
           </Card>
         </div>
 
-        <Tabs defaultValue="analytics" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 bg-white dark:bg-gray-800 border rounded-lg p-1">
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
@@ -313,15 +334,15 @@ export default function AdminPanel() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline" onClick={() => document.querySelector('[value="content"]')?.click()}>
+                  <Button className="w-full justify-start" variant="outline" onClick={() => setActiveTab("content")}>
                     <Upload className="w-4 h-4 mr-2" />
                     Upload New Book
                   </Button>
-                  <Button className="w-full justify-start" variant="outline" onClick={() => document.querySelector('[value="users"]')?.click()}>
+                  <Button className="w-full justify-start" variant="outline" onClick={() => setActiveTab("users")}>
                     <Users className="w-4 h-4 mr-2" />
                     Add New User
                   </Button>
-                  <Button className="w-full justify-start" variant="outline" onClick={() => document.querySelector('[value="settings"]')?.click()}>
+                  <Button className="w-full justify-start" variant="outline" onClick={() => setActiveTab("settings")}>
                     <Settings className="w-4 h-4 mr-2" />
                     Manage Categories
                   </Button>
