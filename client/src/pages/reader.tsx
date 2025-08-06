@@ -142,10 +142,10 @@ export default function ReaderPage() {
     console.log('PDF loaded:', numPages, 'pages');
     
     // Step 2: Resume reading from last page where user left off
-    if (progress && typeof progress === 'object' && 'currentPage' in progress) {
-      const lastPage = Number(progress.currentPage);
-      if (lastPage > 0 && lastPage <= numPages) {
-        setCurrentPage(lastPage);
+    if (progress && typeof progress === 'object') {
+      const lastPage = progress.lastPage || progress.currentPage;
+      if (lastPage && lastPage > 1 && lastPage <= numPages) {
+        setCurrentPage(Number(lastPage));
         toast({
           title: "Welcome back!",
           description: `Resuming from page ${lastPage}`,
@@ -418,7 +418,7 @@ export default function ReaderPage() {
               fileUrl={pdfUrl}
               plugins={[defaultLayoutPluginInstance]}
               onDocumentLoad={handleDocumentLoad}
-              onPageChange={(e) => setCurrentPage(e.currentPage + 1)}
+              onPageChange={(e) => handlePageChange(e.currentPage + 1)}
             />
           )}
         </div>
