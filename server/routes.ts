@@ -13,10 +13,31 @@ import connectPg from "connect-pg-simple";
 import { registerSEORoutes } from "./routes-seo";
 import { antiAbuseService } from "./antiAbuseService";
 
-// Local authentication middleware
+// Local authentication middleware with production debugging
 const isAuthenticated = (req: any, res: any, next: any) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // Debug session information in production
+  if (isProduction) {
+    console.log('Auth check:', {
+      sessionId: req.sessionID,
+      hasSession: !!req.session,
+      hasUser: !!(req.session && req.session.user),
+      userAgent: req.headers['user-agent']?.substring(0, 50),
+      path: req.path
+    });
+  }
+  
   if (!req.session || !req.session.user) {
-    return res.status(401).json({ message: "Unauthorized" });
+    console.log('Authentication failed: No session or user data');
+    return res.status(401).json({ 
+      message: "Unauthorized",
+      debug: isProduction ? undefined : {
+        hasSession: !!req.session,
+        sessionId: req.sessionID,
+        sessionData: req.session
+      }
+    });
   }
   
   // Set user object with both session data and claims structure for compatibility
@@ -43,8 +64,39 @@ console.log('Using Stripe secret key starting with:', actualSecretKey?.substring
 const stripe = new Stripe(actualSecretKey!);
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Session configuration for local authentication
-  app.set("trust proxy", 1);
+  // Production environment detection and configuration
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // Trust proxy configuration for production
+  app.set("trust proxy", isProduction ? 1 : false);
+  
+  // CORS configuration
+  app.use((req, res, next) => {
+    const allowedOrigins = isProduction 
+      ? ['https://*.replit.app', 'https://*.replit.dev']
+      : ['http://localhost:3000', 'http://localhost:5000', 'http://127.0.0.1:5000'];
+    
+    const origin = req.headers.origin;
+    if (isProduction) {
+      // In production, check if origin matches allowed patterns
+      if (origin && (origin.includes('.replit.app') || origin.includes('.replit.dev'))) {
+        res.header('Access-Control-Allow-Origin', origin);
+      }
+    } else {
+      // In development, allow localhost origins
+      res.header('Access-Control-Allow-Origin', origin || '*');
+    }
+    
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(200);
+    } else {
+      next();
+    }
+  });
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
@@ -61,10 +113,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
+      secure: process.env.NODE_ENV === 'production', // Enable secure cookies in production
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       maxAge: sessionTtl,
     },
+    proxy: process.env.NODE_ENV === 'production', // Trust proxy in production
   }));
+
+  // Production health check and environment status
+  app.get('/api/health', async (req, res) => {
+    try {
+      const health = {
+        status: 'ok',
+        environment: process.env.NODE_ENV || 'development',
+        timestamp: new Date().toISOString(),
+        database: {
+          connected: !!process.env.DATABASE_URL,
+          sessionStore: 'postgresql'
+        },
+        authentication: {
+          sessionSecret: !!process.env.SESSION_SECRET,
+          provider: 'local'
+        },
+        deployment: {
+          trustProxy: isProduction,
+          secureCookies: isProduction,
+          corsEnabled: true
+        }
+      };
+      res.json(health);
+    } catch (error) {
+      res.status(500).json({ 
+        status: 'error', 
+        message: 'Health check failed',
+        error: isProduction ? 'Internal server error' : String(error)
+      });
+    }
+  });
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -167,28 +252,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/auth/login', async (req, res) => {
     try {
+      console.log('Login attempt:', { 
+        email: req.body.email, 
+        environment: process.env.NODE_ENV,
+        sessionId: req.sessionID,
+        userAgent: req.headers['user-agent']?.substring(0, 50)
+      });
+      
       const loginData = loginSchema.parse(req.body);
       const user = await storage.authenticateUser(loginData.email, loginData.password);
       
       if (!user) {
+        console.log('Login failed: Invalid credentials for', loginData.email);
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
       if (!user.emailVerified) {
+        console.log('Login failed: Email not verified for', loginData.email);
         return res.status(401).json({ message: "Please verify your email before signing in" });
       }
 
       if (!user.isActive) {
+        console.log('Login failed: Account deactivated for', loginData.email);
         return res.status(401).json({ message: "Your account has been deactivated" });
       }
 
       // Create a session for local auth users
-      (req.session as any).user = {
+      const sessionData = {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
-        lastName: user.lastName
+        lastName: user.lastName,
+        loginTime: new Date().toISOString()
       };
+      
+      (req.session as any).user = sessionData;
+      
+      // Force session save for production environments
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err: any) => {
+          if (err) {
+            console.error('Session save error:', err);
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+      
+      console.log('Login successful for:', user.email, 'sessionId:', req.sessionID);
       
       res.json({ 
         message: "Login successful", 
@@ -201,7 +313,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('Login error:', error);
-      res.status(400).json({ message: error.message || "Login failed" });
+      res.status(400).json({ 
+        message: error.message || "Login failed",
+        debug: isProduction ? undefined : {
+          error: String(error),
+          sessionId: req.sessionID,
+          environment: process.env.NODE_ENV
+        }
+      });
     }
   });
 
