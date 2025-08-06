@@ -46,6 +46,9 @@ export default function AdminPanel() {
   const [description, setDescription] = useState("");
   const [pdfFile, setPdfFile] = useState("");
   const [activeTab, setActiveTab] = useState("analytics");
+  const [bookToDelete, setBookToDelete] = useState<any>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   // Admin authorization check
   const isAdmin = (user as any)?.id === "45814604" || (user as any)?.email === "drcwiseman@gmail.com";
@@ -75,7 +78,17 @@ export default function AdminPanel() {
   });
 
   // Fetch analytics data
-  const { data: analytics } = useQuery({
+  const { data: analytics = {
+    totalUsers: 0,
+    activeSubscriptions: 0,
+    monthlyRevenue: 0,
+    conversionRate: 0
+  } } = useQuery<{
+    totalUsers: number;
+    activeSubscriptions: number;
+    monthlyRevenue: number;
+    conversionRate: number;
+  }>({
     queryKey: ["/api/admin/analytics"],
     enabled: isAdmin,
   });
@@ -115,6 +128,54 @@ export default function AdminPanel() {
     },
   });
 
+  // Delete book mutation
+  const deleteBookMutation = useMutation({
+    mutationFn: async (bookId: string) => {
+      await apiRequest("DELETE", `/api/admin/books/${bookId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Book deleted successfully!",
+      });
+      setDeleteConfirmOpen(false);
+      setBookToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete book",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Bulk delete mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (bookIds: string[]) => {
+      await apiRequest("POST", "/api/admin/books/bulk-delete", { bookIds });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: `${selectedBooks.length} book(s) deleted successfully!`,
+      });
+      setBulkDeleteOpen(false);
+      setSelectedBooks([]);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete books",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle book selection
   const handleSelectBook = (bookId: string, checked: boolean) => {
     if (checked) {
@@ -130,6 +191,25 @@ export default function AdminPanel() {
     } else {
       setSelectedBooks([]);
     }
+  };
+
+  const handleDeleteBook = (book: any) => {
+    setBookToDelete(book);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (bookToDelete) {
+      deleteBookMutation.mutate(bookToDelete.id);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    setBulkDeleteOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
+    bulkDeleteMutation.mutate(selectedBooks);
   };
 
   if (!isAuthenticated) {
@@ -267,7 +347,7 @@ export default function AdminPanel() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Users</p>
-                          <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{analytics?.totalUsers || 0}</p>
+                          <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{analytics.totalUsers || 0}</p>
                         </div>
                         <Users className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                       </div>
@@ -279,7 +359,7 @@ export default function AdminPanel() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium text-green-700 dark:text-green-300">Active Subscriptions</p>
-                          <p className="text-2xl font-bold text-green-900 dark:text-green-100">{analytics?.activeSubscriptions || 0}</p>
+                          <p className="text-2xl font-bold text-green-900 dark:text-green-100">{analytics.activeSubscriptions || 0}</p>
                         </div>
                         <TrendingUp className="w-8 h-8 text-green-600 dark:text-green-400" />
                       </div>
@@ -291,7 +371,7 @@ export default function AdminPanel() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Monthly Revenue</p>
-                          <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">£{analytics?.monthlyRevenue || 0}</p>
+                          <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">£{analytics.monthlyRevenue || 0}</p>
                         </div>
                         <DollarSign className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                       </div>
@@ -310,15 +390,15 @@ export default function AdminPanel() {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <span className="font-medium">Trial Conversion Rate</span>
-                        <Badge variant="secondary">{analytics?.conversionRate || 0}%</Badge>
+                        <Badge variant="secondary">{analytics.conversionRate || 0}%</Badge>
                       </div>
                       <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <span className="font-medium">Total Books</span>
-                        <Badge variant="outline">{books?.length || 0}</Badge>
+                        <Badge variant="outline">{Array.isArray(books) ? books.length : 0}</Badge>
                       </div>
                       <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <span className="font-medium">Featured Books</span>
-                        <Badge variant="default">{books?.filter((book: any) => book.isFeatured)?.length || 0}</Badge>
+                        <Badge variant="default">{Array.isArray(books) ? books.filter((book: any) => book.isFeatured).length : 0}</Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -433,7 +513,7 @@ export default function AdminPanel() {
                         <div className="space-y-2">
                           <Label>Categories (Select multiple)</Label>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-4 border rounded-md">
-                            {categories.map((category: any) => (
+                            {Array.isArray(categories) && categories.map((category: any) => (
                               <div key={category.id} className="flex items-center space-x-2">
                                 <Checkbox
                                   id={`category-${category.id}`}
@@ -531,11 +611,24 @@ export default function AdminPanel() {
                                 Select All ({(books as any[])?.length || 0} books)
                               </span>
                             </div>
-                            {selectedBooks.length > 0 && (
-                              <span className="text-sm text-blue-600 dark:text-blue-400">
-                                {selectedBooks.length} book(s) selected
-                              </span>
-                            )}
+                            <div className="flex items-center space-x-3">
+                              {selectedBooks.length > 0 && (
+                                <>
+                                  <span className="text-sm text-blue-600 dark:text-blue-400">
+                                    {selectedBooks.length} book(s) selected
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={handleBulkDelete}
+                                    disabled={bulkDeleteMutation.isPending}
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Selected
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </div>
                           {(books as any[] || []).map((book: any) => (
                             <div
@@ -575,7 +668,13 @@ export default function AdminPanel() {
                                 <Button size="sm" variant="ghost">
                                   {book.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                                 </Button>
-                                <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => handleDeleteBook(book)}
+                                  disabled={deleteBookMutation.isPending}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
                               </div>
@@ -600,6 +699,56 @@ export default function AdminPanel() {
             <CategoryManager />
           </TabsContent>
         </Tabs>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center space-x-2">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                <span>Delete Book</span>
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{bookToDelete?.title}"? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-red-600 text-white hover:bg-red-700"
+                disabled={deleteBookMutation.isPending}
+              >
+                {deleteBookMutation.isPending ? "Deleting..." : "Delete Book"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Bulk Delete Confirmation Dialog */}
+        <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center space-x-2">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                <span>Delete Multiple Books</span>
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {selectedBooks.length} selected book(s)? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmBulkDelete}
+                className="bg-red-600 text-white hover:bg-red-700"
+                disabled={bulkDeleteMutation.isPending}
+              >
+                {bulkDeleteMutation.isPending ? "Deleting..." : `Delete ${selectedBooks.length} Book(s)`}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

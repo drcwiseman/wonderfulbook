@@ -391,6 +391,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete a book (admin)
+  app.delete("/api/admin/books/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const bookId = req.params.id;
+      await storage.deleteBook(bookId);
+      res.json({ message: "Book deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting book:", error);
+      res.status(500).json({ message: "Failed to delete book" });
+    }
+  });
+
+  // Bulk delete books (admin)
+  app.post("/api/admin/books/bulk-delete", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { bookIds } = req.body;
+      if (!Array.isArray(bookIds) || bookIds.length === 0) {
+        return res.status(400).json({ message: "Book IDs array is required" });
+      }
+
+      const result = await storage.deleteMultipleBooks(bookIds);
+      res.json({ 
+        message: `${result.totalDeleted} book(s) deleted successfully`,
+        totalDeleted: result.totalDeleted,
+        deletedBooks: result.deletedBooks
+      });
+    } catch (error) {
+      console.error("Error bulk deleting books:", error);
+      res.status(500).json({ message: "Failed to delete books" });
+    }
+  });
+
   app.get('/api/admin/analytics', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const analytics = await storage.getAnalytics();
@@ -546,8 +578,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (result.book.coverImageUrl) {
           deleteFileIfExists(result.book.coverImageUrl);
         }
-        if (result.book.fileUrl) {
-          deleteFileIfExists(result.book.fileUrl);
+        if (result.book.pdfUrl) {
+          deleteFileIfExists(result.book.pdfUrl);
         }
       }
 
@@ -591,8 +623,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (book.coverImageUrl) {
             deleteFileIfExists(book.coverImageUrl);
           }
-          if (book.fileUrl) {
-            deleteFileIfExists(book.fileUrl);
+          if (book.pdfUrl) {
+            deleteFileIfExists(book.pdfUrl);
           }
         }
       });
