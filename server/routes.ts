@@ -58,6 +58,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Categories endpoint
+  app.get('/api/categories', async (req, res) => {
+    try {
+      // Get unique book tiers and categories from the database
+      const books = await storage.getAllBooks();
+      const tiers = [...new Set(books.map(book => book.requiredTier))];
+      res.json(tiers);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
   app.get('/api/books/:id', async (req, res) => {
     try {
       const book = await storage.getBook(req.params.id);

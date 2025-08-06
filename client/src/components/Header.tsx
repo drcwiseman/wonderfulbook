@@ -29,7 +29,7 @@ export default function Header() {
             <div className="text-orange-500 text-2xl font-bold">Wonderful Books</div>
             <div className="hidden md:flex space-x-6">
               <a href="/" className="text-white hover:text-orange-300 transition-colors font-medium">Home</a>
-              <a href="#categories" className="text-white hover:text-orange-300 transition-colors font-medium">Categories</a>
+              <a href="/bookstore" className="text-white hover:text-orange-300 transition-colors font-medium">Book Store</a>
               {isAuthenticated && (
                 <>
                   <a href="/dashboard" className="text-white hover:text-orange-300 transition-colors font-medium">Dashboard</a>
@@ -145,7 +145,7 @@ export default function Header() {
             
             <nav className="space-y-4">
               <a href="/" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">Home</a>
-              <a href="#categories" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">Categories</a>
+              <a href="/bookstore" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">Book Store</a>
               {isAuthenticated && (
                 <>
                   <a href="#my-books" className="block py-2 text-white hover:text-orange-300 text-lg border-b border-gray-700 font-medium">My Books</a>
