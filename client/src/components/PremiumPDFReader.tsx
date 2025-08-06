@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -42,6 +42,12 @@ export function PremiumPDFReader({
   const queryClient = useQueryClient();
 
   const pdfUrl = `/api/stream/${bookId}`;
+
+  // Memoize PDF options to prevent unnecessary reloads
+  const pdfOptions = useMemo(() => ({
+    cMapUrl: `//unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+    cMapPacked: true,
+  }), []);
 
   // Check if current page is bookmarked
   useEffect(() => {
@@ -122,11 +128,27 @@ export function PremiumPDFReader({
   function onDocumentLoadError(error: Error) {
     console.error('Error loading PDF:', error);
     setIsLoading(false);
-    toast({
-      title: "Error loading book",
-      description: "Please check your internet connection and try again",
-      variant: "destructive",
-    });
+    
+    // Check if it's an authentication error
+    if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to access this book",
+        variant: "destructive",
+      });
+    } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
+      toast({
+        title: "Upgrade Required",
+        description: "This book requires a higher subscription tier",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Error loading book",
+        description: "Failed to load PDF file. Please try refreshing the page.",
+        variant: "destructive",
+      });
+    }
   }
 
   function goToPage(page: number) {
@@ -371,15 +393,18 @@ export function PremiumPDFReader({
         )}
 
         <Document
-          file={pdfUrl}
+          file={{
+            url: pdfUrl,
+            httpHeaders: {
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            withCredentials: true
+          }}
           onLoadSuccess={onDocumentLoadSuccess}
           onLoadError={onDocumentLoadError}
           loading=""
           className="flex items-center justify-center"
-          options={{
-            cMapUrl: `//unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
-            cMapPacked: true,
-          }}
+          options={pdfOptions}
         >
           {numPages && (
             <div className="transition-all duration-300 ease-in-out">
