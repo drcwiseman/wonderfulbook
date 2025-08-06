@@ -87,12 +87,30 @@ export function UserManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch users
+  // Fetch users with cache-busting
   const { data: usersResponse, isLoading, refetch } = useQuery({
     queryKey: ["/api/admin/users", searchQuery, refreshKey],
-    queryFn: () => apiRequest("GET", `/api/admin/users${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}`),
-    staleTime: 0, // Always refetch
-    gcTime: 0, // Don't cache
+    queryFn: async () => {
+      const url = `/api/admin/users${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}${searchQuery || refreshKey ? (searchQuery ? "&" : "?") : "?"}t=${Date.now()}`;
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0",
+        },
+        credentials: "include",
+      });
+      
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`${res.status}: ${text}`);
+      }
+      
+      return await res.json();
+    },
+    staleTime: 0,
+    gcTime: 0,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
   });
