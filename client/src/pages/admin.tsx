@@ -14,7 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X } from "lucide-react";
+import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X, AlertTriangle } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -56,6 +57,8 @@ export default function AdminPanel() {
   const [description, setDescription] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [pdfFile, setPdfFile] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [bookToDelete, setBookToDelete] = useState<any>(null);
 
   // Admin authorization check
   const isAdmin = (user as any)?.id === "45814604" || (user as any)?.email === "drcwiseman@gmail.com";
@@ -98,6 +101,53 @@ export default function AdminPanel() {
   const { data: categories = [] } = useQuery({
     queryKey: ["/api/admin/categories"],
     enabled: isAdmin,
+  });
+
+  // Delete single book mutation
+  const deleteBookMutation = useMutation({
+    mutationFn: async (bookId: string) => {
+      await apiRequest("DELETE", `/api/admin/books/${bookId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Book deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
+      setDeleteConfirmOpen(false);
+      setBookToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete book",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete multiple books mutation
+  const deleteMultipleMutation = useMutation({
+    mutationFn: async (bookIds: string[]) => {
+      await apiRequest("DELETE", "/api/admin/books/bulk", { bookIds });
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Success",
+        description: data.message || "Books deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
+      setSelectedBooks([]);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete books",
+        variant: "destructive",
+      });
+    },
   });
 
   // Create book mutation
@@ -217,6 +267,41 @@ export default function AdminPanel() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
     },
   });
+
+  const handleDeleteBook = (book: any) => {
+    setBookToDelete(book);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (bookToDelete) {
+      deleteBookMutation.mutate(bookToDelete.id);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedBooks.length > 0) {
+      deleteMultipleMutation.mutate(selectedBooks);
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && books) {
+      setSelectedBooks((books as any[]).map((book: any) => book.id));
+    } else {
+      setSelectedBooks([]);
+    }
+  };
+
+  const handleSelectBook = (bookId: string, checked: boolean) => {
+    setSelectedBooks(prev => 
+      checked 
+        ? [...prev, bookId]
+        : prev.filter(id => id !== bookId)
+    );
+  };
+
+
 
   if (!isAuthenticated) {
     return (
@@ -464,6 +549,40 @@ export default function AdminPanel() {
                       >
                         Set Premium
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={deleteMultipleMutation.isPending}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Delete Selected ({selectedBooks.length})
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center">
+                              <AlertTriangle className="w-5 h-5 text-red-500 mr-2" />
+                              Delete Selected Books
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete {selectedBooks.length} book(s)? 
+                              This action cannot be undone and will permanently remove the books 
+                              and their associated files from the system.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleBulkDelete}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Delete Books
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   )}
                 </CardTitle>
@@ -479,23 +598,31 @@ export default function AdminPanel() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {(books as any[]).map((book: any) => (
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={selectedBooks.length === (books as any[])?.length && (books as any[])?.length > 0}
+                          onCheckedChange={handleSelectAll}
+                        />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                          Select All ({(books as any[])?.length || 0} books)
+                        </span>
+                      </div>
+                      {selectedBooks.length > 0 && (
+                        <span className="text-sm text-blue-600 dark:text-blue-400">
+                          {selectedBooks.length} book(s) selected
+                        </span>
+                      )}
+                    </div>
+                    {(books as any[] || []).map((book: any) => (
                       <div
                         key={book.id}
                         className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
                       >
                         <div className="flex items-center space-x-4">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={selectedBooks.includes(book.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedBooks([...selectedBooks, book.id]);
-                              } else {
-                                setSelectedBooks(selectedBooks.filter(id => id !== book.id));
-                              }
-                            }}
-                            className="rounded"
+                            onCheckedChange={(checked) => handleSelectBook(book.id, checked as boolean)}
                           />
                           <div>
                             <h3 className="font-medium text-gray-900 dark:text-white">
@@ -529,6 +656,15 @@ export default function AdminPanel() {
                             })}
                           >
                             {book.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteBook(book)}
+                            disabled={deleteBookMutation.isPending}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
@@ -726,6 +862,33 @@ export default function AdminPanel() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center">
+                <AlertTriangle className="w-5 h-5 text-red-500 mr-2" />
+                Delete Book
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{bookToDelete?.title}"? 
+                This action cannot be undone and will permanently remove the book 
+                and all associated files from the system.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-red-500 hover:bg-red-600"
+                disabled={deleteBookMutation.isPending}
+              >
+                {deleteBookMutation.isPending ? "Deleting..." : "Delete Book"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

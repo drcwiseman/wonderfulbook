@@ -508,6 +508,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete single book
+  app.delete('/api/admin/books/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const bookId = req.params.id;
+      const result = await storage.deleteBook(bookId);
+      
+      // Delete associated files
+      if (result.book) {
+        const deleteFileIfExists = (filePath: string) => {
+          try {
+            const fullPath = path.join(process.cwd(), filePath.startsWith('/') ? filePath.substring(1) : filePath);
+            if (fs.existsSync(fullPath)) {
+              fs.unlinkSync(fullPath);
+              console.log(`Deleted file: ${fullPath}`);
+            }
+          } catch (error) {
+            console.error(`Failed to delete file ${filePath}:`, error);
+          }
+        };
+
+        // Delete cover image and PDF file
+        if (result.book.coverImageUrl) {
+          deleteFileIfExists(result.book.coverImageUrl);
+        }
+        if (result.book.fileUrl) {
+          deleteFileIfExists(result.book.fileUrl);
+        }
+      }
+
+      res.json({ 
+        message: "Book deleted successfully", 
+        deletedBook: result.book,
+        filesDeleted: result.filesDeleted 
+      });
+    } catch (error) {
+      console.error("Error deleting book:", error);
+      res.status(500).json({ message: "Failed to delete book" });
+    }
+  });
+
+  // Delete multiple books
+  app.delete('/api/admin/books/bulk', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { bookIds } = req.body;
+      
+      if (!bookIds || !Array.isArray(bookIds) || bookIds.length === 0) {
+        return res.status(400).json({ message: "No book IDs provided" });
+      }
+
+      const result = await storage.deleteMultipleBooks(bookIds);
+      
+      // Delete associated files for all successfully deleted books
+      const deleteFileIfExists = (filePath: string) => {
+        try {
+          const fullPath = path.join(process.cwd(), filePath.startsWith('/') ? filePath.substring(1) : filePath);
+          if (fs.existsSync(fullPath)) {
+            fs.unlinkSync(fullPath);
+            console.log(`Deleted file: ${fullPath}`);
+          }
+        } catch (error) {
+          console.error(`Failed to delete file ${filePath}:`, error);
+        }
+      };
+
+      result.deletedBooks.forEach(book => {
+        if (book) {
+          if (book.coverImageUrl) {
+            deleteFileIfExists(book.coverImageUrl);
+          }
+          if (book.fileUrl) {
+            deleteFileIfExists(book.fileUrl);
+          }
+        }
+      });
+
+      res.json({ 
+        message: `Successfully deleted ${result.totalDeleted} book(s)`,
+        totalDeleted: result.totalDeleted,
+        deletedBooks: result.deletedBooks.filter(book => book !== undefined)
+      });
+    } catch (error) {
+      console.error("Error bulk deleting books:", error);
+      res.status(500).json({ message: "Failed to delete books" });
+    }
+  });
+
   // Stripe subscription routes
   app.post('/api/create-subscription', isAuthenticated, async (req: any, res) => {
     try {

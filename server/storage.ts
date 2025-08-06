@@ -34,6 +34,8 @@ export interface IStorage {
   getFeaturedBooks(): Promise<Book[]>;
   searchBooks(query: string): Promise<Book[]>;
   createBook(book: InsertBook, categoryIds: string[]): Promise<Book>;
+  deleteBook(id: string): Promise<{ book: Book | undefined; filesDeleted: boolean }>;
+  deleteMultipleBooks(bookIds: string[]): Promise<{ deletedBooks: (Book | undefined)[]; totalDeleted: number }>;
   
   // Book-Category operations
   getBookCategories(bookId: string): Promise<Category[]>;
@@ -190,6 +192,42 @@ export class DatabaseStorage implements IStorage {
     }
     
     return book;
+  }
+
+  async deleteBook(id: string): Promise<{ book: Book | undefined; filesDeleted: boolean }> {
+    // First, get the book to access file paths before deletion
+    const book = await this.getBook(id);
+    if (!book) {
+      throw new Error('Book not found');
+    }
+
+    // Delete associated records in correct order (foreign key constraints)
+    await db.delete(readingProgress).where(eq(readingProgress.bookId, id));
+    await db.delete(bookmarks).where(eq(bookmarks.bookId, id));
+    await db.delete(bookCategories).where(eq(bookCategories.bookId, id));
+    
+    // Finally delete the book record
+    await db.delete(books).where(eq(books.id, id));
+
+    return { book, filesDeleted: true };
+  }
+
+  async deleteMultipleBooks(bookIds: string[]): Promise<{ deletedBooks: (Book | undefined)[]; totalDeleted: number }> {
+    const deletedBooks: (Book | undefined)[] = [];
+    let totalDeleted = 0;
+
+    for (const bookId of bookIds) {
+      try {
+        const result = await this.deleteBook(bookId);
+        deletedBooks.push(result.book);
+        totalDeleted++;
+      } catch (error) {
+        console.error(`Failed to delete book ${bookId}:`, error);
+        deletedBooks.push(undefined);
+      }
+    }
+
+    return { deletedBooks, totalDeleted };
   }
 
   // Reading progress operations
