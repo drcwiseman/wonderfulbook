@@ -115,8 +115,17 @@ export function UserManagement() {
     refetchOnWindowFocus: true,
   });
 
-  // Ensure users is always an array
+  // Ensure users is always an array and log data for debugging
   const users = Array.isArray(usersResponse) ? usersResponse : [];
+  
+  // Debug logging
+  console.log("UserManagement Debug:", {
+    usersResponse,
+    usersArray: users,
+    usersCount: users.length,
+    isLoading,
+    refreshKey
+  });
 
   // Fetch user analytics
   const { data: userAnalytics } = useQuery({
@@ -636,8 +645,19 @@ export function UserManagement() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-8 text-center">Loading users...</div>
+          ) : users.length === 0 ? (
+            <div className="p-8 text-center">
+              <p className="text-muted-foreground">No users found</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Debug: usersResponse = {JSON.stringify(usersResponse)}
+              </p>
+            </div>
           ) : (
-            <Table>
+            <div>
+              <div className="p-4 bg-blue-50 text-sm">
+                Debug: Found {users.length} users
+              </div>
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
@@ -747,6 +767,7 @@ export function UserManagement() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
