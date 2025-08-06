@@ -245,6 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { bookId } = req.query;
+      console.log('Fetching bookmarks for user:', userId, 'book:', bookId);
       const bookmarks = await storage.getUserBookmarks(userId, bookId as string);
       res.json(bookmarks);
     } catch (error) {
