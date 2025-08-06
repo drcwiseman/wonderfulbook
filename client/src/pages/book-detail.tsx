@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,7 @@ import type { Book as BookType, ReadingProgress, Bookmark as BookmarkType } from
 
 export default function BookDetail() {
   const [, params] = useRoute("/book/:id");
+  const [, setLocation] = useLocation();
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(0);
