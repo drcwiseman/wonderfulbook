@@ -118,16 +118,8 @@ export function UserManagement() {
   // Ensure users is always an array and log data for debugging
   const users = Array.isArray(usersResponse) ? usersResponse : [];
   
-  // Debug logging
-  console.log("UserManagement Debug:", {
-    usersResponse,
-    usersArray: users,
-    usersCount: users.length,
-    isLoading,
-    refreshKey,
-    responseType: typeof usersResponse,
-    isArray: Array.isArray(usersResponse)
-  });
+  // Debug logging (can be removed in production)
+  // console.log("UserManagement Debug:", { usersCount: users.length, isLoading });
 
   // Fetch user analytics
   const { data: userAnalytics } = useQuery({
@@ -656,8 +648,8 @@ export function UserManagement() {
             </div>
           ) : (
             <div>
-              <div className="p-4 bg-green-50 border border-green-200 text-sm font-medium">
-                ✅ {users.length} users loaded - Edit buttons should be visible in Action column
+              <div className="p-3 bg-slate-50 border-b text-sm text-muted-foreground">
+                {users.length} users found
               </div>
               <Table>
               <TableHeader>
