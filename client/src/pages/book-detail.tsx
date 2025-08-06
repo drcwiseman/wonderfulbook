@@ -201,15 +201,20 @@ export default function BookDetail() {
                 </p>
                 
                 <div className="bg-netflix-red/10 border-l-4 border-netflix-red p-6 rounded">
-                  <h3 className="text-xl font-semibold mb-2 text-netflix-red">Upgrade Required</h3>
+                  <h3 className="text-xl font-semibold mb-2 text-netflix-red">
+                    {book.requiredTier === 'free' ? 'Login Required' : 'Upgrade Required'}
+                  </h3>
                   <p className="text-gray-300 mb-4">
-                    This book requires a {book.requiredTier} subscription to access.
+                    {book.requiredTier === 'free' 
+                      ? 'Please log in to start reading this book for free.'
+                      : `This book requires a ${book.requiredTier} subscription to access.`
+                    }
                   </p>
                   <Button
-                    onClick={() => window.location.href = "/subscribe"}
+                    onClick={() => window.location.href = book.requiredTier === 'free' ? '/api/login' : '/subscribe'}
                     className="bg-netflix-red hover:bg-red-700"
                   >
-                    Upgrade Now
+                    {book.requiredTier === 'free' ? 'Log In to Read' : 'Upgrade Now'}
                   </Button>
                 </div>
               </div>
