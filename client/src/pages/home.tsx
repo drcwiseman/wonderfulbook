@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Star, Zap, BookOpen, Users, TrendingUp, CheckCircle, ArrowRight, PlayCircle, Award, Shield, Clock } from "lucide-react";
 import FeaturedBooks from "@/components/FeaturedBooks";
+import IntelligentSearch from "@/components/IntelligentSearch";
 import { useQuery } from "@tanstack/react-query";
 import { SEOHead, seoConfigs } from "@/components/SEOHead";
 
@@ -176,6 +177,38 @@ export default function Home() {
       </section>
 
 
+
+      {/* Smart Search Section */}
+      <section className="py-16 bg-gradient-to-br from-gray-50 to-orange-50/20">
+        <div className="responsive-container">
+          <div className="text-center mb-12">
+            <h2 className="text-responsive-3xl font-bold mb-4 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+              Find Your Next Great Read
+            </h2>
+            <p className="text-responsive-lg text-gray-700 max-w-2xl mx-auto mb-8">
+              Search by book title, author, or topic. Our intelligent search helps you discover exactly what you're looking for.
+            </p>
+          </div>
+          
+          <IntelligentSearch className="mb-8" />
+          
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mt-8">
+            <span className="text-sm text-gray-600">Popular searches:</span>
+            <button className="text-sm bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1 rounded-full transition-colors">
+              Leadership
+            </button>
+            <button className="text-sm bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1 rounded-full transition-colors">
+              Personal Growth
+            </button>
+            <button className="text-sm bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1 rounded-full transition-colors">
+              Business
+            </button>
+            <button className="text-sm bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1 rounded-full transition-colors">
+              Psychology
+            </button>
+          </div>
+        </div>
+      </section>
 
       {/* Book Showcase Section */}
       <section className="py-20">

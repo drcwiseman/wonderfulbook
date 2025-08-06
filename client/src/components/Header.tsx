@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -10,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 export default function Header() {
   const { user, isAuthenticated } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -35,13 +33,7 @@ export default function Header() {
     },
   });
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      // Navigate to search results or update URL with search params
-      console.log("Search query:", searchQuery);
-    }
-  };
+
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -70,25 +62,6 @@ export default function Header() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <form onSubmit={handleSearch} className="hidden md:block relative">
-              <Input
-                type="text"
-                placeholder="Search books..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-gray-800 text-white px-4 py-2 rounded-md w-64 focus:outline-none focus:ring-2 focus:ring-orange-500 border border-gray-600"
-              />
-              <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
-            </form>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden text-white"
-              onClick={toggleMobileMenu}
-            >
-              <Search className="h-4 w-4" />
-            </Button>
             
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
