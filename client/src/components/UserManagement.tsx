@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Trash2, Edit2, Search, Shield, Mail, Key, UserCheck, UserX, Users, TrendingUp, Plus } from "lucide-react";
+import { Trash2, Edit2, Search, Shield, Mail, Key, UserCheck, UserX, Users, TrendingUp, Plus, RefreshCw } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -87,9 +87,13 @@ export function UserManagement() {
   const queryClient = useQueryClient();
 
   // Fetch users
-  const { data: usersResponse, isLoading } = useQuery({
+  const { data: usersResponse, isLoading, refetch } = useQuery({
     queryKey: ["/api/admin/users", searchQuery],
     queryFn: () => apiRequest("GET", `/api/admin/users${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ""}`),
+    staleTime: 0, // Always refetch
+    gcTime: 0, // Don't cache (renamed from cacheTime in TanStack Query v5)
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Ensure users is always an array
@@ -176,6 +180,7 @@ export function UserManagement() {
       setEditingUser(null);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-analytics"] });
+      refetch(); // Force immediate refetch
     },
     onError: (error: any) => {
       toast({
@@ -198,6 +203,7 @@ export function UserManagement() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-analytics"] });
+      refetch(); // Force immediate refetch
     },
     onError: (error: any) => {
       toast({
@@ -224,6 +230,7 @@ export function UserManagement() {
       setSelectedUsers([]);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-analytics"] });
+      refetch(); // Force immediate refetch
     },
     onError: (error: any) => {
       toast({
@@ -249,6 +256,7 @@ export function UserManagement() {
       setSelectedUsers([]);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-analytics"] });
+      refetch(); // Force immediate refetch
     },
     onError: (error: any) => {
       toast({
@@ -459,6 +467,10 @@ export function UserManagement() {
                 />
               </div>
             </div>
+            <Button variant="outline" onClick={() => refetch()}>
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
             <Button 
               onClick={() => setShowCreateDialog(true)}
               className="bg-blue-600 hover:bg-blue-700"
