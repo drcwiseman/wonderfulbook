@@ -6,6 +6,7 @@ import {
   type User,
   type UpsertUser,
   type Book,
+  type InsertBook,
   type ReadingProgress,
   type InsertReadingProgress,
   type Bookmark,
@@ -26,6 +27,7 @@ export interface IStorage {
   getBooksByCategory(category: string): Promise<Book[]>;
   getFeaturedBooks(): Promise<Book[]>;
   searchBooks(query: string): Promise<Book[]>;
+  createBook(book: InsertBook): Promise<Book>;
   
   // Reading progress operations
   getReadingProgress(userId: string, bookId: string): Promise<ReadingProgress | undefined>;
@@ -97,10 +99,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined> {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.stripeCustomerId, stripeCustomerId));
+    const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, stripeCustomerId));
     return user;
   }
 
@@ -133,6 +132,14 @@ export class DatabaseStorage implements IStorage {
           ilike(books.description, `%${query}%`)
         )
       );
+  }
+
+  async createBook(bookData: InsertBook): Promise<Book> {
+    const [book] = await db
+      .insert(books)
+      .values(bookData)
+      .returning();
+    return book;
   }
 
   // Reading progress operations

@@ -82,7 +82,6 @@ export const bookmarks = pgTable("bookmarks", {
 
 // Schemas for validation
 export const upsertUserSchema = createInsertSchema(users).omit({
-  id: true,
   createdAt: true,
   updatedAt: true,
 });
