@@ -43,8 +43,8 @@ const editBookSchema = z.object({
   tier: z.enum(["free", "basic", "premium"]),
   rating: z.number().min(1).max(5),
   coverImage: z.string().optional(),
-  isVisible: z.boolean().optional(),
-  isFeatured: z.boolean().optional(),
+  isVisible: z.boolean().default(true),
+  isFeatured: z.boolean().default(false),
 });
 
 type UploadForm = z.infer<typeof uploadSchema>;
@@ -220,9 +220,9 @@ export default function AdminPanel() {
         author: data.author,
         description: editDescription || data.description,
         categories: data.categories,
-        tier: data.tier,
-        rating: data.rating,
-        coverImage: data.coverImage,
+        requiredTier: data.tier, // Map to correct database field
+        rating: String(data.rating), // Convert to string for database
+        coverImageUrl: data.coverImage, // Map to correct database field
         isVisible: data.isVisible,
         isFeatured: data.isFeatured,
       };
@@ -253,15 +253,21 @@ export default function AdminPanel() {
   const handleEditBook = (book: any) => {
     setEditingBook(book);
     setEditDescription(book.description || "");
+    
+    // Convert category objects to IDs if needed
+    const categoryIds = book.categories?.map((cat: any) => 
+      typeof cat === 'string' ? cat : cat.id
+    ) || [];
+    
     editForm.reset({
       title: book.title,
       author: book.author,
       description: book.description,
-      categories: book.categories || [],
-      tier: book.tier,
-      rating: book.rating,
-      coverImage: book.coverImage || "",
-      isVisible: book.isVisible,
+      categories: categoryIds,
+      tier: book.requiredTier || "free", // Use requiredTier from database
+      rating: Number(book.rating) || 4,
+      coverImage: book.coverImageUrl || "",
+      isVisible: book.isVisible !== false, // Default to true if undefined
       isFeatured: book.isFeatured || false,
     });
   };
