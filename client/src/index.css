@@ -100,7 +100,19 @@
   }
   
   .mobile-grid {
-    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+    @apply grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+  
+  /* Enhanced mobile typography */
+  .mobile-text-contrast {
+    @apply text-gray-900 font-semibold;
+  }
+  
+  /* Mobile card enhancements */
+  .mobile-card {
+    @apply bg-white border-2 border-orange-300 hover:border-orange-500 shadow-lg hover:shadow-xl;
+    @apply transform transition-all duration-300 hover:scale-105;
+    min-height: 280px;
   }
   
   /* Touch-friendly interactive elements */

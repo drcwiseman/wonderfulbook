@@ -196,49 +196,49 @@ export default function Home() {
 
 
       {/* Value Proposition Section */}
-      <section className="py-20 bg-gradient-to-r from-orange-100/50 to-orange-50/50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+      <section className="py-16 sm:py-20 bg-gradient-to-r from-orange-100/80 to-orange-50/80">
+        <div className="responsive-container">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-responsive-3xl sm:text-responsive-4xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
               Why Choose Wonderful Books?
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-responsive-lg text-gray-800 max-w-3xl mx-auto font-medium">
               We've crafted the perfect reading experience for modern learners and book enthusiasts
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <Card className="bg-white border-orange-300 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg">
+          <div className="mobile-grid max-w-6xl mx-auto">
+            <Card className="bg-gradient-to-br from-white to-orange-50/30 border-2 border-orange-300 hover:border-orange-500 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
               <CardHeader className="text-center pb-3">
-                <Shield className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-                <CardTitle className="text-2xl text-gray-900">Curated Quality</CardTitle>
+                <Shield className="w-10 h-10 sm:w-12 sm:h-12 text-orange-500 mx-auto mb-3 sm:mb-4" />
+                <CardTitle className="text-responsive-xl text-gray-900 font-bold">Curated Quality</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-responsive-base text-gray-800 leading-relaxed font-medium">
                   Every book is hand-selected by our expert team. Only the highest quality content that delivers real value and transformation.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white border-orange-300 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg">
+            <Card className="bg-gradient-to-br from-white to-orange-50/30 border-2 border-orange-300 hover:border-orange-500 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
               <CardHeader className="text-center pb-3">
-                <Clock className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-                <CardTitle className="text-2xl text-gray-900">Read Anywhere</CardTitle>
+                <Clock className="w-10 h-10 sm:w-12 sm:h-12 text-orange-500 mx-auto mb-3 sm:mb-4" />
+                <CardTitle className="text-responsive-xl text-gray-900 font-bold">Read Anywhere</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-responsive-base text-gray-800 leading-relaxed font-medium">
                   Seamless reading across all your devices. Pick up exactly where you left off, whether on phone, tablet, or computer.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white border-orange-300 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg">
+            <Card className="bg-gradient-to-br from-white to-orange-50/30 border-2 border-orange-300 hover:border-orange-500 backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
               <CardHeader className="text-center pb-3">
-                <TrendingUp className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-                <CardTitle className="text-2xl text-gray-900">Track Progress</CardTitle>
+                <TrendingUp className="w-10 h-10 sm:w-12 sm:h-12 text-orange-500 mx-auto mb-3 sm:mb-4" />
+                <CardTitle className="text-responsive-xl text-gray-900 font-bold">Track Progress</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-responsive-base text-gray-800 leading-relaxed font-medium">
                   Advanced analytics show your reading habits, progress, and achievements. Turn reading into a rewarding journey.
                 </p>
               </CardContent>
