@@ -305,14 +305,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-      fileSize: 5 * 1024 * 1024, // 5MB limit
+      fileSize: 50 * 1024 * 1024, // 50MB limit for PDFs
     },
     fileFilter: (req, file, cb) => {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
       if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
       } else {
-        cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'));
+        cb(new Error('Invalid file type. Only JPEG, PNG, GIF, WebP, and PDF are allowed.'));
       }
     },
   });
@@ -357,10 +357,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve uploaded files
-  app.get('/uploads/:filename', (req, res) => {
+  // Serve uploaded files with proper subdirectory support
+  app.get('/uploads/:subfolder?/:filename', (req, res) => {
+    const subfolder = req.params.subfolder;
     const filename = req.params.filename;
-    const filePath = path.join(process.cwd(), 'uploads', filename);
+    
+    let filePath;
+    if (subfolder && filename) {
+      filePath = path.join(process.cwd(), 'uploads', subfolder, filename);
+    } else {
+      // If no subfolder, treat subfolder param as filename
+      filePath = path.join(process.cwd(), 'uploads', subfolder);
+    }
     
     if (fs.existsSync(filePath)) {
       res.sendFile(filePath);
@@ -402,15 +410,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/upload', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post('/api/admin/upload-pdf', isAuthenticated, isAdmin, upload.single('pdf'), async (req: any, res) => {
     try {
-      // TODO: Implement file upload with multer or similar
-      // For now, return success message
-      console.log('Book upload attempted:', req.body);
-      res.json({ message: "Upload functionality will be implemented", id: "placeholder" });
+      if (!req.file) {
+        return res.status(400).json({ error: 'No PDF file uploaded' });
+      }
+
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(process.cwd(), 'uploads/pdfs');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      const fileExtension = path.extname(req.file.originalname);
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${fileExtension}`;
+      const filePath = path.join(uploadsDir, fileName);
+
+      fs.writeFileSync(filePath, req.file.buffer);
+
+      const fileUrl = `/uploads/pdfs/${fileName}`;
+      res.json({ fileUrl });
     } catch (error) {
-      console.error("Error uploading book:", error);
-      res.status(500).json({ message: "Failed to upload book" });
+      console.error('PDF upload error:', error);
+      res.status(500).json({ error: 'Failed to upload PDF' });
     }
   });
 

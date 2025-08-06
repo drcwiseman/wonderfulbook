@@ -16,18 +16,20 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RichTextEditor } from "@/components/RichTextEditor";
+import { ImageUploader } from "@/components/ImageUploader";
+import { PDFUploader } from "@/components/PDFUploader";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 
 const uploadSchema = z.object({
   title: z.string().min(1, "Title is required"),
   author: z.string().min(1, "Author is required"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
   category: z.string().min(1, "Category is required"),
   tier: z.enum(["free", "basic", "premium"]),
   rating: z.number().min(1).max(5),
   coverImage: z.string().optional(),
-  file: z.any().refine((file) => file?.length > 0, "PDF file is required"),
+  fileUrl: z.string().min(1, "PDF file is required"),
 });
 
 const editBookSchema = z.object({
@@ -50,6 +52,9 @@ export default function AdminPanel() {
   const queryClient = useQueryClient();
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const [editingBook, setEditingBook] = useState<any>(null);
+  const [description, setDescription] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [pdfFile, setPdfFile] = useState("");
 
 
   // Admin authorization check
@@ -83,15 +88,23 @@ export default function AdminPanel() {
   // Create book mutation
   const createBookMutation = useMutation({
     mutationFn: async (data: UploadForm) => {
+      // Validate that both description and PDF are provided
+      if (!description || description.length < 10) {
+        throw new Error("Description must be at least 10 characters long");
+      }
+      if (!pdfFile) {
+        throw new Error("PDF file is required");
+      }
+
       return apiRequest("POST", "/api/admin/books", {
         title: data.title,
         author: data.author,
-        description: data.description,
+        description: description,
         category: data.category,
         tier: data.tier,
         rating: data.rating,
         coverImage: data.coverImage || "",
-        fileUrl: "placeholder.pdf", // For now, placeholder until file upload is implemented
+        fileUrl: pdfFile,
       });
     },
     onSuccess: () => {
@@ -100,7 +113,10 @@ export default function AdminPanel() {
         description: "Book created successfully!",
       });
       form.reset();
+      setDescription("");
+      setPdfFile("");
       queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
     },
     onError: (error: any) => {
       toast({
@@ -117,7 +133,7 @@ export default function AdminPanel() {
       return apiRequest("PATCH", `/api/admin/books/${data.id}`, {
         title: data.title,
         author: data.author,
-        description: data.description,
+        description: editDescription || data.description,
         category: data.category,
         tier: data.tier,
         rating: data.rating,
@@ -131,6 +147,7 @@ export default function AdminPanel() {
         description: "Book updated successfully!",
       });
       setEditingBook(null);
+      setEditDescription("");
       queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
     },
     onError: (error: any) => {
@@ -145,6 +162,7 @@ export default function AdminPanel() {
   // Handle edit book
   const handleEditBook = (book: any) => {
     setEditingBook(book);
+    setEditDescription(book.description || "");
     editForm.reset({
       title: book.title,
       author: book.author,
@@ -282,18 +300,32 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
+                  {/* Image Upload */}
+                  <ImageUploader
+                    value={form.watch("coverImage") || ""}
+                    onChange={(imageUrl) => form.setValue("coverImage", imageUrl)}
+                    label="Cover Image"
+                  />
+
+                  {/* Rich Text Description */}
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      {...form.register("description")}
-                      placeholder="Enter book description..."
-                      rows={4}
+                    <Label>Description</Label>
+                    <RichTextEditor
+                      content={description}
+                      onChange={setDescription}
+                      placeholder="Enter book description with rich formatting..."
                     />
-                    {form.formState.errors.description && (
-                      <p className="text-sm text-red-500">{form.formState.errors.description.message as string}</p>
+                    {description.length < 10 && description.length > 0 && (
+                      <p className="text-sm text-red-500">Description must be at least 10 characters</p>
                     )}
                   </div>
+
+                  {/* PDF Upload */}
+                  <PDFUploader
+                    value={pdfFile}
+                    onChange={setPdfFile}
+                    label="Book PDF File"
+                  />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -567,12 +599,20 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
+                {/* Image Upload for Edit */}
+                <ImageUploader
+                  value={editForm.watch("coverImage") || ""}
+                  onChange={(imageUrl) => editForm.setValue("coverImage", imageUrl)}
+                  label="Cover Image"
+                />
+
+                {/* Rich Text Description for Edit */}
                 <div className="space-y-2">
                   <Label>Description</Label>
-                  <Textarea
-                    {...editForm.register("description")}
-                    placeholder="Enter book description..."
-                    rows={3}
+                  <RichTextEditor
+                    content={editDescription}
+                    onChange={setEditDescription}
+                    placeholder="Enter book description with rich formatting..."
                   />
                 </div>
 
