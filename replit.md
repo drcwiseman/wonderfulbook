@@ -15,6 +15,8 @@ Wonderful Books is a subscription-based digital reading platform, akin to Netfli
 - **Enhanced Error Handling**: Added robust handling for aborted requests and development server interruptions
 - **Login Redirect Fix**: Resolved frozen login panel issue - users now properly redirect to home page after successful authentication
 - **PDF Reader Authentication**: Fixed session-based authentication for PDF streaming and reading progress tracking
+- **Admin Subscription Management**: Built comprehensive admin interface for managing subscription plans with full CRUD operations
+- **Updated Subscription Structure**: Free Trial (3 books, 7 days free) → Basic Plan (£5.99/month, 10 books) → Premium Plan (£9.99/month, unlimited)
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
