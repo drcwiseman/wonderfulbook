@@ -703,21 +703,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin middleware - works with local authentication
-  const isAdmin = (req: any, res: any, next: any) => {
+  const isAdmin = async (req: any, res: any, next: any) => {
     if (!req.user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
     
-    // For local auth, check role and email directly on user object
-    const userRole = req.user.role;
-    const userEmail = req.user.email;
+    // Get fresh user data from database to ensure we have the role
     const userId = req.user.id;
+    const userEmail = req.user.email;
     
-    // Check for admin role or specific admin users
-    if (userRole === "admin" || userEmail === "drcwiseman@gmail.com" || userEmail === "prophetclimate@yahoo.com") {
-      return next();
+    try {
+      const user = await storage.getUser(userId);
+      const userRole = user?.role;
+      
+      // Check for admin role or specific admin users
+      if (userRole === "admin" || userEmail === "drcwiseman@gmail.com" || userEmail === "prophetclimate@yahoo.com" || userEmail === "admin@wonderfulbooks.com") {
+        return next();
+      }
+      
+      console.log('Admin access denied:', { userId, userEmail, userRole, hasUser: !!user });
+      return res.status(403).json({ message: "Admin access required" });
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return res.status(500).json({ message: "Error checking admin status" });
     }
-    return res.status(403).json({ message: "Admin access required" });
   };
 
   // Admin image upload route
