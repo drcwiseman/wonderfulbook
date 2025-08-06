@@ -344,7 +344,8 @@ async function generateSamplePDF(book: any): Promise<Buffer> {
   // In a real application, you would fetch the actual PDF from secure storage
   // For demo purposes, we'll create a simple PDF with book information
   
-  const PDFDocument = require('pdfkit');
+  const PDFKit = await import('pdfkit');
+  const PDFDocument = PDFKit.default;
   const doc = new PDFDocument();
   const chunks: Buffer[] = [];
 
