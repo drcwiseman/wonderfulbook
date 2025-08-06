@@ -48,10 +48,10 @@ export default function ReaderPage() {
   // Handle loading state
   if (!bookId) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Book not found</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">The requested book could not be loaded.</p>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 safe-area-top safe-area-bottom">
+        <div className="text-center px-4">
+          <h1 className="text-responsive-xl font-semibold text-gray-900 dark:text-white">Book not found</h1>
+          <p className="text-responsive-base text-gray-600 dark:text-gray-400 mt-2">The requested book could not be loaded.</p>
         </div>
       </div>
     );

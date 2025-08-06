@@ -20,7 +20,7 @@ function BookShowcaseSection() {
   const showcaseBooks = (books as any[]).slice(0, 6); // Show first 6 books
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-6xl mx-auto">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 max-w-7xl mx-auto px-4">
       {showcaseBooks.map((book: any) => (
         <div key={book.id} className="group cursor-pointer">
           <div className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
@@ -29,7 +29,9 @@ function BookShowcaseSection() {
                 <img
                   src={book.coverImageUrl}
                   alt={book.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover retina-ready"
+                  loading="lazy"
+                  decoding="async"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
@@ -37,9 +39,9 @@ function BookShowcaseSection() {
                 </div>
               )}
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="absolute bottom-3 left-3 right-3">
-                <h3 className="text-white font-semibold text-sm mb-1 line-clamp-2">{book.title}</h3>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3">
+                <h3 className="text-white font-semibold text-xs sm:text-sm mb-1 line-clamp-2">{book.title}</h3>
                 <p className="text-orange-200 text-xs">{book.author}</p>
               </div>
             </div>
@@ -71,7 +73,7 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center safe-area-top safe-area-bottom">
         <div className="animate-spin w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full" />
       </div>
     );
