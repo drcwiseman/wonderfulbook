@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,7 @@ export default function ChallengesPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -73,7 +74,7 @@ export default function ChallengesPage() {
   }, [isAuthenticated, isLoading, toast]);
 
   // Fetch challenges
-  const { data: challenges = [], isLoading: challengesLoading } = useQuery({
+  const { data: challenges = [], isLoading: challengesLoading } = useQuery<any[]>({
     queryKey: ['/api/challenges'],
     enabled: !!isAuthenticated,
   });
@@ -88,10 +89,7 @@ export default function ChallengesPage() {
         maxParticipants: data.maxParticipants || null,
         difficulty: data.difficulty || 'medium',
       };
-      return await apiRequest('/api/challenges', {
-        method: 'POST',
-        body: JSON.stringify(formattedData),
-      });
+      return await apiRequest('POST', '/api/challenges', formattedData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });

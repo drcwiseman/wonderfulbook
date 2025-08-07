@@ -2134,18 +2134,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new challenge (authenticated users)
   app.post('/api/challenges', isAuthenticated, async (req: any, res) => {
     try {
+      console.log('Creating challenge - Request body:', req.body);
+      console.log('Creating challenge - User:', req.user);
+      
       const { insertChallengeSchema } = await import("@shared/schema");
       const challengeData = insertChallengeSchema.parse(req.body);
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims.sub || req.user.id;
+      
+      console.log('Creating challenge - Validated data:', challengeData);
+      console.log('Creating challenge - User ID:', userId);
       
       const challenge = await storage.createChallenge(challengeData, userId);
       res.json(challenge);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Challenge validation error:', error.errors);
         return res.status(400).json({ message: "Invalid challenge data", errors: error.errors });
       }
       console.error("Error creating challenge:", error);
-      res.status(500).json({ message: "Failed to create challenge" });
+      res.status(500).json({ message: "Failed to create challenge. Please try again." });
     }
   });
 
