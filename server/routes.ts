@@ -2093,6 +2093,189 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register SEO routes
   registerSEORoutes(app);
 
+  // ===== SOCIAL READING CHALLENGES ROUTES =====
+
+  // Get all public challenges
+  app.get('/api/challenges', async (req, res) => {
+    try {
+      const challenges = await storage.getActivePublicChallenges();
+      res.json(challenges);
+    } catch (error) {
+      console.error("Error fetching challenges:", error);
+      res.status(500).json({ message: "Failed to fetch challenges" });
+    }
+  });
+
+  // Get challenge details with participants
+  app.get('/api/challenges/:id', async (req, res) => {
+    try {
+      const challenge = await storage.getChallenge(req.params.id);
+      if (!challenge) {
+        return res.status(404).json({ message: "Challenge not found" });
+      }
+      
+      const participants = await storage.getChallengeParticipants(req.params.id);
+      const activities = await storage.getChallengeActivities(req.params.id, 20);
+      const comments = await storage.getChallengeComments(req.params.id);
+      
+      res.json({
+        ...challenge,
+        participants,
+        activities,
+        comments,
+        participantCount: participants.length
+      });
+    } catch (error) {
+      console.error("Error fetching challenge details:", error);
+      res.status(500).json({ message: "Failed to fetch challenge details" });
+    }
+  });
+
+  // Create new challenge (authenticated users)
+  app.post('/api/challenges', isAuthenticated, async (req: any, res) => {
+    try {
+      const { insertChallengeSchema } = await import("@shared/schema");
+      const challengeData = insertChallengeSchema.parse(req.body);
+      const userId = req.user.claims.sub;
+      
+      const challenge = await storage.createChallenge(challengeData, userId);
+      res.json(challenge);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid challenge data", errors: error.errors });
+      }
+      console.error("Error creating challenge:", error);
+      res.status(500).json({ message: "Failed to create challenge" });
+    }
+  });
+
+  // Join a challenge
+  app.post('/api/challenges/:id/join', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const participation = await storage.joinChallenge(req.params.id, userId);
+      res.json(participation);
+    } catch (error: any) {
+      if (error.message === "Already participating in this challenge") {
+        return res.status(400).json({ message: error.message });
+      }
+      console.error("Error joining challenge:", error);
+      res.status(500).json({ message: "Failed to join challenge" });
+    }
+  });
+
+  // Leave a challenge
+  app.delete('/api/challenges/:id/leave', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.leaveChallenge(req.params.id, userId);
+      res.json({ message: "Left challenge successfully" });
+    } catch (error) {
+      console.error("Error leaving challenge:", error);
+      res.status(500).json({ message: "Failed to leave challenge" });
+    }
+  });
+
+  // Update challenge progress
+  app.put('/api/challenges/:id/progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const { updateProgressSchema } = await import("@shared/schema");
+      const progressData = updateProgressSchema.parse(req.body);
+      const userId = req.user.claims.sub;
+      
+      const participation = await storage.updateChallengeProgress(req.params.id, userId, progressData);
+      res.json(participation);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid progress data", errors: error.errors });
+      }
+      if (error.message === "Not participating in this challenge") {
+        return res.status(400).json({ message: error.message });
+      }
+      console.error("Error updating challenge progress:", error);
+      res.status(500).json({ message: "Failed to update progress" });
+    }
+  });
+
+  // Get leaderboard for a challenge
+  app.get('/api/challenges/:id/leaderboard', async (req, res) => {
+    try {
+      const leaderboard = await storage.getChallengeLeaderboard(req.params.id);
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
+  // Get user's participation status for a challenge
+  app.get('/api/challenges/:id/participation', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const participation = await storage.getUserChallengeParticipation(req.params.id, userId);
+      res.json(participation);
+    } catch (error) {
+      console.error("Error fetching participation status:", error);
+      res.status(500).json({ message: "Failed to fetch participation status" });
+    }
+  });
+
+  // Get user's challenges (created by them)
+  app.get('/api/user/challenges', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const challenges = await storage.getUserChallenges(userId);
+      res.json(challenges);
+    } catch (error) {
+      console.error("Error fetching user challenges:", error);
+      res.status(500).json({ message: "Failed to fetch user challenges" });
+    }
+  });
+
+  // Post comment on challenge
+  app.post('/api/challenges/:id/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const { insertCommentSchema } = await import("@shared/schema");
+      const commentData = insertCommentSchema.parse({
+        ...req.body,
+        challengeId: req.params.id,
+        userId: req.user.claims.sub
+      });
+      
+      const comment = await storage.createChallengeComment(commentData);
+      res.json(comment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid comment data", errors: error.errors });
+      }
+      console.error("Error creating comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // Delete challenge comment (author only)
+  app.delete('/api/challenges/comments/:commentId', isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteChallengeComment(req.params.commentId);
+      res.json({ message: "Comment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
+  // Like challenge comment
+  app.post('/api/challenges/comments/:commentId/like', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const comment = await storage.likeChallengeComment(req.params.commentId, userId);
+      res.json(comment);
+    } catch (error) {
+      console.error("Error liking comment:", error);
+      res.status(500).json({ message: "Failed to like comment" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

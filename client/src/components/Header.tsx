@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Home, BookOpen, Library, BarChart3, User, LogOut, Crown } from "lucide-react";
+import { Menu, X, Home, BookOpen, Library, BarChart3, User, LogOut, Crown, Trophy } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -68,6 +68,7 @@ export default function Header() {
     { href: "/bookstore", label: "Book Store", icon: BookOpen },
     ...(isAuthenticated ? [
       { href: "/library", label: "My Library", icon: Library },
+      { href: "/challenges", label: "Challenges", icon: Trophy },
       { href: "/dashboard", label: "Dashboard", icon: BarChart3 }
     ] : [])
   ];

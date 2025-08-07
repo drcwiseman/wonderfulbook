@@ -8,6 +8,10 @@ import {
   subscriptionPlans,
   emailPreferences,
   emailLogs,
+  readingChallenges,
+  challengeParticipants,
+  challengeActivities,
+  challengeComments,
   type User,
   type UpsertUser,
   type Book,
@@ -27,6 +31,15 @@ import {
   type UpdateEmailPreferences,
   type EmailLog,
   type InsertEmailLog,
+  type ReadingChallenge,
+  type InsertChallenge,
+  type ChallengeParticipant,
+  type InsertParticipant,
+  type UpdateProgress,
+  type ChallengeActivity,
+  type InsertActivity,
+  type ChallengeComment,
+  type InsertComment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, ilike } from "drizzle-orm";
@@ -130,6 +143,33 @@ export interface IStorage {
     status?: string;
     emailType?: string;
   }): Promise<EmailLog[]>;
+
+  // Challenge operations
+  getAllChallenges(): Promise<ReadingChallenge[]>;
+  getActivePublicChallenges(): Promise<ReadingChallenge[]>;
+  getUserChallenges(userId: string): Promise<ReadingChallenge[]>;
+  getChallenge(challengeId: string): Promise<ReadingChallenge | undefined>;
+  createChallenge(challengeData: InsertChallenge, userId: string): Promise<ReadingChallenge>;
+  updateChallenge(challengeId: string, updates: Partial<InsertChallenge>): Promise<ReadingChallenge>;
+  deleteChallenge(challengeId: string): Promise<void>;
+  
+  // Challenge participation operations
+  joinChallenge(challengeId: string, userId: string): Promise<ChallengeParticipant>;
+  leaveChallenge(challengeId: string, userId: string): Promise<void>;
+  updateChallengeProgress(challengeId: string, userId: string, progressData: UpdateProgress): Promise<ChallengeParticipant>;
+  getChallengeParticipants(challengeId: string): Promise<ChallengeParticipant[]>;
+  getUserChallengeParticipation(challengeId: string, userId: string): Promise<ChallengeParticipant | undefined>;
+  getChallengeLeaderboard(challengeId: string): Promise<ChallengeParticipant[]>;
+  
+  // Challenge activity operations
+  logChallengeActivity(activityData: InsertActivity): Promise<ChallengeActivity>;
+  getChallengeActivities(challengeId: string, limit?: number): Promise<ChallengeActivity[]>;
+  
+  // Challenge comment operations
+  createChallengeComment(commentData: InsertComment): Promise<ChallengeComment>;
+  getChallengeComments(challengeId: string): Promise<ChallengeComment[]>;
+  deleteChallengeComment(commentId: string): Promise<void>;
+  likeChallengeComment(commentId: string, userId: string): Promise<ChallengeComment>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -944,6 +984,220 @@ export class DatabaseStorage implements IStorage {
       console.error("Error fetching email logs:", error);
       return [];
     }
+  }
+
+  // ===== CHALLENGE OPERATIONS =====
+  
+  async getAllChallenges(): Promise<ReadingChallenge[]> {
+    return await db.select().from(readingChallenges)
+      .orderBy(desc(readingChallenges.createdAt));
+  }
+
+  async getActivePublicChallenges(): Promise<ReadingChallenge[]> {
+    return await db.select().from(readingChallenges)
+      .where(and(
+        eq(readingChallenges.isActive, true),
+        eq(readingChallenges.isPublic, true)
+      ))
+      .orderBy(desc(readingChallenges.createdAt));
+  }
+
+  async getUserChallenges(userId: string): Promise<ReadingChallenge[]> {
+    return await db.select().from(readingChallenges)
+      .where(eq(readingChallenges.createdById, userId))
+      .orderBy(desc(readingChallenges.createdAt));
+  }
+
+  async getChallenge(challengeId: string): Promise<ReadingChallenge | undefined> {
+    const [challenge] = await db.select().from(readingChallenges)
+      .where(eq(readingChallenges.id, challengeId));
+    return challenge;
+  }
+
+  async createChallenge(challengeData: InsertChallenge, userId: string): Promise<ReadingChallenge> {
+    const [challenge] = await db.insert(readingChallenges)
+      .values({ ...challengeData, createdById: userId })
+      .returning();
+
+    // Auto-join the creator
+    await this.joinChallenge(challenge.id, userId);
+
+    // Log activity
+    await this.logChallengeActivity({
+      challengeId: challenge.id,
+      userId,
+      activityType: 'created',
+      message: `Created the challenge "${challenge.title}"`,
+    });
+
+    return challenge;
+  }
+
+  async updateChallenge(challengeId: string, updates: Partial<InsertChallenge>): Promise<ReadingChallenge> {
+    const [challenge] = await db.update(readingChallenges)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(readingChallenges.id, challengeId))
+      .returning();
+    return challenge;
+  }
+
+  async deleteChallenge(challengeId: string): Promise<void> {
+    await db.delete(readingChallenges)
+      .where(eq(readingChallenges.id, challengeId));
+  }
+
+  // Challenge participation operations
+  async joinChallenge(challengeId: string, userId: string): Promise<ChallengeParticipant> {
+    // Check if already participating
+    const existing = await this.getUserChallengeParticipation(challengeId, userId);
+    if (existing) {
+      throw new Error("Already participating in this challenge");
+    }
+
+    const [participant] = await db.insert(challengeParticipants)
+      .values({ challengeId, userId })
+      .returning();
+
+    // Log activity
+    await this.logChallengeActivity({
+      challengeId,
+      userId,
+      activityType: 'joined',
+      message: 'Joined the challenge',
+    });
+
+    return participant;
+  }
+
+  async leaveChallenge(challengeId: string, userId: string): Promise<void> {
+    await db.delete(challengeParticipants)
+      .where(and(
+        eq(challengeParticipants.challengeId, challengeId),
+        eq(challengeParticipants.userId, userId)
+      ));
+
+    // Log activity
+    await this.logChallengeActivity({
+      challengeId,
+      userId,
+      activityType: 'left',
+      message: 'Left the challenge',
+    });
+  }
+
+  async updateChallengeProgress(challengeId: string, userId: string, progressData: UpdateProgress): Promise<ChallengeParticipant> {
+    const oldParticipant = await this.getUserChallengeParticipation(challengeId, userId);
+    if (!oldParticipant) {
+      throw new Error("Not participating in this challenge");
+    }
+
+    const challenge = await this.getChallenge(challengeId);
+    if (!challenge) {
+      throw new Error("Challenge not found");
+    }
+
+    const isCompleted = progressData.progress >= challenge.targetValue;
+    const completedAt = isCompleted && !oldParticipant.isCompleted ? new Date() : oldParticipant.completedAt;
+
+    const [participant] = await db.update(challengeParticipants)
+      .set({
+        progress: progressData.progress,
+        notes: progressData.notes || oldParticipant.notes,
+        isCompleted,
+        completedAt,
+      })
+      .where(and(
+        eq(challengeParticipants.challengeId, challengeId),
+        eq(challengeParticipants.userId, userId)
+      ))
+      .returning();
+
+    // Log activity
+    const message = isCompleted && !oldParticipant.isCompleted
+      ? `Completed the challenge! 🎉`
+      : `Updated progress: ${progressData.progress}/${challenge.targetValue}`;
+
+    await this.logChallengeActivity({
+      challengeId,
+      userId,
+      activityType: isCompleted ? 'completed' : 'progress_update',
+      message,
+      progressValue: progressData.progress,
+    });
+
+    return participant;
+  }
+
+  async getChallengeParticipants(challengeId: string): Promise<ChallengeParticipant[]> {
+    return await db.select().from(challengeParticipants)
+      .where(eq(challengeParticipants.challengeId, challengeId))
+      .orderBy(desc(challengeParticipants.progress));
+  }
+
+  async getUserChallengeParticipation(challengeId: string, userId: string): Promise<ChallengeParticipant | undefined> {
+    const [participant] = await db.select().from(challengeParticipants)
+      .where(and(
+        eq(challengeParticipants.challengeId, challengeId),
+        eq(challengeParticipants.userId, userId)
+      ));
+    return participant;
+  }
+
+  async getChallengeLeaderboard(challengeId: string): Promise<ChallengeParticipant[]> {
+    return await db.select().from(challengeParticipants)
+      .where(eq(challengeParticipants.challengeId, challengeId))
+      .orderBy(desc(challengeParticipants.progress), challengeParticipants.joinedAt);
+  }
+
+  // Challenge activity operations
+  async logChallengeActivity(activityData: InsertActivity): Promise<ChallengeActivity> {
+    const [activity] = await db.insert(challengeActivities)
+      .values(activityData)
+      .returning();
+    return activity;
+  }
+
+  async getChallengeActivities(challengeId: string, limit = 50): Promise<ChallengeActivity[]> {
+    return await db.select().from(challengeActivities)
+      .where(eq(challengeActivities.challengeId, challengeId))
+      .orderBy(desc(challengeActivities.createdAt))
+      .limit(limit);
+  }
+
+  // Challenge comment operations
+  async createChallengeComment(commentData: InsertComment): Promise<ChallengeComment> {
+    const [comment] = await db.insert(challengeComments)
+      .values(commentData)
+      .returning();
+
+    // Log activity
+    await this.logChallengeActivity({
+      challengeId: commentData.challengeId,
+      userId: commentData.userId,
+      activityType: 'comment',
+      message: 'Posted a comment',
+    });
+
+    return comment;
+  }
+
+  async getChallengeComments(challengeId: string): Promise<ChallengeComment[]> {
+    return await db.select().from(challengeComments)
+      .where(eq(challengeComments.challengeId, challengeId))
+      .orderBy(challengeComments.createdAt);
+  }
+
+  async deleteChallengeComment(commentId: string): Promise<void> {
+    await db.delete(challengeComments)
+      .where(eq(challengeComments.id, commentId));
+  }
+
+  async likeChallengeComment(commentId: string, userId: string): Promise<ChallengeComment> {
+    const [comment] = await db.update(challengeComments)
+      .set({ likes: sql`${challengeComments.likes} + 1` })
+      .where(eq(challengeComments.id, commentId))
+      .returning();
+    return comment;
   }
 }
 

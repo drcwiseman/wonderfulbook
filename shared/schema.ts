@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { sql, relations } from 'drizzle-orm';
 import {
   index,
   jsonb,
@@ -397,3 +397,179 @@ export type InsertEmailPreferences = z.infer<typeof insertEmailPreferencesSchema
 export type UpdateEmailPreferences = z.infer<typeof updateEmailPreferencesSchema>;
 export type EmailLog = typeof emailLogs.$inferSelect;
 export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;
+
+// ===== SOCIAL READING CHALLENGES =====
+
+// Reading challenges table
+export const readingChallenges = pgTable("reading_challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  type: varchar("type").notNull(), // books_count, pages_count, time_duration
+  targetValue: integer("target_value").notNull(), // e.g., 5 books, 1000 pages, 30 days
+  duration: varchar("duration").notNull(), // weekly, monthly, custom
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  isPublic: boolean("is_public").default(true),
+  isActive: boolean("is_active").default(true),
+  createdById: varchar("created_by_id").references(() => users.id).notNull(),
+  maxParticipants: integer("max_participants"), // null for unlimited
+  rules: text("rules").array(), // Array of challenge rules
+  tags: varchar("tags").array(), // Array of tags for categorization
+  difficulty: varchar("difficulty").default("medium"), // easy, medium, hard
+  prize: text("prize"), // Optional prize description
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  typeIndex: index("idx_challenge_type").on(table.type),
+  statusIndex: index("idx_challenge_status").on(table.isActive, table.isPublic),
+  dateIndex: index("idx_challenge_dates").on(table.startDate, table.endDate),
+  creatorIndex: index("idx_challenge_creator").on(table.createdById),
+}));
+
+// Challenge participants table
+export const challengeParticipants = pgTable("challenge_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  challengeId: varchar("challenge_id").references(() => readingChallenges.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  progress: integer("progress").default(0), // Current progress value
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  rank: integer("rank"), // Leaderboard position
+  notes: text("notes"), // Personal notes or motivational message
+}, (table) => ({
+  challengeUserIndex: index("idx_challenge_user").on(table.challengeId, table.userId),
+  challengeProgressIndex: index("idx_challenge_progress").on(table.challengeId, table.progress),
+  userChallengesIndex: index("idx_user_challenges").on(table.userId),
+}));
+
+// Challenge updates/activities table
+export const challengeActivities = pgTable("challenge_activities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  challengeId: varchar("challenge_id").references(() => readingChallenges.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  activityType: varchar("activity_type").notNull(), // joined, progress_update, completed, comment
+  message: text("message"),
+  progressValue: integer("progress_value"), // Progress at time of activity
+  metadata: jsonb("metadata"), // Additional activity data
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  challengeActivityIndex: index("idx_challenge_activity").on(table.challengeId, table.createdAt),
+  userActivityIndex: index("idx_user_activity").on(table.userId, table.createdAt),
+}));
+
+// Challenge comments table
+export const challengeComments = pgTable("challenge_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  challengeId: varchar("challenge_id").references(() => readingChallenges.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  parentId: varchar("parent_id"), // For reply threading
+  likes: integer("likes").default(0),
+  isEdited: boolean("is_edited").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  challengeCommentsIndex: index("idx_challenge_comments").on(table.challengeId, table.createdAt),
+  parentCommentIndex: index("idx_parent_comment").on(table.parentId),
+}));
+
+// Relations for social challenges
+export const challengesRelations = relations(readingChallenges, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [readingChallenges.createdById],
+    references: [users.id],
+  }),
+  participants: many(challengeParticipants),
+  activities: many(challengeActivities),
+  comments: many(challengeComments),
+}));
+
+export const challengeParticipantsRelations = relations(challengeParticipants, ({ one }) => ({
+  challenge: one(readingChallenges, {
+    fields: [challengeParticipants.challengeId],
+    references: [readingChallenges.id],
+  }),
+  user: one(users, {
+    fields: [challengeParticipants.userId],
+    references: [users.id],
+  }),
+}));
+
+export const challengeActivitiesRelations = relations(challengeActivities, ({ one }) => ({
+  challenge: one(readingChallenges, {
+    fields: [challengeActivities.challengeId],
+    references: [readingChallenges.id],
+  }),
+  user: one(users, {
+    fields: [challengeActivities.userId],
+    references: [users.id],
+  }),
+}));
+
+export const challengeCommentsRelations = relations(challengeComments, ({ one }) => ({
+  challenge: one(readingChallenges, {
+    fields: [challengeComments.challengeId],
+    references: [readingChallenges.id],
+  }),
+  user: one(users, {
+    fields: [challengeComments.userId],
+    references: [users.id],
+  }),
+}));
+
+// Challenge schemas
+export const insertChallengeSchema = createInsertSchema(readingChallenges).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  type: z.enum(["books_count", "pages_count", "time_duration"]),
+  targetValue: z.number().min(1, "Target value must be positive"),
+  duration: z.enum(["weekly", "monthly", "custom"]),
+  startDate: z.string().transform((str) => new Date(str)),
+  endDate: z.string().transform((str) => new Date(str)),
+  difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+  maxParticipants: z.number().positive().optional(),
+  rules: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+});
+
+export const insertParticipantSchema = createInsertSchema(challengeParticipants).omit({
+  id: true,
+  joinedAt: true,
+});
+
+export const updateProgressSchema = z.object({
+  progress: z.number().min(0),
+  notes: z.string().optional(),
+});
+
+export const insertActivitySchema = createInsertSchema(challengeActivities).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCommentSchema = createInsertSchema(challengeComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  likes: true,
+  isEdited: true,
+}).extend({
+  content: z.string().min(1, "Comment cannot be empty").max(1000, "Comment too long"),
+});
+
+// Challenge types
+export type ReadingChallenge = typeof readingChallenges.$inferSelect;
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+export type ChallengeParticipant = typeof challengeParticipants.$inferSelect;
+export type InsertParticipant = z.infer<typeof insertParticipantSchema>;
+export type UpdateProgress = z.infer<typeof updateProgressSchema>;
+export type ChallengeActivity = typeof challengeActivities.$inferSelect;
+export type InsertActivity = z.infer<typeof insertActivitySchema>;
+export type ChallengeComment = typeof challengeComments.$inferSelect;
+export type InsertComment = z.infer<typeof insertCommentSchema>;
