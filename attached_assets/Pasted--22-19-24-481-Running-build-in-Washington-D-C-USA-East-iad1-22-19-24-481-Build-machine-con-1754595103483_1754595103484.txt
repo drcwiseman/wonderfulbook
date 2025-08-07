@@ -1,0 +1,63 @@
+[22:19:24.481] Running build in Washington, D.C., USA (East) – iad1
+[22:19:24.481] Build machine configuration: 2 cores, 8 GB
+[22:19:24.533] Cloning github.com/drcwiseman/wonderfulbooks (Branch: main, Commit: 30cfc08)
+[22:19:24.655] Previous build caches not available
+[22:19:26.734] Cloning completed: 2.200s
+[22:19:29.551] Running "vercel build"
+[22:19:30.018] Vercel CLI 44.7.3
+[22:19:30.667] Installing dependencies...
+[22:19:33.716] npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+[22:19:34.399] npm warn deprecated npmlog@5.0.1: This package is no longer supported.
+[22:19:34.829] npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+[22:19:35.400] npm warn deprecated gauge@3.0.2: This package is no longer supported.
+[22:19:35.585] npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+[22:19:35.672] npm warn deprecated are-we-there-yet@2.0.0: This package is no longer supported.
+[22:19:37.145] npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+[22:19:37.170] npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+[22:19:37.443] npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+[22:19:45.831] 
+[22:19:45.832] added 769 packages in 15s
+[22:19:45.832] 
+[22:19:45.833] 124 packages are looking for funding
+[22:19:45.833]   run `npm fund` for details
+[22:19:45.899] Running "npm run build"
+[22:19:46.006] 
+[22:19:46.006] > rest-express@1.0.0 build
+[22:19:46.007] > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+[22:19:46.007] 
+[22:19:46.290] [36mvite v5.4.19 [32mbuilding for production...[36m[39m
+[22:19:46.345] transforming...
+[22:19:46.607] Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
+[22:19:46.608]   npx update-browserslist-db@latest
+[22:19:46.608]   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[22:19:47.971] [33m[vite:css] @import must precede all other statements (besides @charset or empty @layer)
+[22:19:47.971] 4  |  
+[22:19:47.971] 5  |  /* Import navigation styles */
+[22:19:47.971] 6  |  @import './styles/navigation.css';
+[22:19:47.971]    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[22:19:47.971] 7  |  
+[22:19:47.971] 8  |  /* Retina and High-DPI Display Optimizations */[39m
+[22:19:51.786] node_modules/pdfjs-dist/build/pdf.js (1982:23): Use of eval in "node_modules/pdfjs-dist/build/pdf.js" is strongly discouraged as it poses security risks and may cause issues with minification.
+[22:19:55.022] [32m✓[39m 2313 modules transformed.
+[22:19:56.040] rendering chunks...
+[22:19:56.060] computing gzip size...
+[22:19:56.114] [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m    4.70 kB[22m[1m[22m[2m │ gzip:   1.40 kB[22m
+[22:19:56.114] [2m../dist/public/[22m[2massets/[22m[35mindex-88P1SmrL.css  [39m[1m[2m  154.84 kB[22m[1m[22m[2m │ gzip:  22.89 kB[22m
+[22:19:56.115] [2m../dist/public/[22m[2massets/[22m[36mindex-Clm6FPHo.js   [39m[1m[33m1,778.54 kB[39m[22m[2m │ gzip: 480.28 kB[22m
+[22:19:56.115] [33m
+[22:19:56.116] (!) Some chunks are larger than 500 kB after minification. Consider:
+[22:19:56.116] - Using dynamic import() to code-split the application
+[22:19:56.116] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[22:19:56.116] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[22:19:56.116] [32m✓ built in 9.80s[39m
+[22:19:56.173] 
+[22:19:56.173]   dist/index.js  153.0kb
+[22:19:56.174] 
+[22:19:56.174] ⚡ Done in 16ms
+[22:19:56.260] Build Completed in /vercel/output [26s]
+[22:19:56.377] Deploying outputs...
+[22:19:58.578] Deployment completed
+[22:19:59.409] Creating build cache...
+[22:20:15.928] Created build cache: 16.512s
+[22:20:15.929] Uploading build cache [109.74 MB]
+[22:20:17.864] Build cache uploaded: 1.941s
