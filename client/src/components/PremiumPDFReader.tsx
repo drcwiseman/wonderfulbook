@@ -2,12 +2,14 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Bookmark, BookmarkCheck, Menu, X, RotateCcw, Sun, Moon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Bookmark, BookmarkCheck, Menu, X, RotateCcw, Sun, Moon, Volume2, VolumeX, Pause, Play, Accessibility } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAccessibility } from '@/hooks/useAccessibility';
+import AccessibilityPanel from '@/components/AccessibilityPanel';
 
 // Configure PDF.js with a reliable CDN - using unpkg.com which has better CORS support
 pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
@@ -35,11 +37,13 @@ export function PremiumPDFReader({
   const [showSidebar, setShowSidebar] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showAccessibility, setShowAccessibility] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { settings, speakText, stopReading, isReading } = useAccessibility();
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
@@ -276,6 +280,46 @@ export function PremiumPDFReader({
     });
   }
 
+  // Accessibility functions
+  function readCurrentPage() {
+    if (!settings.textToSpeech) return;
+    
+    try {
+      // Get text content from the PDF page
+      const textLayer = document.querySelector('.react-pdf__Page__textContent');
+      if (textLayer) {
+        const text = textLayer.textContent || '';
+        const cleanText = text
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        if (cleanText) {
+          speakText(`Page ${pageNumber}. ${cleanText}`);
+        } else {
+          speakText(`Page ${pageNumber} appears to be an image or has no readable text.`);
+        }
+      } else {
+        speakText(`Reading page ${pageNumber} of ${bookTitle}.`);
+      }
+    } catch (error) {
+      console.error('Error reading page:', error);
+      speakText(`Unable to read page ${pageNumber}.`);
+    }
+  }
+
+  function readPageInfo() {
+    if (settings.textToSpeech) {
+      speakText(`Currently on page ${pageNumber} of ${numPages} in ${bookTitle}.`);
+    }
+  }
+
+  // Auto-read when page changes if enabled
+  useEffect(() => {
+    if (settings.autoRead && settings.textToSpeech && !isLoading) {
+      setTimeout(readCurrentPage, 500); // Small delay for page render
+    }
+  }, [pageNumber, settings.autoRead, settings.textToSpeech, isLoading]);
+
   // Keyboard navigation
   useEffect(() => {
     function handleKeyPress(event: KeyboardEvent) {
@@ -301,12 +345,40 @@ export function PremiumPDFReader({
             toggleBookmark();
           }
           break;
+        case 'r':
+        case 'R':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            readCurrentPage();
+          }
+          break;
+        case 'i':
+        case 'I':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            readPageInfo();
+          }
+          break;
+        case 's':
+        case 'S':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            stopReading();
+          }
+          break;
+        case 'a':
+        case 'A':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            setShowAccessibility(!showAccessibility);
+          }
+          break;
       }
     }
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [pageNumber, numPages, isBookmarked]);
+  }, [pageNumber, numPages, isBookmarked, settings.textToSpeech, showAccessibility]);
 
   // Touch/swipe support for mobile
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -448,6 +520,45 @@ export function PremiumPDFReader({
                 className={`${isDarkMode ? 'text-white hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'}`}
               >
                 {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+
+              {/* Text-to-Speech Controls */}
+              {settings.textToSpeech && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={readCurrentPage}
+                    disabled={isReading}
+                    className={`${isDarkMode ? 'text-white hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'} ${isReading ? 'text-blue-500' : ''}`}
+                    title="Read current page (Ctrl+R)"
+                  >
+                    <Volume2 className="h-4 w-4" />
+                  </Button>
+
+                  {isReading && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={stopReading}
+                      className={`${isDarkMode ? 'text-white hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'} text-red-500`}
+                      title="Stop reading (Ctrl+S)"
+                    >
+                      <VolumeX className="h-4 w-4" />
+                    </Button>
+                  )}
+                </>
+              )}
+
+              {/* Accessibility Panel Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAccessibility(!showAccessibility)}
+                className={`${isDarkMode ? 'text-white hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'} ${showAccessibility ? 'text-blue-500' : ''}`}
+                title="Accessibility settings (Ctrl+A)"
+              >
+                <Accessibility className="h-4 w-4" />
               </Button>
 
               <Button
@@ -629,6 +740,25 @@ export function PremiumPDFReader({
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Accessibility Panel */}
+      <AccessibilityPanel
+        isOpen={showAccessibility}
+        onClose={() => setShowAccessibility(false)}
+      />
+
+      {/* Keyboard Shortcuts Help (only visible when accessibility is enabled) */}
+      {settings.textToSpeech && (
+        <div className="fixed bottom-4 right-4 z-30">
+          <div className={`text-xs p-2 rounded ${isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'} max-w-xs`}>
+            <div className="font-medium mb-1">Keyboard Shortcuts:</div>
+            <div>Ctrl+R - Read page</div>
+            <div>Ctrl+I - Page info</div>
+            <div>Ctrl+S - Stop reading</div>
+            <div>Ctrl+A - Accessibility</div>
           </div>
         </div>
       )}

@@ -24,6 +24,7 @@ import ForgotPassword from "@/pages/auth/forgot-password";
 import ResetPassword from "@/pages/auth/reset-password";
 import NotFound from "@/pages/not-found";
 import ScrollToTop from "@/components/ScrollToTop";
+import AccessibilityButton from "@/components/AccessibilityButton";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -94,8 +95,13 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
+          {/* Skip link for keyboard navigation */}
+          <a href="#main-content" className="skip-link">
+            Skip to main content
+          </a>
           <Router />
           <ScrollToTop />
+          <AccessibilityButton />
         </TooltipProvider>
       </QueryClientProvider>
     </ProductionErrorBoundary>

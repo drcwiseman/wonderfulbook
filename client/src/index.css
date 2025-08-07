@@ -82,6 +82,176 @@
   }
 }
 
+/* Accessibility Styles - Note: OpenDyslexic font will be loaded via CSS custom properties */
+
+/* Accessibility font and spacing variables */
+:root {
+  --accessibility-font-size: 16px;
+  --accessibility-line-height: 1.6;
+  --accessibility-letter-spacing: 0px;
+}
+
+/* Apply accessibility settings */
+body {
+  font-size: var(--accessibility-font-size);
+  line-height: var(--accessibility-line-height);
+  letter-spacing: var(--accessibility-letter-spacing);
+  font-family: var(--font-family, inherit);
+}
+
+/* High contrast mode */
+.high-contrast {
+  filter: contrast(150%) brightness(110%);
+}
+
+.high-contrast * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.high-contrast a {
+  text-decoration: underline !important;
+}
+
+/* Focus mode - reduce distractions */
+.focus-mode .bg-gradient-to-r,
+.focus-mode .bg-gradient-to-b,
+.focus-mode .bg-gradient-to-l,
+.focus-mode .bg-gradient-to-t {
+  background: var(--background) !important;
+}
+
+.focus-mode img:not(.user-avatar) {
+  opacity: 0.3;
+}
+
+.focus-mode .shadow-lg,
+.focus-mode .shadow-xl,
+.focus-mode .shadow-2xl {
+  box-shadow: none !important;
+}
+
+/* Color themes */
+.theme-sepia {
+  filter: sepia(20%) saturate(120%);
+  background-color: #f4f1e8 !important;
+}
+
+.theme-sepia * {
+  background-color: inherit;
+}
+
+.theme-dark {
+  filter: invert(100%) hue-rotate(180deg);
+}
+
+.theme-blue {
+  filter: sepia(100%) saturate(50%) hue-rotate(180deg);
+}
+
+/* Dyslexia-friendly adjustments */
+.dyslexia-friendly,
+.dyslexia-friendly * {
+  font-family: 'Comic Sans MS', 'Trebuchet MS', 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', 'Arial', cursive !important;
+}
+
+.dyslexia-friendly p,
+.dyslexia-friendly div,
+.dyslexia-friendly span {
+  font-weight: 500;
+  word-spacing: 0.16em;
+}
+
+.dyslexia-friendly h1,
+.dyslexia-friendly h2,
+.dyslexia-friendly h3,
+.dyslexia-friendly h4,
+.dyslexia-friendly h5,
+.dyslexia-friendly h6 {
+  font-weight: 700;
+  margin-bottom: 1em;
+}
+
+/* Text-to-speech highlighting */
+.tts-highlight {
+  background-color: #ffeb3b !important;
+  color: #000 !important;
+  padding: 2px 4px;
+  border-radius: 3px;
+  animation: pulse-highlight 1s infinite;
+}
+
+@keyframes pulse-highlight {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Enhanced focus indicators */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #f97316 !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+/* Skip link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #f97316;
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+  font-weight: bold;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Ensure minimum touch targets */
+@media (hover: none) and (pointer: coarse) {
+  button, 
+  a, 
+  [role="button"], 
+  input[type="checkbox"], 
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  * {
+    border-color: currentColor !important;
+  }
+  
+  button,
+  .btn {
+    border: 2px solid currentColor !important;
+  }
+}
+
 /* Retina and High-DPI Display Optimizations */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
   .retina-ready {
