@@ -31,7 +31,7 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AccessibleContent from "@/components/AccessibleContent";
-import BookPreview from "@/components/BookPreview";
+import SimpleBookPreview from "@/components/SimpleBookPreview";
 import type { Book as BookType, BookReview } from "@shared/schema";
 import { SEOHead, getBookSEO } from "@/components/SEOHead";
 
@@ -485,7 +485,7 @@ export default function BookDetail() {
       
       {/* Book Preview Modal */}
       {book && (
-        <BookPreview
+        <SimpleBookPreview
           book={book}
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
