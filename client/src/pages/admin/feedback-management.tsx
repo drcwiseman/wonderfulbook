@@ -143,7 +143,14 @@ export default function AdminFeedbackManagement() {
         {/* Statistics Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => {
+                setStatusFilter('all');
+                setTypeFilter('all');
+                setPriorityFilter('all');
+              }}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -155,7 +162,14 @@ export default function AdminFeedbackManagement() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => {
+                setStatusFilter('open');
+                setTypeFilter('all');
+                setPriorityFilter('all');
+              }}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -167,7 +181,14 @@ export default function AdminFeedbackManagement() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => {
+                setStatusFilter('all');
+                setTypeFilter('bug');
+                setPriorityFilter('all');
+              }}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -179,7 +200,14 @@ export default function AdminFeedbackManagement() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => {
+                setStatusFilter('all');
+                setTypeFilter('all');
+                setPriorityFilter('critical');
+              }}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -208,7 +236,7 @@ export default function AdminFeedbackManagement() {
                 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-2">
-                  <Select onValueChange={setStatusFilter} defaultValue="all">
+                  <Select onValueChange={setStatusFilter} value={statusFilter}>
                     <SelectTrigger className="w-32">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
@@ -221,7 +249,7 @@ export default function AdminFeedbackManagement() {
                     </SelectContent>
                   </Select>
                   
-                  <Select onValueChange={setTypeFilter} defaultValue="all">
+                  <Select onValueChange={setTypeFilter} value={typeFilter}>
                     <SelectTrigger className="w-32">
                       <SelectValue placeholder="Type" />
                     </SelectTrigger>
@@ -234,7 +262,7 @@ export default function AdminFeedbackManagement() {
                     </SelectContent>
                   </Select>
                   
-                  <Select onValueChange={setPriorityFilter} defaultValue="all">
+                  <Select onValueChange={setPriorityFilter} value={priorityFilter}>
                     <SelectTrigger className="w-32">
                       <SelectValue placeholder="Priority" />
                     </SelectTrigger>
