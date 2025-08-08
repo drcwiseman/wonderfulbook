@@ -136,6 +136,14 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
   const [currentPage, setCurrentPage] = useState(0);
   const [pages] = useState(() => generateSimplePages(book));
 
+  // Debug log
+  console.log('SimpleBookPreview render:', {
+    isOpen,
+    currentPage,
+    totalPages: pages.length,
+    currentPageContent: pages[currentPage]?.title
+  });
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -191,9 +199,16 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
         </div>
 
         {/* Content */}
-        <div className="relative bg-white flex-1 overflow-auto">
-          <div className="h-full p-8">
-            {pages[currentPage]?.content}
+        <div className="relative bg-white flex-1 overflow-auto min-h-0 border border-red-200">
+          <div className="p-8 min-h-full">
+            {pages[currentPage]?.content || (
+              <div className="text-center text-red-500 p-8">
+                <p>Debug: No content found</p>
+                <p>Current page: {currentPage}</p>
+                <p>Total pages: {pages.length}</p>
+                <p>Page title: {pages[currentPage]?.title}</p>
+              </div>
+            )}
           </div>
         </div>
 
