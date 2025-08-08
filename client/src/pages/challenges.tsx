@@ -86,7 +86,7 @@ export default function ChallengesPage() {
         ...data,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()) : [],
         rules: data.rules ? data.rules.split('\n').filter(rule => rule.trim()) : [],
-        maxParticipants: data.maxParticipants || null,
+        maxParticipants: data.maxParticipants || undefined,
         difficulty: data.difficulty || 'medium',
       };
       return await apiRequest('POST', '/api/challenges', formattedData);
