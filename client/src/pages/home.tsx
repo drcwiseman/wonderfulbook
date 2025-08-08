@@ -12,6 +12,7 @@ import FeaturedBooks from "@/components/FeaturedBooks";
 import IntelligentSearch from "@/components/IntelligentSearch";
 import { useQuery } from "@tanstack/react-query";
 import { SEOHead, seoConfigs } from "@/components/SEOHead";
+import { Link } from "wouter";
 
 // Book Showcase Component
 function BookShowcaseSection() {
@@ -24,31 +25,33 @@ function BookShowcaseSection() {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 max-w-7xl mx-auto px-4">
       {showcaseBooks.map((book: any) => (
-        <div key={book.id} className="group cursor-pointer">
-          <div className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-            <div className="aspect-[3/4] bg-gradient-to-br from-orange-800/20 to-amber-800/20 flex items-center justify-center">
-              {book.coverImageUrl ? (
-                <img
-                  src={book.coverImageUrl}
-                  alt={book.title}
-                  className="w-full h-full object-cover retina-ready"
-                  loading="lazy"
-                  decoding="async"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
-                  <BookOpen className="w-12 h-12 text-white/80" />
+        <Link key={book.id} href="/bookstore">
+          <div className="group cursor-pointer">
+            <div className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+              <div className="aspect-[3/4] bg-gradient-to-br from-orange-800/20 to-amber-800/20 flex items-center justify-center">
+                {book.coverImageUrl ? (
+                  <img
+                    src={book.coverImageUrl}
+                    alt={book.title}
+                    className="w-full h-full object-cover retina-ready"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
+                    <BookOpen className="w-12 h-12 text-white/80" />
+                  </div>
+                )}
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3">
+                  <h3 className="text-white font-semibold text-xs sm:text-sm mb-1 line-clamp-2">{book.title}</h3>
+                  <p className="text-orange-200 text-xs">{book.author}</p>
                 </div>
-              )}
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3">
-                <h3 className="text-white font-semibold text-xs sm:text-sm mb-1 line-clamp-2">{book.title}</h3>
-                <p className="text-orange-200 text-xs">{book.author}</p>
               </div>
             </div>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );
@@ -218,9 +221,15 @@ export default function Home() {
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
               Discover Our Premium Book Collection
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
               Handpicked titles from world-renowned authors and thought leaders. Experience the quality that sets us apart.
             </p>
+            <Link href="/bookstore">
+              <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105">
+                Browse Full Collection
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
           </div>
           
           <BookShowcaseSection />
