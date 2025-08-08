@@ -1,121 +1,284 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 
 interface AccessibilitySettings {
   textToSpeech: boolean;
   dyslexiaFont: boolean;
-  highContrast: boolean;
   fontSize: number;
   lineHeight: number;
   letterSpacing: number;
-  voiceRate: number;
-  voicePitch: number;
-  autoRead: boolean;
-  focusMode: boolean;
-  colorTheme: 'default' | 'sepia' | 'dark' | 'blue';
+  highContrast: boolean;
+  darkMode: boolean;
+  readingSpeed: number;
+  voiceType: string;
+  highlightText: boolean;
+}
+
+interface AccessibilityState {
+  settings: AccessibilitySettings;
+  isReading: boolean;
+  isPaused: boolean;
+  currentUtterance: SpeechSynthesisUtterance | null;
+  availableVoices: SpeechSynthesisVoice[];
 }
 
 const defaultSettings: AccessibilitySettings = {
   textToSpeech: false,
   dyslexiaFont: false,
-  highContrast: false,
   fontSize: 16,
-  lineHeight: 1.6,
+  lineHeight: 1.5,
   letterSpacing: 0,
-  voiceRate: 1,
-  voicePitch: 1,
-  autoRead: false,
-  focusMode: false,
-  colorTheme: 'default'
+  highContrast: false,
+  darkMode: false,
+  readingSpeed: 1,
+  voiceType: 'default',
+  highlightText: true
 };
 
 export function useAccessibility() {
-  const [settings, setSettings] = useState<AccessibilitySettings>(defaultSettings);
-  const [isReading, setIsReading] = useState(false);
+  const [state, setState] = useState<AccessibilityState>({
+    settings: defaultSettings,
+    isReading: false,
+    isPaused: false,
+    currentUtterance: null,
+    availableVoices: []
+  });
 
   // Load settings from localStorage on mount
   useEffect(() => {
-    const savedSettings = localStorage.getItem('accessibilitySettings');
+    const savedSettings = localStorage.getItem('accessibility-settings');
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
-        setSettings(parsed);
+        setState(prev => ({ ...prev, settings: { ...defaultSettings, ...parsed } }));
+        applyAccessibilitySettings({ ...defaultSettings, ...parsed });
       } catch (error) {
         console.error('Failed to parse accessibility settings:', error);
       }
     }
+
+    // Load available voices
+    const loadVoices = () => {
+      const voices = speechSynthesis.getVoices();
+      setState(prev => ({ ...prev, availableVoices: voices }));
+    };
+
+    loadVoices();
+    speechSynthesis.addEventListener('voiceschanged', loadVoices);
+
+    return () => {
+      speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+      speechSynthesis.cancel();
+    };
   }, []);
 
-  // Apply settings when they change
-  useEffect(() => {
-    applySettings(settings);
-  }, [settings]);
-
-  const applySettings = useCallback((newSettings: AccessibilitySettings) => {
+  // Apply accessibility settings to the document
+  const applyAccessibilitySettings = useCallback((settings: AccessibilitySettings) => {
     const root = document.documentElement;
     
-    // Apply font settings
-    if (newSettings.dyslexiaFont) {
-      root.style.setProperty('--font-family', '"OpenDyslexic", "Comic Sans MS", cursive');
+    // Font settings
+    if (settings.dyslexiaFont) {
+      root.style.setProperty('--font-family', '"OpenDyslexic", "Comic Sans MS", Arial, sans-serif');
+      root.classList.add('dyslexic-font');
     } else {
       root.style.removeProperty('--font-family');
+      root.classList.remove('dyslexic-font');
     }
+
+    // Font size
+    root.style.setProperty('--accessibility-font-size', `${settings.fontSize}px`);
     
-    root.style.setProperty('--accessibility-font-size', `${newSettings.fontSize}px`);
-    root.style.setProperty('--accessibility-line-height', newSettings.lineHeight.toString());
-    root.style.setProperty('--accessibility-letter-spacing', `${newSettings.letterSpacing}px`);
+    // Line height
+    root.style.setProperty('--accessibility-line-height', settings.lineHeight.toString());
     
-    // Apply visual modes
-    document.body.classList.toggle('high-contrast', newSettings.highContrast);
-    document.body.classList.toggle('focus-mode', newSettings.focusMode);
-    
-    // Apply color theme
-    document.body.className = document.body.className.replace(/theme-\w+/g, '');
-    if (newSettings.colorTheme !== 'default') {
-      document.body.classList.add(`theme-${newSettings.colorTheme}`);
+    // Letter spacing
+    root.style.setProperty('--accessibility-letter-spacing', `${settings.letterSpacing}px`);
+
+    // High contrast mode
+    if (settings.highContrast) {
+      root.classList.add('high-contrast');
+    } else {
+      root.classList.remove('high-contrast');
+    }
+
+    // Dark mode
+    if (settings.darkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+
+    // Text highlighting
+    if (settings.highlightText) {
+      root.classList.add('highlight-reading-text');
+    } else {
+      root.classList.remove('highlight-reading-text');
     }
   }, []);
 
-  const updateSetting = useCallback(<K extends keyof AccessibilitySettings>(
-    key: K, 
-    value: AccessibilitySettings[K]
-  ) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    localStorage.setItem('accessibilitySettings', JSON.stringify(newSettings));
-  }, [settings]);
+  const updateSettings = useCallback((newSettings: Partial<AccessibilitySettings>) => {
+    setState(prev => {
+      const updated = { ...prev.settings, ...newSettings };
+      localStorage.setItem('accessibility-settings', JSON.stringify(updated));
+      applyAccessibilitySettings(updated);
+      return { ...prev, settings: updated };
+    });
+  }, [applyAccessibilitySettings]);
 
-  const speakText = useCallback((text: string) => {
-    if (!('speechSynthesis' in window) || !settings.textToSpeech) return;
-
-    speechSynthesis.cancel();
+  const getTextContent = useCallback((element: Element): string => {
+    let text = '';
     
+    for (const node of element.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        text += (node.textContent || '').trim() + ' ';
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as Element;
+        
+        // Skip script, style, and hidden elements
+        if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'SVG'].includes(el.tagName) || 
+            el.getAttribute('aria-hidden') === 'true' ||
+            el.hasAttribute('data-skip-tts') ||
+            getComputedStyle(el).display === 'none' ||
+            getComputedStyle(el).visibility === 'hidden') {
+          continue;
+        }
+        
+        // Add paragraph breaks
+        if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI'].includes(el.tagName)) {
+          text += getTextContent(el) + '. ';
+        } else {
+          text += getTextContent(el);
+        }
+      }
+    }
+    
+    return text.replace(/\s+/g, ' ').trim();
+  }, []);
+
+  const startTextToSpeech = useCallback((customText?: string) => {
+    if (!state.settings.textToSpeech) return;
+
+    // Stop any current speech
+    speechSynthesis.cancel();
+
+    let text = customText;
+    
+    if (!text) {
+      // Get main content text
+      const mainContent = document.querySelector('main') || 
+                         document.querySelector('[role="main"]') || 
+                         document.querySelector('.pdf-viewer') ||
+                         document.querySelector('.book-content') ||
+                         document.body;
+
+      if (!mainContent) return;
+      text = getTextContent(mainContent);
+    }
+
+    if (!text || text.length < 3) return;
+
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = settings.voiceRate;
-    utterance.pitch = settings.voicePitch;
     
-    utterance.onstart = () => setIsReading(true);
-    utterance.onend = () => setIsReading(false);
-    utterance.onerror = () => setIsReading(false);
+    // Configure speech settings
+    utterance.rate = state.settings.readingSpeed;
+    utterance.pitch = 1;
+    utterance.volume = 1;
 
+    // Set voice if available
+    if (state.settings.voiceType !== 'default' && state.availableVoices.length > 0) {
+      const selectedVoice = state.availableVoices.find(voice => 
+        voice.name === state.settings.voiceType || voice.lang === state.settings.voiceType
+      );
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+    }
+
+    // Event handlers
+    utterance.onstart = () => {
+      setState(prev => ({ ...prev, isReading: true, isPaused: false }));
+    };
+
+    utterance.onend = () => {
+      setState(prev => ({ ...prev, isReading: false, isPaused: false, currentUtterance: null }));
+    };
+
+    utterance.onerror = (error) => {
+      console.error('Speech synthesis error:', error);
+      setState(prev => ({ ...prev, isReading: false, isPaused: false, currentUtterance: null }));
+    };
+
+    setState(prev => ({ ...prev, currentUtterance: utterance }));
     speechSynthesis.speak(utterance);
-  }, [settings.textToSpeech, settings.voiceRate, settings.voicePitch]);
+  }, [state.settings.textToSpeech, state.settings.readingSpeed, state.settings.voiceType, state.availableVoices, getTextContent]);
 
-  const stopReading = useCallback(() => {
+  const pauseTextToSpeech = useCallback(() => {
+    if (speechSynthesis.speaking && !speechSynthesis.paused) {
+      speechSynthesis.pause();
+      setState(prev => ({ ...prev, isPaused: true }));
+    }
+  }, []);
+
+  const resumeTextToSpeech = useCallback(() => {
+    if (speechSynthesis.paused) {
+      speechSynthesis.resume();
+      setState(prev => ({ ...prev, isPaused: false }));
+    }
+  }, []);
+
+  const stopTextToSpeech = useCallback(() => {
     speechSynthesis.cancel();
-    setIsReading(false);
+    setState(prev => ({ ...prev, isReading: false, isPaused: false, currentUtterance: null }));
   }, []);
 
   const resetSettings = useCallback(() => {
-    setSettings(defaultSettings);
-    localStorage.setItem('accessibilitySettings', JSON.stringify(defaultSettings));
-  }, []);
+    setState(prev => ({ ...prev, settings: defaultSettings }));
+    localStorage.setItem('accessibility-settings', JSON.stringify(defaultSettings));
+    applyAccessibilitySettings(defaultSettings);
+  }, [applyAccessibilitySettings]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only activate if accessibility features are enabled
+      if (!state.settings.textToSpeech) return;
+
+      // Alt + S to start/stop reading
+      if (event.altKey && event.key === 's') {
+        event.preventDefault();
+        if (state.isReading) {
+          stopTextToSpeech();
+        } else {
+          startTextToSpeech();
+        }
+      }
+
+      // Alt + P to pause/resume reading
+      if (event.altKey && event.key === 'p') {
+        event.preventDefault();
+        if (state.isReading) {
+          if (state.isPaused) {
+            resumeTextToSpeech();
+          } else {
+            pauseTextToSpeech();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [state.settings.textToSpeech, state.isReading, state.isPaused, startTextToSpeech, pauseTextToSpeech, resumeTextToSpeech, stopTextToSpeech]);
 
   return {
-    settings,
-    updateSetting,
-    speakText,
-    stopReading,
-    resetSettings,
-    isReading
+    settings: state.settings,
+    isReading: state.isReading,
+    isPaused: state.isPaused,
+    availableVoices: state.availableVoices,
+    updateSettings,
+    startTextToSpeech,
+    pauseTextToSpeech,
+    resumeTextToSpeech,
+    stopTextToSpeech,
+    resetSettings
   };
 }

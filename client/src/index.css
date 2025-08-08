@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* OpenDyslexic Font - Self-hosted for better performance */
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('data:font/woff2;base64,') format('woff2'); /* You would include the actual font here */
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Enhanced Navigation Styles */
 .nav-link {
   position: relative;

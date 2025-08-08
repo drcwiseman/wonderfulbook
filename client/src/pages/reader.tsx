@@ -91,12 +91,14 @@ export default function ReaderPage() {
   };
 
   return (
-    <PremiumPDFReader
-      bookId={bookId}
-      bookTitle={(book as any)?.title || 'Unknown Book'}
-      initialPage={initialPage}
-      onPageChange={handlePageChange}
-      bookmarks={Array.isArray(bookmarks) ? bookmarks : []}
-    />
+    <main id="main-content" className="pdf-viewer book-content" role="main" aria-label="Book Reader">
+      <PremiumPDFReader
+        bookId={bookId}
+        bookTitle={(book as any)?.title || 'Unknown Book'}
+        initialPage={initialPage}
+        onPageChange={handlePageChange}
+        bookmarks={Array.isArray(bookmarks) ? bookmarks : []}
+      />
+    </main>
   );
 }

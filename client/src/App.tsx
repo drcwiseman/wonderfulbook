@@ -29,6 +29,7 @@ import ResetPassword from "@/pages/auth/reset-password";
 import NotFound from "@/pages/not-found";
 import ScrollToTop from "@/components/ScrollToTop";
 import AccessibilityButton from "@/components/AccessibilityButton";
+import AccessibilityMenu from "@/components/AccessibilityMenu";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -118,6 +119,7 @@ function App() {
           <Router />
           <ScrollToTop />
           <AccessibilityButton />
+          <AccessibilityMenu />
         </TooltipProvider>
       </QueryClientProvider>
     </ProductionErrorBoundary>
