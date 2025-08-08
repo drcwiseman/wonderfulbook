@@ -58,7 +58,7 @@ export default function SuperAdminDashboard() {
   // User management filters
   const [userPage, setUserPage] = useState(1);
   const [userSearch, setUserSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
 
   // System stats query
   const { data: stats, isLoading: statsLoading } = useQuery<SystemStats>({
@@ -68,7 +68,7 @@ export default function SuperAdminDashboard() {
 
   // Users query
   const { data: usersData, isLoading: usersLoading } = useQuery<UsersResponse>({
-    queryKey: ['/api/super-admin/users', { page: userPage, search: userSearch, role: roleFilter }],
+    queryKey: ['/api/super-admin/users', { page: userPage, search: userSearch, role: roleFilter === 'all' ? '' : roleFilter }],
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
@@ -313,7 +313,7 @@ export default function SuperAdminDashboard() {
                     <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Roles</SelectItem>
+                    <SelectItem value="all">All Roles</SelectItem>
                     <SelectItem value="user">User</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="super_admin">Super Admin</SelectItem>
