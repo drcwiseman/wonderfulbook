@@ -41,22 +41,23 @@ export const isAuthenticated: RequestHandler = (req: any, res, next) => {
  * Checks if the authenticated user has admin privileges
  */
 export const requireAdmin: RequestHandler = (req: any, res, next) => {
-  // First check if user is authenticated
-  if (!req.user) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  
-  // Check for admin role or specific admin emails
-  const isAdmin = req.user.role === 'admin' || 
-                  req.user.role === 'super_admin' ||
-                  req.user.email === 'admin@wonderfulbooks.com' ||
-                  req.user.email === 'prophetclimate@yahoo.com';
-  
-  if (!isAdmin) {
-    return res.status(403).json({ message: "Admin access required" });
-  }
-  
-  next();
+  // First ensure user is authenticated
+  isAuthenticated(req, res, (authErr: any) => {
+    if (authErr) return;
+    
+    // Check for admin role or specific admin emails
+    const userIsAdmin = req.user.role === 'admin' || 
+                        req.user.role === 'super_admin' ||
+                        req.user.email === 'admin@wonderfulbooks.com' ||
+                        req.user.email === 'prophetclimate@yahoo.com' ||
+                        req.user.email === 'drcwiseman@gmail.com';
+    
+    if (!userIsAdmin) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    next();
+  });
 };
 
 /**
@@ -64,18 +65,18 @@ export const requireAdmin: RequestHandler = (req: any, res, next) => {
  * Checks if the authenticated user has super admin privileges
  */
 export const requireSuperAdmin: RequestHandler = (req: any, res, next) => {
-  // First check if user is authenticated
-  if (!req.user) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  
-  // Check for super admin role or specific super admin emails
-  const isSuperAdmin = req.user.role === 'super_admin' ||
-                       req.user.email === 'prophetclimate@yahoo.com';
-  
-  if (!isSuperAdmin) {
-    return res.status(403).json({ message: "Super admin access required" });
-  }
-  
-  next();
+  // First ensure user is authenticated
+  isAuthenticated(req, res, (authErr: any) => {
+    if (authErr) return;
+    
+    // Check for super admin role or specific super admin emails
+    const userIsSuperAdmin = req.user.role === 'super_admin' ||
+                             req.user.email === 'prophetclimate@yahoo.com';
+    
+    if (!userIsSuperAdmin) {
+      return res.status(403).json({ message: "Super admin access required" });
+    }
+    
+    next();
+  });
 };

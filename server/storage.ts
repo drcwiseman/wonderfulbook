@@ -79,6 +79,7 @@ export interface IStorage {
   resetUserPassword(userId: string, newPassword?: string): Promise<{ success: boolean; tempPassword?: string }>;
   updateUserRole(userId: string, role: string): Promise<User>;
   updateUserStatus(userId: string, isActive: boolean): Promise<User>;
+  toggleUserStatus(userId: string, isActive: boolean): Promise<User>;
   getSystemStats(): Promise<{
     totalUsers: number;
     activeUsers: number;
@@ -824,6 +825,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserStatus(userId: string, isActive: boolean): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async toggleUserStatus(userId: string, isActive: boolean): Promise<User> {
     const [user] = await db
       .update(users)
       .set({ isActive, updatedAt: new Date() })
