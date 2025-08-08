@@ -483,7 +483,7 @@ export const feedbackComments = pgTable("feedback_comments", {
 export const insertFeedbackSchema = createInsertSchema(feedback, {
   type: z.enum(['bug', 'feedback', 'suggestion', 'compliment']),
   priority: z.enum(['low', 'medium', 'high', 'critical']),
-  status: z.enum(['open', 'in_progress', 'resolved', 'closed']),
+  status: z.enum(['open', 'in_progress', 'resolved', 'closed']).optional(),
   title: z.string().min(5, "Title must be at least 5 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   deviceInfo: z.object({

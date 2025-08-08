@@ -21,6 +21,7 @@ export function registerFeedbackRoutes(app: Express) {
       const validatedData = insertFeedbackSchema.parse({
         ...req.body,
         userId: (req as any).session?.userId || null, // Optional user ID
+        status: 'open', // Default status for new feedback
       });
 
       // Insert feedback into database
