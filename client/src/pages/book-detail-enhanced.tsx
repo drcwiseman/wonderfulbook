@@ -149,12 +149,26 @@ export default function BookDetail() {
                   {/* Action Buttons */}
                   <div className="mt-6 space-y-3">
                     {canAccessFullContent() ? (
-                      <Button asChild className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-lg py-3">
-                        <Link href={`/reader/${book.id}`}>
-                          <BookOpen className="w-5 h-5 mr-2" />
-                          Start Reading
-                        </Link>
-                      </Button>
+                      <div className="space-y-3">
+                        <Button asChild className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-lg py-3">
+                          <Link href={`/reader/${book.id}`}>
+                            <BookOpen className="w-5 h-5 mr-2" />
+                            Start Reading
+                          </Link>
+                        </Button>
+                        
+                        {/* Always show preview for all users */}
+                        {book.previewPageCount && book.previewPageCount > 0 && (
+                          <Button 
+                            variant="outline" 
+                            className="w-full border-orange-500 text-orange-600 hover:bg-orange-50"
+                            onClick={() => setIsPreviewOpen(true)}
+                          >
+                            <Book className="w-4 h-4 mr-2" />
+                            Interactive Preview ({book.previewPageCount} pages)
+                          </Button>
+                        )}
+                      </div>
                     ) : (
                       <div className="space-y-3">
                         {hasActiveSubscription() ? (
@@ -173,6 +187,7 @@ export default function BookDetail() {
                           </Button>
                         )}
                         
+                        {/* Always show preview for all users */}
                         {book.previewPageCount && book.previewPageCount > 0 && (
                           <Button 
                             variant="outline" 
