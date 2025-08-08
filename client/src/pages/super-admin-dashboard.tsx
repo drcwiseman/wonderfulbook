@@ -86,6 +86,8 @@ export default function SuperAdminDashboard() {
         return res.json();
       }).then(data => {
         console.log('Users API Response:', data);
+        console.log('Users array check:', data.users);
+        console.log('Users length:', data.users?.length);
         return data;
       });
     },
@@ -96,6 +98,8 @@ export default function SuperAdminDashboard() {
   console.log('Users Data:', usersData);
   console.log('Users Loading:', usersLoading);
   console.log('Users Error:', usersError);
+  console.log('Users array exists:', !!usersData?.users);
+  console.log('Users array length:', usersData?.users?.length);
 
   // Audit logs query
   const { data: auditLogs, isLoading: auditLoading } = useQuery<{ logs: any[]; total: number; page: number; totalPages: number }>({
@@ -371,7 +375,7 @@ export default function SuperAdminDashboard() {
                           Error: {usersError.message}
                         </TableCell>
                       </TableRow>
-                    ) : usersData?.users && usersData.users.length > 0 ? (
+                    ) : usersData && usersData.users && usersData.users.length > 0 ? (
                       usersData.users.map((user) => (
                         <TableRow key={user.id}>
                           <TableCell>
@@ -443,7 +447,7 @@ export default function SuperAdminDashboard() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          No users found matching your criteria.
+                          {usersData ? `No users found. Total: ${usersData.total || 0}, Users length: ${usersData.users?.length || 0}` : 'No data received from server'}
                         </TableCell>
                       </TableRow>
                     )}
