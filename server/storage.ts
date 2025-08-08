@@ -729,7 +729,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      query = query.where(and(...conditions)) as any;
     }
     
     // Get total count
@@ -1369,14 +1369,20 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async resetUserPassword(userId: string, newPassword: string): Promise<void> {
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
+  async resetUserPassword(userId: string, newPassword?: string): Promise<{ success: boolean; tempPassword?: string }> {
+    const passwordToUse = newPassword || Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(passwordToUse, 12);
     await db.update(users)
       .set({
         passwordHash: hashedPassword,
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId));
+    
+    return {
+      success: true,
+      tempPassword: newPassword ? undefined : passwordToUse
+    };
   }
 
   async deleteUser(userId: string): Promise<void> {
