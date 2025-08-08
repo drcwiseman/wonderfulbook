@@ -52,8 +52,14 @@ export default function SuperAdminDashboard() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [newRole, setNewRole] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: ''
+  });
   
   // User management filters
   const [userPage, setUserPage] = useState(1);
@@ -137,21 +143,6 @@ export default function SuperAdminDashboard() {
     },
   });
 
-  // Delete user mutation
-  const deleteUserMutation = useMutation({
-    mutationFn: (userId: string) => apiRequest('DELETE', `/api/super-admin/users/${userId}`),
-    onSuccess: () => {
-      toast({ title: 'Success', description: 'User deleted successfully' });
-      queryClient.invalidateQueries({ queryKey: ['/api/super-admin/users'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/super-admin/stats'] });
-      setShowDeleteDialog(false);
-      setSelectedUser(null);
-    },
-    onError: (error: any) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    },
-  });
-
   // Reset password mutation
   const resetPasswordMutation = useMutation({
     mutationFn: ({ userId, newPassword }: { userId: string; newPassword: string }) =>
@@ -167,6 +158,24 @@ export default function SuperAdminDashboard() {
     },
   });
 
+  // Update user details mutation
+  const updateUserMutation = useMutation({
+    mutationFn: ({ userId, userData }: { userId: string; userData: { firstName: string; lastName: string; email: string } }) =>
+      apiRequest('PATCH', `/api/super-admin/users/${userId}`, userData),
+    onSuccess: () => {
+      toast({ title: 'Success', description: 'User details updated successfully' });
+      queryClient.invalidateQueries({ queryKey: ['/api/super-admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/super-admin/stats'] });
+      setShowEditDialog(false);
+      setSelectedUser(null);
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+
+
   const handleRoleChange = () => {
     if (selectedUser && newRole) {
       updateRoleMutation.mutate({ userId: selectedUser.id, role: newRole });
@@ -176,6 +185,35 @@ export default function SuperAdminDashboard() {
   const handlePasswordReset = () => {
     if (selectedUser && newPassword) {
       resetPasswordMutation.mutate({ userId: selectedUser.id, newPassword });
+    }
+  };
+
+  const handleUserEdit = () => {
+    if (selectedUser && editForm.firstName && editForm.lastName && editForm.email) {
+      updateUserMutation.mutate({ 
+        userId: selectedUser.id, 
+        userData: {
+          firstName: editForm.firstName,
+          lastName: editForm.lastName,
+          email: editForm.email
+        }
+      });
+    }
+  };
+
+  const openEditDialog = (user: User) => {
+    setSelectedUser(user);
+    setEditForm({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUserDelete = () => {
+    if (selectedUser) {
+      deleteUserMutation.mutate(selectedUser.id);
     }
   };
 
@@ -405,11 +443,20 @@ export default function SuperAdminDashboard() {
                               <Button
                                 size="sm"
                                 variant="outline"
+                                onClick={() => openEditDialog(user)}
+                                title="Edit user details"
+                              >
+                                <Settings className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 onClick={() => {
                                   setSelectedUser(user);
                                   setNewRole(user.role);
                                   setShowRoleDialog(true);
                                 }}
+                                title="Change role"
                               >
                                 <UserCog className="h-4 w-4" />
                               </Button>
@@ -417,6 +464,7 @@ export default function SuperAdminDashboard() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleStatusToggle(user)}
+                                title={user.isActive ? "Deactivate user" : "Activate user"}
                               >
                                 {user.isActive ? <Ban className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                               </Button>
@@ -427,6 +475,7 @@ export default function SuperAdminDashboard() {
                                   setSelectedUser(user);
                                   setShowPasswordDialog(true);
                                 }}
+                                title="Reset password"
                               >
                                 <RotateCcw className="h-4 w-4" />
                               </Button>
@@ -437,6 +486,7 @@ export default function SuperAdminDashboard() {
                                   setSelectedUser(user);
                                   setShowDeleteDialog(true);
                                 }}
+                                title="Delete user"
                               >
                                 <AlertCircle className="h-4 w-4" />
                               </Button>
@@ -573,6 +623,58 @@ export default function SuperAdminDashboard() {
               disabled={resetPasswordMutation.isPending || newPassword.length < 8}
             >
               {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User Details</DialogTitle>
+            <DialogDescription>
+              Update information for {selectedUser?.firstName} {selectedUser?.lastName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">First Name</label>
+                <Input
+                  value={editForm.firstName}
+                  onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                  placeholder="First name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Last Name</label>
+                <Input
+                  value={editForm.lastName}
+                  onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                  placeholder="Last name"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Email Address</label>
+              <Input
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                placeholder="email@example.com"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUserEdit} 
+              disabled={updateUserMutation.isPending || !editForm.firstName || !editForm.lastName || !editForm.email}
+            >
+              {updateUserMutation.isPending ? 'Updating...' : 'Update User'}
             </Button>
           </DialogFooter>
         </DialogContent>

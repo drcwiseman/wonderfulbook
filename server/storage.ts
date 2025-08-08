@@ -760,7 +760,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async deleteUserBasic(id: string): Promise<void> {
     // Delete related data first
     await db.delete(readingProgress).where(eq(readingProgress.userId, id));
     await db.delete(bookmarks).where(eq(bookmarks.userId, id));
@@ -783,7 +783,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(users).where(or(...ids.map(id => eq(users.id, id))));
   }
 
-  async resetUserPassword(userId: string, newPassword?: string): Promise<{ success: boolean; tempPassword?: string }> {
+  async resetUserPasswordBasic(userId: string, newPassword?: string): Promise<{ success: boolean; tempPassword?: string }> {
     try {
       const tempPassword = newPassword || Math.random().toString(36).slice(-12);
       const saltRounds = 12;
@@ -1339,6 +1339,42 @@ export class DatabaseStorage implements IStorage {
       .where(eq(challengeComments.id, commentId))
       .returning();
     return comment;
+  }
+
+  // Super Admin User Management Operations - Enhanced versions
+  async updateUserDetails(userId: string, userData: { firstName: string; lastName: string; email: string }): Promise<User> {
+    const [user] = await db.update(users)
+      .set({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async resetUserPassword(userId: string, newPassword: string): Promise<void> {
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await db.update(users)
+      .set({
+        passwordHash: hashedPassword,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // Delete related records first due to foreign key constraints
+    await db.delete(readingProgress).where(eq(readingProgress.userId, userId));
+    await db.delete(bookmarks).where(eq(bookmarks.userId, userId));
+    await db.delete(challengeParticipants).where(eq(challengeParticipants.userId, userId));
+    await db.delete(challengeComments).where(eq(challengeComments.userId, userId));
+    await db.delete(challengeActivities).where(eq(challengeActivities.userId, userId));
+    
+    // Finally delete the user
+    await db.delete(users).where(eq(users.id, userId));
   }
 }
 

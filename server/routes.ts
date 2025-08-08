@@ -793,6 +793,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user details (name, email)
+  app.patch('/api/super-admin/users/:userId', isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { firstName, lastName, email } = req.body;
+      
+      if (!firstName || !lastName || !email) {
+        return res.status(400).json({ message: 'First name, last name, and email are required' });
+      }
+      
+      const updatedUser = await storage.updateUserDetails(userId, { firstName, lastName, email });
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating user details:', error);
+      res.status(500).json({ message: 'Failed to update user details' });
+    }
+  });
+
+  // Reset user password
+  app.post('/api/super-admin/users/:userId/reset-password', isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { newPassword } = req.body;
+      
+      if (!newPassword || newPassword.length < 8) {
+        return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+      }
+      
+      await storage.resetUserPassword(userId, newPassword);
+      res.json({ message: 'Password reset successfully' });
+    } catch (error) {
+      console.error('Error resetting user password:', error);
+      res.status(500).json({ message: 'Failed to reset user password' });
+    }
+  });
+
+  // Delete user
+  app.delete('/api/super-admin/users/:userId', isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      
+      await storage.deleteUser(userId);
+      res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Failed to delete user' });
+    }
+  });
+
   // Deactivate/activate user
   app.patch('/api/super-admin/users/:userId/status', isAuthenticated, isSuperAdmin, async (req: any, res) => {
     try {
