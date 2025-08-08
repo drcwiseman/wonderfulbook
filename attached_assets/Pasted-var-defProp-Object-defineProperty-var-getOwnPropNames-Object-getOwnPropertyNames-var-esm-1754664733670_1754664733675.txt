@@ -1,0 +1,3955 @@
+var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
+// shared/schema.ts
+var schema_exports = {};
+__export(schema_exports, {
+  adminUpdateUserSchema: () => adminUpdateUserSchema,
+  bookCategories: () => bookCategories,
+  bookmarks: () => bookmarks,
+  books: () => books,
+  bulkUserUpdateSchema: () => bulkUserUpdateSchema,
+  categories: () => categories,
+  emailLogs: () => emailLogs,
+  emailPreferences: () => emailPreferences,
+  forgotPasswordSchema: () => forgotPasswordSchema,
+  freeTrialAbusePrevention: () => freeTrialAbusePrevention,
+  insertBookCategorySchema: () => insertBookCategorySchema,
+  insertBookSchema: () => insertBookSchema,
+  insertBookmarkSchema: () => insertBookmarkSchema,
+  insertCategorySchema: () => insertCategorySchema,
+  insertEmailLogSchema: () => insertEmailLogSchema,
+  insertEmailPreferencesSchema: () => insertEmailPreferencesSchema,
+  insertReadingProgressSchema: () => insertReadingProgressSchema,
+  insertSubscriptionPlanSchema: () => insertSubscriptionPlanSchema,
+  loginSchema: () => loginSchema,
+  passwordResetSchema: () => passwordResetSchema,
+  readingProgress: () => readingProgress,
+  registerSchema: () => registerSchema,
+  resetPasswordSchema: () => resetPasswordSchema,
+  sessions: () => sessions,
+  signupAttempts: () => signupAttempts,
+  subscriptionPlans: () => subscriptionPlans,
+  updateEmailPreferencesSchema: () => updateEmailPreferencesSchema,
+  updateSubscriptionPlanSchema: () => updateSubscriptionPlanSchema,
+  upsertUserSchema: () => upsertUserSchema,
+  userSelectedBooks: () => userSelectedBooks,
+  userSubscriptionCycles: () => userSubscriptionCycles,
+  users: () => users
+});
+import { sql as sql2 } from "drizzle-orm";
+import {
+  index,
+  jsonb,
+  pgTable,
+  timestamp,
+  varchar,
+  text,
+  integer,
+  decimal,
+  boolean,
+  unique
+} from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+var sessions, users, subscriptionPlans, books, userSelectedBooks, userSubscriptionCycles, freeTrialAbusePrevention, signupAttempts, readingProgress, bookmarks, categories, bookCategories, upsertUserSchema, insertBookSchema, insertReadingProgressSchema, insertBookmarkSchema, insertCategorySchema, insertBookCategorySchema, adminUpdateUserSchema, passwordResetSchema, bulkUserUpdateSchema, registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, insertSubscriptionPlanSchema, updateSubscriptionPlanSchema, emailPreferences, emailLogs, insertEmailPreferencesSchema, updateEmailPreferencesSchema, insertEmailLogSchema;
+var init_schema = __esm({
+  "shared/schema.ts"() {
+    "use strict";
+    sessions = pgTable(
+      "sessions",
+      {
+        sid: varchar("sid").primaryKey(),
+        sess: jsonb("sess").notNull(),
+        expire: timestamp("expire").notNull()
+      },
+      (table) => [index("IDX_session_expire").on(table.expire)]
+    );
+    users = pgTable("users", {
+      id: varchar("id").primaryKey(),
+      email: varchar("email").unique(),
+      firstName: varchar("first_name"),
+      lastName: varchar("last_name"),
+      profileImageUrl: varchar("profile_image_url"),
+      // Local authentication fields
+      username: varchar("username").unique(),
+      passwordHash: varchar("password_hash"),
+      // For local auth
+      emailVerified: boolean("email_verified").default(false),
+      emailVerificationToken: varchar("email_verification_token"),
+      // OAuth provider info
+      authProvider: varchar("auth_provider").default("replit"),
+      // replit, local, google
+      // Subscription fields
+      stripeCustomerId: varchar("stripe_customer_id"),
+      stripeSubscriptionId: varchar("stripe_subscription_id"),
+      subscriptionTier: varchar("subscription_tier").default("free"),
+      subscriptionStatus: varchar("subscription_status").default("inactive"),
+      booksReadThisMonth: integer("books_read_this_month").default(0),
+      role: varchar("role").default("user"),
+      // user, admin, moderator
+      isActive: boolean("is_active").default(true),
+      lastLoginAt: timestamp("last_login_at"),
+      passwordResetToken: varchar("password_reset_token"),
+      passwordResetExpires: timestamp("password_reset_expires"),
+      // Anti-abuse fields for free trial
+      freeTrialUsed: boolean("free_trial_used").default(false),
+      freeTrialStartedAt: timestamp("free_trial_started_at"),
+      freeTrialEndedAt: timestamp("free_trial_ended_at"),
+      registrationIp: varchar("registration_ip"),
+      // Track IP for duplicate prevention
+      deviceFingerprint: varchar("device_fingerprint"),
+      // Browser/device fingerprint
+      createdAt: timestamp("created_at").defaultNow(),
+      updatedAt: timestamp("updated_at").defaultNow()
+    });
+    subscriptionPlans = pgTable("subscription_plans", {
+      id: varchar("id").primaryKey(),
+      name: varchar("name").notNull(),
+      price: varchar("price").notNull(),
+      // Display price (e.g., "£9.99")
+      priceAmount: integer("price_amount").notNull(),
+      // Price in pence/cents
+      currency: varchar("currency").default("GBP"),
+      period: varchar("period").default("per month"),
+      description: text("description"),
+      bookLimit: integer("book_limit").default(3),
+      // -1 for unlimited
+      features: text("features").array(),
+      // Array of feature strings
+      isActive: boolean("is_active").default(true),
+      stripePriceId: varchar("stripe_price_id"),
+      displayOrder: integer("display_order").default(1),
+      createdAt: timestamp("created_at").defaultNow(),
+      updatedAt: timestamp("updated_at").defaultNow()
+    });
+    books = pgTable("books", {
+      id: varchar("id").primaryKey().default(sql2`gen_random_uuid()`),
+      title: text("title").notNull(),
+      author: text("author").notNull(),
+      description: text("description"),
+      coverImageUrl: text("cover_image_url"),
+      pdfUrl: text("pdf_url"),
+      rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),
+      totalRatings: integer("total_ratings").default(0),
+      isFeatured: boolean("is_featured").default(false),
+      requiredTier: varchar("required_tier").default("free"),
+      createdAt: timestamp("created_at").defaultNow(),
+      updatedAt: timestamp("updated_at").defaultNow()
+    });
+    userSelectedBooks = pgTable("user_selected_books", {
+      id: varchar("id").primaryKey().default(sql2`gen_random_uuid()`),
+      userId: varchar("user_id").references(() => users.id).notNull(),
+      bookId: varchar("book_id").references(() => books.id).notNull(),
+      subscriptionTier: varchar("subscription_tier").notNull(),
+      // free, basic, premium
+      selectedAt: timestamp("selected_at").defaultNow(),
+      lockedUntil: timestamp("locked_until").notNull(),
+      // When access expires
+      billingCycleStart: timestamp("billing_cycle_start"),
+      // For basic plan monthly reset
+      isActive: boolean("is_active").default(true),
+      createdAt: timestamp("created_at").defaultNow(),
+      updatedAt: timestamp("updated_at").defaultNow()
+    }, (table) => ({
+      uniqueActiveUserBook: unique("unique_active_user_book").on(table.userId, table.bookId, table.isActive)
+    }));
+    userSubscriptionCycles = pgTable("user_subscription_cycles", {
+      id: varchar("id").primaryKey().default(sql2`gen_random_uuid()`),
+      userId: varchar("user_id").references(() => users.id).notNull(),
+      subscriptionTier: varchar("subscription_tier").notNull(),
+      cycleStart: timestamp("cycle_start").notNull(),
+      cycleEnd: timestamp("cycle_end").notNull(),
+      booksSelectedCount: integer("books_selected_count").default(0),
+      maxBooks: integer("max_books").notNull(),
+      // Book limit for this cycle
+      isActive: boolean("is_active").default(true),
+      createdAt: timestamp("created_at").defaultNow(),
+      updatedAt: timestamp("updated_at").defaultNow()
+    });
+    freeTrialAbusePrevention = pgTable("free_trial_abuse_prevention", {
+      id: varchar("id").primaryKey().default(sql2`gen_random_uuid()`),
+      email: varchar("email").notNull(),
+      emailDomain: varchar("email_domain").notNull(),
+      // Extract domain for tracking
+      registrationIp: varchar("registration_ip").notNull(),
+      deviceFingerprint: varchar("device_fingerprint"),
+      // Browser fingerprint
+      userId: varchar("user_id").references(() => users.id),
+      freeTrialStartedAt: timestamp("free_trial_started_at").notNull(),
+      freeTrialEndedAt: timestamp("free_trial_ended_at"),
+      isBlocked: boolean("is_blocked").default(false),
+      blockReason: varchar("block_reason"),
+      // reason for blocking
+      createdAt: timestamp("created_at").defaultNow(),
+      updatedAt: timestamp("updated_at").defaultNow()
+    }, (table) => ({
+      emailIndex: index("idx_email_domain").on(table.email),
+      ipIndex: index("idx_registration_ip").on(table.registrationIp),
+      fingerprintIndex: index("idx_device_fingerprint").on(table.deviceFingerprint)
+    }));
+    signupAttempts = pgTable("signup_attempts", {
+      id: varchar("id").primaryKey().default(sql2`gen_random_uuid()`),
+      email: varchar("email"),
+      registrationIp: varchar("registration_ip").notNull(),
+      deviceFingerprint: varchar("device_fingerprint"),
+      attemptedAt: timestamp("attempted_at").defaultNow(),
+      successful: boolean("successful").default(false),
+      blockUntil: timestamp("block_until"),
+      // Temporary block timestamp
+      createdAt: timestamp("created_at").defaultNow()
+    }, (table) => ({
+      ipAttemptIndex: index("idx_ip_attempt").on(table.registrationIp, table.attemptedAt),
+      emailAttemptIndex: index("idx_email_attempt").on(table.email, table.attemptedAt)
+    }));
+    readingProgress = pgTable("reading_progress", {
+      id: varchar("id").primaryKey().default(sql2`gen_random_uuid()`),
+      userId: varchar("user_id").references(() => users.id).notNull(),
+      bookId: varchar("book_id").references(() => books.id).notNull(),
+      currentPage: integer("current_page").default(0),
+      totalPages: integer("total_pages").default(0),
+      progressPercentage: decimal("progress_percentage", { precision: 5, scale: 2 }).default("0.00"),
+      lastReadAt: timestamp("last_read_at").defaultNow(),
+      createdAt: timestamp("created_at").defaultNow(),
+      updatedAt: timestamp("updated_at").defaultNow()
+    }, (table) => ({
+      uniqueUserBook: unique("unique_user_book").on(table.userId, table.bookId)
+    }));
+    bookmarks = pgTable("bookmarks", {
+      id: varchar("id").primaryKey().default(sql2`gen_random_uuid()`),
+      userId: varchar("user_id").references(() => users.id).notNull(),
+      bookId: varchar("book_id").references(() => books.id).notNull(),
+      page: integer("page").notNull(),
+      note: text("note"),
+      createdAt: timestamp("created_at").defaultNow()
+    });
+    categories = pgTable("categories", {
+      id: varchar("id").primaryKey().default(sql2`gen_random_uuid()`),
+      name: varchar("name", { length: 100 }).notNull().unique(),
+      description: text("description"),
+      isActive: boolean("is_active").default(true),
+      createdAt: timestamp("created_at").defaultNow(),
+      updatedAt: timestamp("updated_at").defaultNow()
+    });
+    bookCategories = pgTable("book_categories", {
+      id: varchar("id").primaryKey().default(sql2`gen_random_uuid()`),
+      bookId: varchar("book_id").references(() => books.id, { onDelete: "cascade" }).notNull(),
+      categoryId: varchar("category_id").references(() => categories.id, { onDelete: "cascade" }).notNull(),
+      createdAt: timestamp("created_at").defaultNow()
+    });
+    upsertUserSchema = createInsertSchema(users).omit({
+      createdAt: true,
+      updatedAt: true
+    });
+    insertBookSchema = createInsertSchema(books).omit({
+      id: true,
+      createdAt: true,
+      updatedAt: true
+    });
+    insertReadingProgressSchema = createInsertSchema(readingProgress).omit({
+      id: true,
+      createdAt: true,
+      updatedAt: true
+    });
+    insertBookmarkSchema = createInsertSchema(bookmarks).omit({
+      id: true,
+      createdAt: true
+    });
+    insertCategorySchema = createInsertSchema(categories).omit({
+      id: true,
+      createdAt: true,
+      updatedAt: true
+    });
+    insertBookCategorySchema = createInsertSchema(bookCategories).omit({
+      id: true,
+      createdAt: true
+    });
+    adminUpdateUserSchema = z.object({
+      firstName: z.string().min(1, "First name is required").optional(),
+      lastName: z.string().min(1, "Last name is required").optional(),
+      email: z.string().email("Invalid email address").optional(),
+      role: z.enum(["user", "admin", "moderator"]).optional(),
+      subscriptionTier: z.enum(["free", "basic", "premium"]).optional(),
+      subscriptionStatus: z.enum(["active", "inactive", "cancelled"]).optional(),
+      isActive: z.boolean().optional()
+    });
+    passwordResetSchema = z.object({
+      userId: z.string().min(1, "User ID is required"),
+      newPassword: z.string().min(8, "Password must be at least 8 characters").optional(),
+      sendResetEmail: z.boolean().default(false)
+    });
+    bulkUserUpdateSchema = z.object({
+      userIds: z.array(z.string()).min(1, "At least one user must be selected"),
+      updates: adminUpdateUserSchema
+    });
+    registerSchema = z.object({
+      firstName: z.string().min(1, "First name is required"),
+      lastName: z.string().min(1, "Last name is required"),
+      username: z.string().min(3, "Username must be at least 3 characters"),
+      email: z.string().email("Please enter a valid email"),
+      password: z.string().min(8, "Password must be at least 8 characters"),
+      confirmPassword: z.string()
+    }).refine((data) => data.password === data.confirmPassword, {
+      message: "Passwords do not match",
+      path: ["confirmPassword"]
+    });
+    loginSchema = z.object({
+      email: z.string().email("Please enter a valid email"),
+      password: z.string().min(1, "Password is required")
+    });
+    forgotPasswordSchema = z.object({
+      email: z.string().email("Please enter a valid email")
+    });
+    resetPasswordSchema = z.object({
+      token: z.string(),
+      password: z.string().min(8, "Password must be at least 8 characters"),
+      confirmPassword: z.string()
+    }).refine((data) => data.password === data.confirmPassword, {
+      message: "Passwords do not match",
+      path: ["confirmPassword"]
+    });
+    insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
+      createdAt: true,
+      updatedAt: true
+    });
+    updateSubscriptionPlanSchema = z.object({
+      name: z.string().min(1, "Plan name is required").optional(),
+      price: z.string().min(1, "Price display is required").optional(),
+      priceAmount: z.number().min(0, "Price amount must be positive").optional(),
+      currency: z.string().min(1, "Currency is required").optional(),
+      period: z.string().min(1, "Period is required").optional(),
+      description: z.string().optional(),
+      bookLimit: z.number().min(-1, "Book limit must be -1 (unlimited) or positive").optional(),
+      features: z.array(z.string()).optional(),
+      isActive: z.boolean().optional(),
+      stripePriceId: z.string().optional(),
+      displayOrder: z.number().min(1, "Display order must be positive").optional()
+    });
+    emailPreferences = pgTable("email_preferences", {
+      id: varchar("id").primaryKey().default(sql2`gen_random_uuid()`),
+      userId: varchar("user_id").references(() => users.id).notNull(),
+      email: varchar("email").notNull(),
+      unsubscribeToken: varchar("unsubscribe_token").notNull().unique(),
+      marketingEmails: boolean("marketing_emails").default(true),
+      trialReminders: boolean("trial_reminders").default(true),
+      subscriptionUpdates: boolean("subscription_updates").default(true),
+      isUnsubscribedAll: boolean("is_unsubscribed_all").default(false),
+      unsubscribedAt: timestamp("unsubscribed_at"),
+      createdAt: timestamp("created_at").defaultNow(),
+      updatedAt: timestamp("updated_at").defaultNow()
+    }, (table) => ({
+      userEmailIndex: index("idx_user_email_prefs").on(table.userId, table.email),
+      tokenIndex: index("idx_unsubscribe_token").on(table.unsubscribeToken)
+    }));
+    emailLogs = pgTable("email_logs", {
+      id: varchar("id").primaryKey().default(sql2`gen_random_uuid()`),
+      userId: varchar("user_id").references(() => users.id),
+      email: varchar("email").notNull(),
+      emailType: varchar("email_type").notNull(),
+      // trial_reminder, conversion_success, cancellation, etc.
+      subject: text("subject").notNull(),
+      status: varchar("status").notNull(),
+      // sent, failed, queued
+      errorMessage: text("error_message"),
+      sentAt: timestamp("sent_at"),
+      createdAt: timestamp("created_at").defaultNow()
+    }, (table) => ({
+      userEmailTypeIndex: index("idx_user_email_type").on(table.userId, table.emailType),
+      statusIndex: index("idx_email_status").on(table.status),
+      sentAtIndex: index("idx_sent_at").on(table.sentAt)
+    }));
+    insertEmailPreferencesSchema = createInsertSchema(emailPreferences).omit({
+      id: true,
+      createdAt: true,
+      updatedAt: true
+    });
+    updateEmailPreferencesSchema = z.object({
+      marketingEmails: z.boolean().optional(),
+      trialReminders: z.boolean().optional(),
+      subscriptionUpdates: z.boolean().optional(),
+      isUnsubscribedAll: z.boolean().optional()
+    });
+    insertEmailLogSchema = createInsertSchema(emailLogs).omit({
+      id: true,
+      createdAt: true
+    });
+  }
+});
+
+// server/db.ts
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import ws from "ws";
+var pool, db;
+var init_db = __esm({
+  "server/db.ts"() {
+    "use strict";
+    init_schema();
+    neonConfig.webSocketConstructor = ws;
+    if (!process.env.DATABASE_URL) {
+      throw new Error(
+        "DATABASE_URL must be set. Did you forget to provision a database?"
+      );
+    }
+    pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    db = drizzle({ client: pool, schema: schema_exports });
+  }
+});
+
+// server/emailService.ts
+var emailService_exports = {};
+__export(emailService_exports, {
+  default: () => emailService_default,
+  emailService: () => emailService
+});
+import nodemailer from "nodemailer";
+import ejs from "ejs";
+import path2 from "path";
+import crypto from "crypto";
+import { eq as eq3, and as and3, lt, gte as gte2 } from "drizzle-orm";
+var EmailService, emailService, emailService_default;
+var init_emailService = __esm({
+  "server/emailService.ts"() {
+    "use strict";
+    init_db();
+    init_schema();
+    EmailService = class {
+      transporter;
+      config;
+      templatesPath;
+      constructor() {
+        this.config = {
+          host: process.env.SMTP_HOST || "mail.thekingdomclub.org",
+          port: parseInt(process.env.SMTP_PORT || "465"),
+          secure: true,
+          // Use SSL/TLS
+          user: process.env.SMTP_USER || "books@thekingdomclub.org",
+          pass: process.env.SMTP_PASS || "@@Brave@@2017",
+          fromEmail: process.env.SMTP_FROM_EMAIL || "books@thekingdomclub.org",
+          fromName: process.env.SMTP_FROM_NAME || "Wonderfulbooks.net"
+        };
+        this.templatesPath = path2.join(process.cwd(), "server", "email-templates");
+        this.initializeTransporter();
+      }
+      /**
+       * Initialize the nodemailer transporter
+       */
+      initializeTransporter() {
+        this.transporter = nodemailer.createTransport({
+          host: this.config.host,
+          port: this.config.port,
+          secure: this.config.secure,
+          auth: {
+            user: this.config.user,
+            pass: this.config.pass
+          },
+          tls: {
+            // Accept self-signed certificates for private SMTP servers
+            rejectUnauthorized: false
+          }
+        });
+        console.log("\u{1F4E7} Email service initialized with SMTP configuration");
+      }
+      /**
+       * Verify SMTP connection
+       */
+      async verifyConnection() {
+        try {
+          await this.transporter.verify();
+          console.log("\u2705 SMTP connection verified successfully");
+          return true;
+        } catch (error) {
+          console.error("\u274C SMTP connection failed:", error);
+          return false;
+        }
+      }
+      /**
+       * Get or create email preferences for a user
+       */
+      async getEmailPreferences(userId, email) {
+        let preferences = await db.select().from(emailPreferences).where(eq3(emailPreferences.userId, userId)).limit(1);
+        if (preferences.length === 0) {
+          const unsubscribeToken = crypto.randomBytes(32).toString("hex");
+          const newPreferences = {
+            userId,
+            email,
+            unsubscribeToken,
+            marketingEmails: true,
+            trialReminders: true,
+            subscriptionUpdates: true,
+            isUnsubscribedAll: false
+          };
+          const inserted = await db.insert(emailPreferences).values(newPreferences).returning();
+          return inserted[0];
+        }
+        return preferences[0];
+      }
+      /**
+       * Check if user can receive specific email type
+       */
+      async canSendEmail(userId, emailType) {
+        const preferences = await db.select().from(emailPreferences).where(eq3(emailPreferences.userId, userId)).limit(1);
+        if (preferences.length === 0) {
+          return true;
+        }
+        const prefs = preferences[0];
+        if (prefs.isUnsubscribedAll) {
+          return false;
+        }
+        switch (emailType) {
+          case "trial_reminder":
+            return prefs.trialReminders ?? true;
+          case "conversion_success":
+          case "cancellation":
+            return prefs.subscriptionUpdates ?? true;
+          case "marketing":
+            return prefs.marketingEmails ?? true;
+          default:
+            return true;
+        }
+      }
+      /**
+       * Generate unsubscribe URL
+       */
+      generateUnsubscribeUrl(token) {
+        const baseUrl = process.env.NODE_ENV === "production" ? `https://${process.env.REPL_SLUG ?? "app"}.${process.env.REPL_OWNER ?? "user"}.repl.co` : "http://localhost:3000";
+        return `${baseUrl}/unsubscribe?token=${token}`;
+      }
+      /**
+       * Render email template with data
+       */
+      async renderTemplate(templateName, data) {
+        try {
+          const htmlTemplatePath = path2.join(this.templatesPath, `${templateName}.html.ejs`);
+          const textTemplatePath = path2.join(this.templatesPath, `${templateName}.text.ejs`);
+          const html = await ejs.renderFile(htmlTemplatePath, data);
+          const text2 = await ejs.renderFile(textTemplatePath, data);
+          return { html, text: text2 };
+        } catch (error) {
+          console.error(`Error rendering template ${templateName}:`, error);
+          throw new Error(`Failed to render email template: ${templateName}`);
+        }
+      }
+      /**
+       * Log email attempt to database
+       */
+      async logEmail(logData) {
+        try {
+          await db.insert(emailLogs).values(logData);
+        } catch (error) {
+          console.error("Error logging email:", error);
+        }
+      }
+      /**
+       * Send email with template
+       */
+      async sendEmail(to, subject, templateName, templateData, emailType, userId) {
+        try {
+          if (userId && !await this.canSendEmail(userId, emailType)) {
+            console.log(`\u{1F4E7} Email blocked for user ${userId}, type: ${emailType}`);
+            await this.logEmail({
+              userId,
+              email: to,
+              emailType,
+              subject,
+              status: "blocked",
+              errorMessage: "User has unsubscribed from this email type"
+            });
+            return false;
+          }
+          const { html, text: text2 } = await this.renderTemplate(templateName, templateData);
+          const info = await this.transporter.sendMail({
+            from: `"${this.config.fromName}" <${this.config.fromEmail}>`,
+            to,
+            subject,
+            html,
+            text: text2
+          });
+          console.log(`\u{1F4E7} Email sent successfully to ${to}, Subject: ${subject}, MessageId: ${info.messageId}`);
+          await this.logEmail({
+            userId,
+            email: to,
+            emailType,
+            subject,
+            status: "sent",
+            sentAt: /* @__PURE__ */ new Date()
+          });
+          return true;
+        } catch (error) {
+          console.error(`\u{1F4E7} Failed to send email to ${to}:`, error);
+          await this.logEmail({
+            userId,
+            email: to,
+            emailType,
+            subject,
+            status: "failed",
+            errorMessage: error instanceof Error ? error.message : "Unknown error"
+          });
+          return false;
+        }
+      }
+      /**
+       * Send trial reminder email (3 days or 1 day before expiry)
+       */
+      async sendTrialReminder(user, daysLeft) {
+        const preferences = await this.getEmailPreferences(user.id, user.email);
+        const unsubscribeUrl = this.generateUnsubscribeUrl(preferences.unsubscribeToken);
+        const templateData = {
+          firstName: user.firstName || "Reader",
+          lastName: user.lastName || "",
+          email: user.email,
+          daysLeft,
+          trialEndDate: user.freeTrialEndedAt?.toLocaleDateString() || "soon",
+          upgradeUrl: `${process.env.NODE_ENV === "production" ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : "http://localhost:3000"}/subscription`,
+          unsubscribeUrl
+        };
+        const subject = daysLeft === 1 ? "\u23F0 Your free trial ends tomorrow - Don't lose access!" : `\u{1F4DA} ${daysLeft} days left in your Wonderful Books trial`;
+        return this.sendEmail(
+          user.email,
+          subject,
+          "trial-reminder",
+          templateData,
+          "trial_reminder",
+          user.id
+        );
+      }
+      /**
+       * Send conversion success email (successful subscription)
+       */
+      async sendConversionSuccess(user, planName, planPrice) {
+        const preferences = await this.getEmailPreferences(user.id, user.email);
+        const unsubscribeUrl = this.generateUnsubscribeUrl(preferences.unsubscribeToken);
+        const templateData = {
+          firstName: user.firstName || "Reader",
+          lastName: user.lastName || "",
+          email: user.email,
+          planName,
+          planPrice,
+          billingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1e3).toLocaleDateString(),
+          // 30 days from now
+          accountUrl: `${process.env.NODE_ENV === "production" ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : "http://localhost:3000"}/account`,
+          unsubscribeUrl
+        };
+        return this.sendEmail(
+          user.email,
+          `\u{1F389} Welcome to ${planName} - Your subscription is active!`,
+          "conversion-success",
+          templateData,
+          "conversion_success",
+          user.id
+        );
+      }
+      /**
+       * Send cancellation confirmation email
+       */
+      async sendCancellationConfirmation(user, planName, endDate) {
+        const preferences = await this.getEmailPreferences(user.id, user.email);
+        const unsubscribeUrl = this.generateUnsubscribeUrl(preferences.unsubscribeToken);
+        const templateData = {
+          firstName: user.firstName || "Reader",
+          lastName: user.lastName || "",
+          email: user.email,
+          planName,
+          endDate,
+          reactivateUrl: `${process.env.NODE_ENV === "production" ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : "http://localhost:3000"}/subscription`,
+          unsubscribeUrl
+        };
+        return this.sendEmail(
+          user.email,
+          "Subscription cancelled - We're sorry to see you go",
+          "cancellation",
+          templateData,
+          "cancellation",
+          user.id
+        );
+      }
+      /**
+       * Get users with trials expiring in X days
+       */
+      async getUsersWithTrialsExpiring(daysFromNow) {
+        const targetDate = /* @__PURE__ */ new Date();
+        targetDate.setDate(targetDate.getDate() + daysFromNow);
+        const startOfDay = new Date(targetDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(targetDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        return await db.select().from(users).where(
+          and3(
+            eq3(users.subscriptionTier, "free"),
+            eq3(users.subscriptionStatus, "active"),
+            eq3(users.freeTrialUsed, true),
+            gte2(users.freeTrialEndedAt, startOfDay),
+            lt(users.freeTrialEndedAt, endOfDay)
+          )
+        );
+      }
+      /**
+       * Generate email preview for admin/development
+       */
+      async generateEmailPreview(templateType, userData) {
+        const mockUser = {
+          id: "preview-user",
+          email: userData.email || "preview@example.com",
+          firstName: userData.firstName || "John",
+          lastName: userData.lastName || "Doe",
+          profileImageUrl: null,
+          username: null,
+          passwordHash: null,
+          emailVerified: true,
+          emailVerificationToken: null,
+          authProvider: "local",
+          stripeCustomerId: null,
+          stripeSubscriptionId: null,
+          subscriptionTier: "free",
+          subscriptionStatus: "active",
+          booksReadThisMonth: 0,
+          role: "user",
+          isActive: true,
+          lastLoginAt: null,
+          passwordResetToken: null,
+          passwordResetExpires: null,
+          freeTrialUsed: true,
+          freeTrialStartedAt: /* @__PURE__ */ new Date(),
+          freeTrialEndedAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1e3),
+          registrationIp: null,
+          deviceFingerprint: null,
+          createdAt: /* @__PURE__ */ new Date(),
+          updatedAt: /* @__PURE__ */ new Date()
+        };
+        const unsubscribeUrl = this.generateUnsubscribeUrl("preview-token-123");
+        let templateData;
+        let templateName;
+        switch (templateType) {
+          case "trial_reminder":
+            templateName = "trial-reminder";
+            templateData = {
+              firstName: mockUser.firstName,
+              lastName: mockUser.lastName,
+              email: mockUser.email,
+              daysLeft: 3,
+              trialEndDate: mockUser.freeTrialEndedAt?.toLocaleDateString(),
+              upgradeUrl: "/subscription",
+              unsubscribeUrl
+            };
+            break;
+          case "conversion_success":
+            templateName = "conversion-success";
+            templateData = {
+              firstName: mockUser.firstName,
+              lastName: mockUser.lastName,
+              email: mockUser.email,
+              planName: "Premium Plan",
+              planPrice: "\xA39.99/month",
+              billingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1e3).toLocaleDateString(),
+              accountUrl: "/account",
+              unsubscribeUrl
+            };
+            break;
+          case "cancellation":
+            templateName = "cancellation";
+            templateData = {
+              firstName: mockUser.firstName,
+              lastName: mockUser.lastName,
+              email: mockUser.email,
+              planName: "Premium Plan",
+              endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1e3).toLocaleDateString(),
+              reactivateUrl: "/subscription",
+              unsubscribeUrl
+            };
+            break;
+          default:
+            throw new Error(`Unknown template type: ${templateType}`);
+        }
+        return this.renderTemplate(templateName, templateData);
+      }
+    };
+    emailService = new EmailService();
+    emailService_default = emailService;
+  }
+});
+
+// server/emailScheduler.ts
+var emailScheduler_exports = {};
+__export(emailScheduler_exports, {
+  default: () => emailScheduler_default,
+  emailScheduler: () => emailScheduler
+});
+import * as cron from "node-cron";
+import { eq as eq4, and as and4, lt as lt2, gte as gte3 } from "drizzle-orm";
+var EmailScheduler, emailScheduler, emailScheduler_default;
+var init_emailScheduler = __esm({
+  "server/emailScheduler.ts"() {
+    "use strict";
+    init_emailService();
+    init_db();
+    init_schema();
+    EmailScheduler = class {
+      isInitialized = false;
+      scheduledJobs = /* @__PURE__ */ new Map();
+      /**
+       * Initialize email scheduler with all automated campaigns
+       */
+      async initialize() {
+        if (this.isInitialized) {
+          console.log("\u{1F4E7} Email scheduler already initialized");
+          return;
+        }
+        try {
+          const isConnected = await emailService.verifyConnection();
+          if (!isConnected) {
+            console.error("\u274C Cannot initialize email scheduler - SMTP connection failed");
+            return;
+          }
+          this.scheduleTrialReminders();
+          this.scheduleCleanupJobs();
+          this.isInitialized = true;
+          console.log("\u{1F4E7} Email scheduler initialized successfully");
+          console.log("\u{1F4C5} Scheduled jobs:", Array.from(this.scheduledJobs.keys()));
+        } catch (error) {
+          console.error("\u274C Failed to initialize email scheduler:", error);
+        }
+      }
+      /**
+       * Schedule trial reminder email campaigns
+       */
+      scheduleTrialReminders() {
+        const threeDayReminder = cron.schedule("0 10 * * *", async () => {
+          console.log("\u{1F4E7} Running 3-day trial reminder campaign...");
+          await this.sendTrialReminders(3);
+        }, {
+          scheduled: false,
+          timezone: "Europe/London"
+          // UK timezone for easyJet-style branding
+        });
+        const oneDayReminder = cron.schedule("0 14 * * *", async () => {
+          console.log("\u{1F4E7} Running 1-day trial reminder campaign...");
+          await this.sendTrialReminders(1);
+        }, {
+          scheduled: false,
+          timezone: "Europe/London"
+        });
+        this.scheduledJobs.set("trial_reminder_3_day", threeDayReminder);
+        this.scheduledJobs.set("trial_reminder_1_day", oneDayReminder);
+        threeDayReminder.start();
+        oneDayReminder.start();
+        console.log("\u{1F4E7} Trial reminder campaigns scheduled:");
+        console.log("  - 3-day reminders: Daily at 10:00 AM UK time");
+        console.log("  - 1-day reminders: Daily at 2:00 PM UK time");
+      }
+      /**
+       * Schedule cleanup jobs for old email logs
+       */
+      scheduleCleanupJobs() {
+        const cleanupJob = cron.schedule("0 3 * * 0", async () => {
+          console.log("\u{1F4E7} Running email logs cleanup...");
+          await this.cleanupOldEmailLogs();
+        }, {
+          scheduled: false,
+          timezone: "Europe/London"
+        });
+        this.scheduledJobs.set("cleanup_email_logs", cleanupJob);
+        cleanupJob.start();
+        console.log("\u{1F4E7} Cleanup job scheduled: Weekly on Sunday at 3:00 AM UK time");
+      }
+      /**
+       * Send trial reminder emails to users whose trials expire in X days
+       */
+      async sendTrialReminders(daysFromNow) {
+        try {
+          const usersToRemind = await emailService.getUsersWithTrialsExpiring(daysFromNow);
+          if (usersToRemind.length === 0) {
+            console.log(`\u{1F4E7} No users found with trials expiring in ${daysFromNow} days`);
+            return;
+          }
+          console.log(`\u{1F4E7} Found ${usersToRemind.length} users with trials expiring in ${daysFromNow} days`);
+          let sentCount = 0;
+          let blockedCount = 0;
+          let failedCount = 0;
+          const batchSize = 10;
+          for (let i = 0; i < usersToRemind.length; i += batchSize) {
+            const batch = usersToRemind.slice(i, i + batchSize);
+            const batchPromises = batch.map(async (user) => {
+              const recentEmail = await this.hasRecentEmail(user.id, "trial_reminder", daysFromNow);
+              if (recentEmail) {
+                console.log(`\u{1F4E7} Skipping duplicate reminder for user ${user.id}`);
+                return "duplicate";
+              }
+              const success = await emailService.sendTrialReminder(user, daysFromNow);
+              return success ? "sent" : "failed";
+            });
+            const results = await Promise.all(batchPromises);
+            results.forEach((result) => {
+              switch (result) {
+                case "sent":
+                  sentCount++;
+                  break;
+                case "failed":
+                  failedCount++;
+                  break;
+                case "duplicate":
+                  blockedCount++;
+                  break;
+              }
+            });
+            if (i + batchSize < usersToRemind.length) {
+              await new Promise((resolve) => setTimeout(resolve, 1e3));
+            }
+          }
+          console.log(`\u{1F4E7} Trial reminder campaign (${daysFromNow} days) completed:`);
+          console.log(`  - Sent: ${sentCount}`);
+          console.log(`  - Blocked/Duplicates: ${blockedCount}`);
+          console.log(`  - Failed: ${failedCount}`);
+        } catch (error) {
+          console.error(`\u274C Error sending ${daysFromNow}-day trial reminders:`, error);
+        }
+      }
+      /**
+       * Check if user has received a specific email type recently (within 24 hours)
+       */
+      async hasRecentEmail(userId, emailType, daysLeft) {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1e3);
+        const subjectPattern = daysLeft ? `%${daysLeft} day${daysLeft !== 1 ? "s" : ""} left%` : "%";
+        const recentEmails = await db.select().from(emailLogs).where(
+          and4(
+            eq4(emailLogs.userId, userId),
+            eq4(emailLogs.emailType, emailType),
+            eq4(emailLogs.status, "sent"),
+            gte3(emailLogs.sentAt, twentyFourHoursAgo),
+            daysLeft ? sql`${emailLogs.subject} LIKE ${subjectPattern}` : void 0
+          )
+        ).limit(1);
+        return recentEmails.length > 0;
+      }
+      /**
+       * Clean up email logs older than 90 days
+       */
+      async cleanupOldEmailLogs() {
+        try {
+          const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1e3);
+          const deletedLogs = await db.delete(emailLogs).where(lt2(emailLogs.createdAt, ninetyDaysAgo)).returning({ id: emailLogs.id });
+          console.log(`\u{1F4E7} Cleaned up ${deletedLogs.length} old email logs (older than 90 days)`);
+        } catch (error) {
+          console.error("\u274C Error cleaning up email logs:", error);
+        }
+      }
+      /**
+       * Manually trigger a trial reminder campaign (for admin use)
+       */
+      async triggerTrialReminderManually(daysFromNow) {
+        console.log(`\u{1F4E7} Manually triggering ${daysFromNow}-day trial reminder campaign...`);
+        const usersToRemind = await emailService.getUsersWithTrialsExpiring(daysFromNow);
+        if (usersToRemind.length === 0) {
+          return { sent: 0, failed: 0, blocked: 0 };
+        }
+        let sentCount = 0;
+        let failedCount = 0;
+        let blockedCount = 0;
+        for (const user of usersToRemind) {
+          try {
+            const success = await emailService.sendTrialReminder(user, daysFromNow);
+            if (success) {
+              sentCount++;
+            } else {
+              blockedCount++;
+            }
+          } catch (error) {
+            console.error(`Failed to send reminder to ${user.email}:`, error);
+            failedCount++;
+          }
+        }
+        return { sent: sentCount, failed: failedCount, blocked: blockedCount };
+      }
+      /**
+       * Send conversion success email (called from payment webhook)
+       */
+      async sendConversionEmail(userId, planName, planPrice) {
+        try {
+          const user = await db.select().from(users).where(eq4(users.id, userId)).limit(1);
+          if (user.length === 0) {
+            console.error(`User ${userId} not found for conversion email`);
+            return false;
+          }
+          return await emailService.sendConversionSuccess(user[0], planName, planPrice);
+        } catch (error) {
+          console.error("Error sending conversion email:", error);
+          return false;
+        }
+      }
+      /**
+       * Send cancellation confirmation email (called from payment webhook)
+       */
+      async sendCancellationEmail(userId, planName, endDate) {
+        try {
+          const user = await db.select().from(users).where(eq4(users.id, userId)).limit(1);
+          if (user.length === 0) {
+            console.error(`User ${userId} not found for cancellation email`);
+            return false;
+          }
+          return await emailService.sendCancellationConfirmation(user[0], planName, endDate);
+        } catch (error) {
+          console.error("Error sending cancellation email:", error);
+          return false;
+        }
+      }
+      /**
+       * Get scheduler status for admin dashboard
+       */
+      getStatus() {
+        return {
+          initialized: this.isInitialized,
+          activeJobs: Array.from(this.scheduledJobs.keys()),
+          jobCount: this.scheduledJobs.size
+        };
+      }
+      /**
+       * Stop all scheduled jobs (for graceful shutdown)
+       */
+      stopAll() {
+        this.scheduledJobs.forEach((job, name) => {
+          job.stop();
+          console.log(`\u{1F4E7} Stopped email job: ${name}`);
+        });
+        this.scheduledJobs.clear();
+        this.isInitialized = false;
+        console.log("\u{1F4E7} Email scheduler stopped");
+      }
+      /**
+       * Restart a specific job
+       */
+      restartJob(jobName) {
+        const job = this.scheduledJobs.get(jobName);
+        if (job) {
+          job.stop();
+          job.start();
+          console.log(`\u{1F4E7} Restarted email job: ${jobName}`);
+          return true;
+        }
+        return false;
+      }
+    };
+    emailScheduler = new EmailScheduler();
+    emailScheduler_default = emailScheduler;
+  }
+});
+
+// server/bookSelectionService.ts
+var bookSelectionService_exports = {};
+__export(bookSelectionService_exports, {
+  BookSelectionService: () => BookSelectionService,
+  bookSelectionService: () => bookSelectionService
+});
+import { eq as eq5, and as and5, gt, lt as lt3, desc as desc3 } from "drizzle-orm";
+var BookSelectionService, bookSelectionService;
+var init_bookSelectionService = __esm({
+  "server/bookSelectionService.ts"() {
+    "use strict";
+    init_db();
+    init_schema();
+    BookSelectionService = class {
+      // Get user's currently selected and locked books
+      async getUserSelectedBooks(userId) {
+        const now = /* @__PURE__ */ new Date();
+        return await db.select().from(userSelectedBooks).where(
+          and5(
+            eq5(userSelectedBooks.userId, userId),
+            eq5(userSelectedBooks.isActive, true),
+            gt(userSelectedBooks.lockedUntil, now)
+            // Only active locks
+          )
+        );
+      }
+      // Check if user can select more books based on their current tier
+      async canSelectMoreBooks(userId) {
+        const user = await db.select().from(users).where(eq5(users.id, userId)).limit(1);
+        if (!user[0]) {
+          return { canSelect: false, reason: "User not found" };
+        }
+        const userTier = user[0].subscriptionTier;
+        if (userTier === "premium") {
+          return { canSelect: true, availableSlots: -1 };
+        }
+        const currentlySelected = await this.getUserSelectedBooks(userId);
+        if (userTier === "free") {
+          const freeLimit = 3;
+          const available = freeLimit - currentlySelected.length;
+          return {
+            canSelect: available > 0,
+            reason: available <= 0 ? "Free trial limit of 3 books reached" : void 0,
+            availableSlots: Math.max(0, available)
+          };
+        }
+        if (userTier === "basic") {
+          const currentCycle = await this.getCurrentBillingCycle(userId);
+          if (!currentCycle) {
+            await this.createNewBillingCycle(userId, "basic");
+            return { canSelect: true, availableSlots: 10 };
+          }
+          const basicLimit = 10;
+          const available = basicLimit - (currentCycle.booksSelectedCount || 0);
+          return {
+            canSelect: available > 0,
+            reason: available <= 0 ? "Monthly limit of 10 books reached" : void 0,
+            availableSlots: Math.max(0, available)
+          };
+        }
+        return { canSelect: false, reason: "Invalid subscription tier" };
+      }
+      // Select a book for the user with appropriate lock period
+      async selectBook(userId, bookId) {
+        const canSelect = await this.canSelectMoreBooks(userId);
+        if (!canSelect.canSelect) {
+          return { success: false, message: canSelect.reason || "Cannot select more books" };
+        }
+        const existingSelection = await db.select().from(userSelectedBooks).where(
+          and5(
+            eq5(userSelectedBooks.userId, userId),
+            eq5(userSelectedBooks.bookId, bookId),
+            eq5(userSelectedBooks.isActive, true),
+            gt(userSelectedBooks.lockedUntil, /* @__PURE__ */ new Date())
+          )
+        ).limit(1);
+        if (existingSelection[0]) {
+          return { success: false, message: "Book already selected" };
+        }
+        const user = await db.select().from(users).where(eq5(users.id, userId)).limit(1);
+        if (!user[0]) {
+          return { success: false, message: "User not found" };
+        }
+        const userTier = user[0].subscriptionTier;
+        const now = /* @__PURE__ */ new Date();
+        let lockedUntil;
+        let billingCycleStart = null;
+        if (userTier === "free") {
+          lockedUntil = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1e3);
+        } else if (userTier === "basic") {
+          const currentCycle = await this.getCurrentBillingCycle(userId);
+          if (!currentCycle) {
+            const newCycle = await this.createNewBillingCycle(userId, "basic");
+            lockedUntil = newCycle.cycleEnd;
+            billingCycleStart = newCycle.cycleStart;
+          } else {
+            lockedUntil = currentCycle.cycleEnd;
+            billingCycleStart = currentCycle.cycleStart;
+          }
+        } else {
+          return { success: false, message: "Premium users don't need to select books" };
+        }
+        await db.insert(userSelectedBooks).values({
+          userId,
+          bookId,
+          subscriptionTier: userTier,
+          lockedUntil,
+          billingCycleStart
+        });
+        if (userTier === "basic") {
+          const currentCycle = await this.getCurrentBillingCycle(userId);
+          if (currentCycle) {
+            await db.update(userSubscriptionCycles).set({
+              booksSelectedCount: (currentCycle.booksSelectedCount || 0) + 1,
+              updatedAt: now
+            }).where(eq5(userSubscriptionCycles.id, currentCycle.id));
+          }
+        }
+        return { success: true, message: "Book selected successfully" };
+      }
+      // Get current billing cycle for a user
+      async getCurrentBillingCycle(userId) {
+        const now = /* @__PURE__ */ new Date();
+        const cycles = await db.select().from(userSubscriptionCycles).where(
+          and5(
+            eq5(userSubscriptionCycles.userId, userId),
+            eq5(userSubscriptionCycles.isActive, true),
+            lt3(userSubscriptionCycles.cycleStart, now),
+            gt(userSubscriptionCycles.cycleEnd, now)
+          )
+        ).orderBy(desc3(userSubscriptionCycles.createdAt)).limit(1);
+        return cycles[0] || null;
+      }
+      // Create a new billing cycle (used for basic plan)
+      async createNewBillingCycle(userId, tier) {
+        const now = /* @__PURE__ */ new Date();
+        const cycleEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1e3);
+        const maxBooks = tier === "basic" ? 10 : tier === "free" ? 3 : -1;
+        const [newCycle] = await db.insert(userSubscriptionCycles).values({
+          userId,
+          subscriptionTier: tier,
+          cycleStart: now,
+          cycleEnd,
+          maxBooks,
+          booksSelectedCount: 0
+        }).returning();
+        return newCycle;
+      }
+      // Check if user has access to a specific book
+      async hasBookAccess(userId, bookId) {
+        const user = await db.select().from(users).where(eq5(users.id, userId)).limit(1);
+        if (!user[0]) return false;
+        const userTier = user[0].subscriptionTier;
+        if (userTier === "premium") {
+          return true;
+        }
+        const now = /* @__PURE__ */ new Date();
+        const selectedBooks = await db.select().from(userSelectedBooks).where(
+          and5(
+            eq5(userSelectedBooks.userId, userId),
+            eq5(userSelectedBooks.bookId, bookId),
+            eq5(userSelectedBooks.isActive, true),
+            gt(userSelectedBooks.lockedUntil, now)
+          )
+        ).limit(1);
+        return selectedBooks.length > 0;
+      }
+      // Expire old selections and billing cycles (cleanup job)
+      async expireOldSelections() {
+        const now = /* @__PURE__ */ new Date();
+        await db.update(userSelectedBooks).set({ isActive: false, updatedAt: now }).where(
+          and5(
+            eq5(userSelectedBooks.isActive, true),
+            lt3(userSelectedBooks.lockedUntil, now)
+          )
+        );
+        await db.update(userSubscriptionCycles).set({ isActive: false, updatedAt: now }).where(
+          and5(
+            eq5(userSubscriptionCycles.isActive, true),
+            lt3(userSubscriptionCycles.cycleEnd, now)
+          )
+        );
+      }
+      // Reset basic user's book selection for new billing cycle
+      async resetBasicUserBooks(userId) {
+        const now = /* @__PURE__ */ new Date();
+        await db.update(userSelectedBooks).set({ isActive: false, updatedAt: now }).where(
+          and5(
+            eq5(userSelectedBooks.userId, userId),
+            eq5(userSelectedBooks.subscriptionTier, "basic"),
+            eq5(userSelectedBooks.isActive, true)
+          )
+        );
+        await this.createNewBillingCycle(userId, "basic");
+      }
+      // Get available books for selection (excludes already selected)
+      async getAvailableBooksForSelection(userId) {
+        const user = await db.select().from(users).where(eq5(users.id, userId)).limit(1);
+        if (!user[0]) return [];
+        const userTier = user[0].subscriptionTier;
+        if (userTier === "premium") {
+          return await db.select().from(books).where(eq5(books.isFeatured, true));
+        }
+        const selectedBooks = await this.getUserSelectedBooks(userId);
+        const selectedBookIds = selectedBooks.map((sb) => sb.bookId);
+        const query = db.select().from(books);
+        if (selectedBookIds.length > 0) {
+          return await query.where(
+            and5(
+              eq5(books.isFeatured, true)
+              // Add NOT IN clause for selectedBookIds - simplified for now
+            )
+          );
+        } else {
+          return await query.where(eq5(books.isFeatured, true));
+        }
+      }
+    };
+    bookSelectionService = new BookSelectionService();
+  }
+});
+
+// server/index.ts
+import express2 from "express";
+
+// server/routes.ts
+import { createServer } from "http";
+import Stripe from "stripe";
+
+// server/storage.ts
+init_schema();
+init_db();
+import { eq, and, desc, or, ilike } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+import { nanoid } from "nanoid";
+var DatabaseStorage = class {
+  // User operations (mandatory for Replit Auth)
+  async getUser(id) {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+  async getUserByEmail(email) {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+  async getUserByUsername(username) {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+  // Local authentication operations
+  async registerUser(userData) {
+    const existingUser = await db.select().from(users).where(or(eq(users.email, userData.email), eq(users.username, userData.username)));
+    if (existingUser.length > 0) {
+      const existing = existingUser[0];
+      if (existing.email === userData.email) {
+        throw new Error("Email already registered");
+      }
+      if (existing.username === userData.username) {
+        throw new Error("Username already taken");
+      }
+    }
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(userData.password, saltRounds);
+    const emailVerificationToken = nanoid(32);
+    const [user] = await db.insert(users).values({
+      id: nanoid(12),
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      username: userData.username,
+      passwordHash,
+      authProvider: "local",
+      emailVerified: false,
+      emailVerificationToken,
+      subscriptionTier: "free",
+      subscriptionStatus: "inactive",
+      role: "user",
+      isActive: true
+    }).returning();
+    return user;
+  }
+  async authenticateUser(email, password) {
+    const [user] = await db.select().from(users).where(and(eq(users.email, email), eq(users.authProvider, "local")));
+    if (!user || !user.passwordHash) {
+      return null;
+    }
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    if (!isValidPassword) {
+      return null;
+    }
+    await db.update(users).set({ lastLoginAt: /* @__PURE__ */ new Date() }).where(eq(users.id, user.id));
+    return user;
+  }
+  async verifyEmail(token) {
+    const [user] = await db.select().from(users).where(eq(users.emailVerificationToken, token));
+    if (!user) {
+      return false;
+    }
+    await db.update(users).set({
+      emailVerified: true,
+      emailVerificationToken: null,
+      updatedAt: /* @__PURE__ */ new Date()
+    }).where(eq(users.id, user.id));
+    return true;
+  }
+  async generatePasswordResetToken(email) {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) {
+      return null;
+    }
+    const resetToken = nanoid(32);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1e3);
+    await db.update(users).set({
+      passwordResetToken: resetToken,
+      passwordResetExpires: expiresAt,
+      updatedAt: /* @__PURE__ */ new Date()
+    }).where(eq(users.id, user.id));
+    return resetToken;
+  }
+  async resetPassword(token, newPassword) {
+    const [user] = await db.select().from(users).where(eq(users.passwordResetToken, token));
+    if (!user || !user.passwordResetExpires) {
+      return false;
+    }
+    if (user.passwordResetExpires < /* @__PURE__ */ new Date()) {
+      return false;
+    }
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(newPassword, saltRounds);
+    await db.update(users).set({
+      passwordHash,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+      updatedAt: /* @__PURE__ */ new Date()
+    }).where(eq(users.id, user.id));
+    return true;
+  }
+  async createManualUser(userData) {
+    const [user] = await db.insert(users).values(userData).returning();
+    return user;
+  }
+  async upsertUser(userData) {
+    const [user] = await db.insert(users).values(userData).onConflictDoUpdate({
+      target: users.id,
+      set: {
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        profileImageUrl: userData.profileImageUrl,
+        updatedAt: /* @__PURE__ */ new Date()
+      }
+    }).returning();
+    return user;
+  }
+  // Stripe and subscription operations
+  async updateUserStripeInfo(userId, stripeCustomerId, stripeSubscriptionId) {
+    const updateData = { stripeCustomerId, updatedAt: /* @__PURE__ */ new Date() };
+    if (stripeSubscriptionId !== void 0) {
+      updateData.stripeSubscriptionId = stripeSubscriptionId;
+    }
+    const [user] = await db.update(users).set(updateData).where(eq(users.id, userId)).returning();
+    return user;
+  }
+  async updateUserSubscription(userId, tier, status) {
+    const [user] = await db.update(users).set({
+      subscriptionTier: tier,
+      subscriptionStatus: status,
+      updatedAt: /* @__PURE__ */ new Date()
+    }).where(eq(users.id, userId)).returning();
+    return user;
+  }
+  async getUserByStripeCustomerId(stripeCustomerId) {
+    const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, stripeCustomerId));
+    return user;
+  }
+  // Book operations
+  async getAllBooks() {
+    const booksList = await db.select().from(books).orderBy(desc(books.createdAt));
+    const booksWithCategories = await Promise.all(
+      booksList.map(async (book) => {
+        const categories2 = await this.getBookCategories(book.id);
+        return { ...book, categories: categories2 };
+      })
+    );
+    return booksWithCategories;
+  }
+  async getBook(id) {
+    const [book] = await db.select().from(books).where(eq(books.id, id));
+    return book;
+  }
+  async getBooksByCategory(categoryId) {
+    return await db.select().from(books).innerJoin(bookCategories, eq(books.id, bookCategories.bookId)).where(eq(bookCategories.categoryId, categoryId)).then((results) => results.map((result) => result.books));
+  }
+  async getFeaturedBooks() {
+    return await db.select().from(books).where(eq(books.isFeatured, true));
+  }
+  async searchBooks(query) {
+    return await db.select().from(books).where(
+      or(
+        ilike(books.title, `%${query}%`),
+        ilike(books.author, `%${query}%`),
+        ilike(books.description, `%${query}%`)
+      )
+    );
+  }
+  async createBook(bookData, categoryIds = []) {
+    const [book] = await db.insert(books).values(bookData).returning();
+    if (categoryIds.length > 0) {
+      await this.setBookCategories(book.id, categoryIds);
+    }
+    return book;
+  }
+  async deleteBook(id) {
+    const book = await this.getBook(id);
+    if (!book) {
+      throw new Error("Book not found");
+    }
+    await db.delete(readingProgress).where(eq(readingProgress.bookId, id));
+    await db.delete(bookmarks).where(eq(bookmarks.bookId, id));
+    await db.delete(bookCategories).where(eq(bookCategories.bookId, id));
+    await db.delete(books).where(eq(books.id, id));
+    return { book, filesDeleted: true };
+  }
+  async deleteMultipleBooks(bookIds) {
+    const deletedBooks = [];
+    let totalDeleted = 0;
+    for (const bookId of bookIds) {
+      try {
+        const result = await this.deleteBook(bookId);
+        deletedBooks.push(result.book);
+        totalDeleted++;
+      } catch (error) {
+        console.error(`Failed to delete book ${bookId}:`, error);
+        deletedBooks.push(void 0);
+      }
+    }
+    return { deletedBooks, totalDeleted };
+  }
+  // Reading progress operations
+  async getReadingProgress(userId, bookId) {
+    const [progress] = await db.select().from(readingProgress).where(and(eq(readingProgress.userId, userId), eq(readingProgress.bookId, bookId)));
+    return progress;
+  }
+  async upsertReadingProgress(progressData) {
+    const [result] = await db.insert(readingProgress).values(progressData).onConflictDoUpdate({
+      target: [readingProgress.userId, readingProgress.bookId],
+      set: {
+        currentPage: progressData.currentPage,
+        totalPages: progressData.totalPages,
+        progressPercentage: progressData.progressPercentage,
+        lastReadAt: /* @__PURE__ */ new Date()
+      }
+    }).returning();
+    return result;
+  }
+  async getUserReadingHistory(userId) {
+    return await db.select().from(readingProgress).where(eq(readingProgress.userId, userId)).orderBy(desc(readingProgress.lastReadAt));
+  }
+  async getUserReadingProgress(userId) {
+    return await db.select().from(readingProgress).where(eq(readingProgress.userId, userId)).orderBy(desc(readingProgress.lastReadAt));
+  }
+  // Bookmark operations
+  async getUserBookmarks(userId, bookId) {
+    const conditions = [eq(bookmarks.userId, userId)];
+    if (bookId) {
+      conditions.push(eq(bookmarks.bookId, bookId));
+    }
+    return await db.select().from(bookmarks).where(and(...conditions)).orderBy(desc(bookmarks.createdAt));
+  }
+  async createBookmark(bookmark) {
+    const [newBookmark] = await db.insert(bookmarks).values(bookmark).returning();
+    return newBookmark;
+  }
+  async deleteBookmark(id) {
+    await db.delete(bookmarks).where(eq(bookmarks.id, id));
+  }
+  // Admin operations
+  async updateBook(id, updates, categoryIds) {
+    const [book] = await db.update(books).set(updates).where(eq(books.id, id)).returning();
+    if (categoryIds !== void 0) {
+      await this.setBookCategories(id, categoryIds);
+    }
+    return book;
+  }
+  async bulkUpdateBooks(ids, updates) {
+    for (const id of ids) {
+      await db.update(books).set(updates).where(eq(books.id, id));
+    }
+  }
+  async getAnalytics() {
+    const totalUsersResult = await db.select().from(users);
+    const totalUsers = totalUsersResult.length;
+    const activeSubscriptionsResult = await db.select().from(users).where(or(eq(users.subscriptionTier, "basic"), eq(users.subscriptionTier, "premium")));
+    const activeSubscriptions = activeSubscriptionsResult.length;
+    const basicSubscribers = await db.select().from(users).where(eq(users.subscriptionTier, "basic"));
+    const premiumSubscribers = await db.select().from(users).where(eq(users.subscriptionTier, "premium"));
+    const monthlyRevenue = basicSubscribers.length * 9.99 + premiumSubscribers.length * 19.99;
+    const conversionRate = totalUsers > 0 ? Math.round(activeSubscriptions / totalUsers * 100) : 0;
+    return {
+      totalUsers,
+      activeSubscriptions,
+      monthlyRevenue: Math.round(monthlyRevenue * 100) / 100,
+      // Round to 2 decimal places
+      conversionRate
+    };
+  }
+  // Category operations
+  async getAllCategories() {
+    return await db.select().from(categories).orderBy(categories.name);
+  }
+  async getActiveCategories() {
+    return await db.select().from(categories).where(eq(categories.isActive, true)).orderBy(categories.name);
+  }
+  async createCategory(categoryData) {
+    const [category] = await db.insert(categories).values(categoryData).returning();
+    return category;
+  }
+  async updateCategory(categoryId, updates) {
+    const [category] = await db.update(categories).set({ ...updates, updatedAt: /* @__PURE__ */ new Date() }).where(eq(categories.id, categoryId)).returning();
+    return category;
+  }
+  async deleteCategory(categoryId) {
+    await db.delete(categories).where(eq(categories.id, categoryId));
+  }
+  // Book-Category relationship operations
+  async getBookCategories(bookId) {
+    return await db.select().from(categories).innerJoin(bookCategories, eq(categories.id, bookCategories.categoryId)).where(eq(bookCategories.bookId, bookId)).then((results) => results.map((result) => result.categories));
+  }
+  async setBookCategories(bookId, categoryIds) {
+    await db.delete(bookCategories).where(eq(bookCategories.bookId, bookId));
+    if (categoryIds.length > 0) {
+      const bookCategoryData = categoryIds.map((categoryId) => ({
+        bookId,
+        categoryId
+      }));
+      await db.insert(bookCategories).values(bookCategoryData);
+    }
+  }
+  async addBookCategory(bookId, categoryId) {
+    await db.insert(bookCategories).values({ bookId, categoryId });
+  }
+  async removeBookCategory(bookId, categoryId) {
+    await db.delete(bookCategories).where(and(eq(bookCategories.bookId, bookId), eq(bookCategories.categoryId, categoryId)));
+  }
+  async toggleFeatured(bookId, isFeatured) {
+    const [book] = await db.update(books).set({ isFeatured, updatedAt: /* @__PURE__ */ new Date() }).where(eq(books.id, bookId)).returning();
+    return book;
+  }
+  // Admin user management operations
+  async getAllUsers() {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+  async searchUsers(query) {
+    return await db.select().from(users).where(
+      or(
+        ilike(users.firstName, `%${query}%`),
+        ilike(users.lastName, `%${query}%`),
+        ilike(users.email, `%${query}%`)
+      )
+    ).orderBy(desc(users.createdAt));
+  }
+  async updateUser(id, updates) {
+    const [user] = await db.update(users).set({ ...updates, updatedAt: /* @__PURE__ */ new Date() }).where(eq(users.id, id)).returning();
+    return user;
+  }
+  async deleteUser(id) {
+    await db.delete(readingProgress).where(eq(readingProgress.userId, id));
+    await db.delete(bookmarks).where(eq(bookmarks.userId, id));
+    await db.delete(users).where(eq(users.id, id));
+  }
+  async bulkUpdateUsers(ids, updates) {
+    await db.update(users).set({ ...updates, updatedAt: /* @__PURE__ */ new Date() }).where(or(...ids.map((id) => eq(users.id, id))));
+  }
+  async bulkDeleteUsers(ids) {
+    await db.delete(readingProgress).where(or(...ids.map((id) => eq(readingProgress.userId, id))));
+    await db.delete(bookmarks).where(or(...ids.map((id) => eq(bookmarks.userId, id))));
+    await db.delete(users).where(or(...ids.map((id) => eq(users.id, id))));
+  }
+  async resetUserPassword(userId, newPassword) {
+    const tempPassword = newPassword || Math.random().toString(36).slice(-8);
+    const resetToken = Math.random().toString(36).slice(-16);
+    const resetExpires = new Date(Date.now() + 24 * 60 * 60 * 1e3);
+    await db.update(users).set({
+      passwordResetToken: resetToken,
+      passwordResetExpires: resetExpires,
+      updatedAt: /* @__PURE__ */ new Date()
+    }).where(eq(users.id, userId));
+    return { success: true, tempPassword };
+  }
+  async updateUserRole(userId, role) {
+    const [user] = await db.update(users).set({ role, updatedAt: /* @__PURE__ */ new Date() }).where(eq(users.id, userId)).returning();
+    return user;
+  }
+  async toggleUserStatus(userId, isActive) {
+    const [user] = await db.update(users).set({ isActive, updatedAt: /* @__PURE__ */ new Date() }).where(eq(users.id, userId)).returning();
+    return user;
+  }
+  async getUserAnalytics() {
+    const allUsers = await db.select().from(users);
+    const totalUsers = allUsers.length;
+    const activeUsers = allUsers.filter((user) => user.isActive).length;
+    const adminUsers = allUsers.filter((user) => user.role === "admin").length;
+    const subscriptionBreakdown = allUsers.reduce((acc, user) => {
+      acc[user.subscriptionTier || "free"] = (acc[user.subscriptionTier || "free"] || 0) + 1;
+      return acc;
+    }, {});
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1e3);
+    const recentSignups = allUsers.filter(
+      (user) => user.createdAt && new Date(user.createdAt) > oneWeekAgo
+    ).length;
+    return {
+      totalUsers,
+      activeUsers,
+      adminUsers,
+      subscriptionBreakdown,
+      recentSignups
+    };
+  }
+  // Subscription plan management methods
+  async getAllSubscriptionPlans() {
+    try {
+      const plans = await db.select().from(subscriptionPlans).orderBy(subscriptionPlans.displayOrder);
+      return plans;
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      return [];
+    }
+  }
+  async getSubscriptionPlan(id) {
+    try {
+      const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+      return plan;
+    } catch (error) {
+      console.error("Error fetching subscription plan:", error);
+      return void 0;
+    }
+  }
+  async createSubscriptionPlan(planData) {
+    try {
+      const [plan] = await db.insert(subscriptionPlans).values(planData).returning();
+      return plan;
+    } catch (error) {
+      console.error("Error creating subscription plan:", error);
+      throw error;
+    }
+  }
+  async updateSubscriptionPlan(id, updates) {
+    try {
+      const [plan] = await db.update(subscriptionPlans).set({ ...updates, updatedAt: /* @__PURE__ */ new Date() }).where(eq(subscriptionPlans.id, id)).returning();
+      if (!plan) {
+        throw new Error("Subscription plan not found");
+      }
+      return plan;
+    } catch (error) {
+      console.error("Error updating subscription plan:", error);
+      throw error;
+    }
+  }
+  async deleteSubscriptionPlan(id) {
+    try {
+      await db.delete(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+    } catch (error) {
+      console.error("Error deleting subscription plan:", error);
+      throw error;
+    }
+  }
+  async getActiveSubscriptionPlans() {
+    try {
+      const plans = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.isActive, true)).orderBy(subscriptionPlans.displayOrder);
+      return plans;
+    } catch (error) {
+      console.error("Error fetching active subscription plans:", error);
+      return [];
+    }
+  }
+  // Email preferences operations
+  async getEmailPreferences(userId, email) {
+    try {
+      let [preferences] = await db.select().from(emailPreferences).where(eq(emailPreferences.userId, userId));
+      if (!preferences) {
+        const crypto2 = await import("crypto");
+        const unsubscribeToken = crypto2.randomBytes(32).toString("hex");
+        const newPreferences = {
+          userId,
+          email,
+          unsubscribeToken,
+          marketingEmails: true,
+          trialReminders: true,
+          subscriptionUpdates: true,
+          isUnsubscribedAll: false
+        };
+        [preferences] = await db.insert(emailPreferences).values(newPreferences).returning();
+      }
+      return preferences;
+    } catch (error) {
+      console.error("Error getting email preferences:", error);
+      throw error;
+    }
+  }
+  async updateEmailPreferences(userId, updates) {
+    try {
+      const [preferences] = await db.update(emailPreferences).set({ ...updates, updatedAt: /* @__PURE__ */ new Date() }).where(eq(emailPreferences.userId, userId)).returning();
+      if (!preferences) {
+        throw new Error("Email preferences not found");
+      }
+      return preferences;
+    } catch (error) {
+      console.error("Error updating email preferences:", error);
+      throw error;
+    }
+  }
+  async findEmailPreferencesByToken(token) {
+    try {
+      const [preferences] = await db.select().from(emailPreferences).where(eq(emailPreferences.unsubscribeToken, token));
+      return preferences;
+    } catch (error) {
+      console.error("Error finding email preferences by token:", error);
+      return void 0;
+    }
+  }
+  // Email logging operations
+  async logEmail(logData) {
+    try {
+      const [log2] = await db.insert(emailLogs).values(logData).returning();
+      return log2;
+    } catch (error) {
+      console.error("Error logging email:", error);
+      throw error;
+    }
+  }
+  async getEmailLogs(options) {
+    try {
+      const conditions = [];
+      if (options.status) {
+        conditions.push(eq(emailLogs.status, options.status));
+      }
+      if (options.emailType) {
+        conditions.push(eq(emailLogs.emailType, options.emailType));
+      }
+      let baseQuery = db.select().from(emailLogs);
+      if (conditions.length > 0) {
+        baseQuery = baseQuery.where(and(...conditions));
+      }
+      const logs = await baseQuery.orderBy(desc(emailLogs.createdAt)).limit(options.limit || 50).offset(options.offset || 0);
+      return logs;
+    } catch (error) {
+      console.error("Error fetching email logs:", error);
+      return [];
+    }
+  }
+};
+var storage = new DatabaseStorage();
+
+// server/routes.ts
+init_schema();
+init_schema();
+import { z as z2 } from "zod";
+import multer from "multer";
+import path3 from "path";
+import fs from "fs";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+
+// server/routes-seo.ts
+import path from "path";
+function registerSEORoutes(app2) {
+  app2.get("/sitemap.xml", (req, res) => {
+    res.set("Content-Type", "application/xml");
+    res.sendFile(path.join(process.cwd(), "public", "sitemap.xml"));
+  });
+  app2.get("/robots.txt", (req, res) => {
+    res.set("Content-Type", "text/plain");
+    res.sendFile(path.join(process.cwd(), "public", "robots.txt"));
+  });
+  app2.get("/api/sitemap", async (req, res) => {
+    try {
+      const books2 = await storage.getAllBooks();
+      const baseUrl = "https://wonderful-books.replit.app";
+      let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/bookstore</loc>
+    <lastmod>${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/subscribe</loc>
+    <lastmod>${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+      books2.forEach((book) => {
+        sitemap += `
+  <url>
+    <loc>${baseUrl}/book/${book.id}</loc>
+    <lastmod>${book.updatedAt ? new Date(book.updatedAt).toISOString().split("T")[0] : (/* @__PURE__ */ new Date()).toISOString().split("T")[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+      });
+      sitemap += `
+</urlset>`;
+      res.set("Content-Type", "application/xml");
+      res.send(sitemap);
+    } catch (error) {
+      console.error("Error generating sitemap:", error);
+      res.status(500).send("Error generating sitemap");
+    }
+  });
+  app2.get("/api/book/:id/structured-data", async (req, res) => {
+    try {
+      const book = await storage.getBook(req.params.id);
+      if (!book) {
+        return res.status(404).json({ error: "Book not found" });
+      }
+      const structuredData = {
+        "@context": "https://schema.org",
+        "@type": "Book",
+        "name": book.title,
+        "author": {
+          "@type": "Person",
+          "name": book.author
+        },
+        "description": book.description?.replace(/<[^>]*>/g, "").substring(0, 200) + "...",
+        "image": book.coverImageUrl ? `https://wonderful-books.replit.app${book.coverImageUrl}` : void 0,
+        "url": `https://wonderful-books.replit.app/book/${book.id}`,
+        "aggregateRating": book.rating ? {
+          "@type": "AggregateRating",
+          "ratingValue": book.rating,
+          "ratingCount": book.totalRatings || 1
+        } : void 0,
+        "offers": {
+          "@type": "Offer",
+          "price": book.requiredTier === "premium" ? "19.99" : book.requiredTier === "basic" ? "9.99" : "0",
+          "priceCurrency": "GBP",
+          "availability": "https://schema.org/InStock",
+          "url": `https://wonderful-books.replit.app/book/${book.id}`
+        },
+        "inLanguage": "en-US",
+        "genre": "Self-help, Business, Personal Development",
+        "publishingPrinciples": "https://wonderful-books.replit.app/publishing-principles",
+        "educationalAlignment": {
+          "@type": "AlignmentObject",
+          "alignmentType": "teaches",
+          "educationalFramework": "Personal Development"
+        }
+      };
+      res.json(structuredData);
+    } catch (error) {
+      console.error("Error generating structured data:", error);
+      res.status(500).json({ error: "Error generating structured data" });
+    }
+  });
+}
+
+// server/antiAbuseService.ts
+init_db();
+init_schema();
+import { eq as eq2, and as and2, gte, count } from "drizzle-orm";
+var AntiAbuseService = class {
+  // Generate a simple device fingerprint hash
+  generateFingerprint(fingerprint) {
+    const fingerprintString = `${fingerprint.userAgent}-${fingerprint.platform}-${fingerprint.screenResolution}-${fingerprint.timezone}`;
+    let hash = 0;
+    for (let i = 0; i < fingerprintString.length; i++) {
+      const char = fingerprintString.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+  }
+  // Extract email domain for tracking
+  extractEmailDomain(email) {
+    return email.split("@")[1]?.toLowerCase() || "";
+  }
+  // Check if IP has too many recent signup attempts
+  async checkIpRateLimit(ip) {
+    const oneHour = new Date(Date.now() - 60 * 60 * 1e3);
+    const oneDay = new Date(Date.now() - 24 * 60 * 60 * 1e3);
+    const activeBlock = await db.select().from(signupAttempts).where(
+      and2(
+        eq2(signupAttempts.registrationIp, ip),
+        gte(signupAttempts.blockUntil, /* @__PURE__ */ new Date())
+      )
+    ).limit(1);
+    if (activeBlock.length > 0) {
+      const blockUntil = activeBlock[0].blockUntil;
+      const retryAfter = blockUntil ? Math.ceil((blockUntil.getTime() - Date.now()) / 1e3) : 3600;
+      return {
+        allowed: false,
+        reason: "IP temporarily blocked due to suspicious activity",
+        retryAfter
+      };
+    }
+    const recentAttempts = await db.select({ count: count() }).from(signupAttempts).where(
+      and2(
+        eq2(signupAttempts.registrationIp, ip),
+        gte(signupAttempts.attemptedAt, oneHour)
+      )
+    );
+    const hourlyAttempts = recentAttempts[0]?.count || 0;
+    if (hourlyAttempts >= 3) {
+      const blockUntil = new Date(Date.now() + 60 * 60 * 1e3);
+      await db.insert(signupAttempts).values({
+        registrationIp: ip,
+        attemptedAt: /* @__PURE__ */ new Date(),
+        successful: false,
+        blockUntil
+      });
+      return {
+        allowed: false,
+        reason: "Too many signup attempts. Please try again later.",
+        retryAfter: 3600
+      };
+    }
+    const dailyAttempts = await db.select({ count: count() }).from(signupAttempts).where(
+      and2(
+        eq2(signupAttempts.registrationIp, ip),
+        gte(signupAttempts.attemptedAt, oneDay)
+      )
+    );
+    const dayAttempts = dailyAttempts[0]?.count || 0;
+    if (dayAttempts >= 5) {
+      const blockUntil = new Date(Date.now() + 24 * 60 * 60 * 1e3);
+      await db.insert(signupAttempts).values({
+        registrationIp: ip,
+        attemptedAt: /* @__PURE__ */ new Date(),
+        successful: false,
+        blockUntil
+      });
+      return {
+        allowed: false,
+        reason: "Daily signup limit reached. Please try again tomorrow.",
+        retryAfter: 86400
+      };
+    }
+    return { allowed: true };
+  }
+  // Check if user has already used free trial (multiple methods)
+  async checkFreeTrialEligibility(attempt) {
+    const email = attempt.email.toLowerCase();
+    const emailDomain = this.extractEmailDomain(email);
+    const emailUsed = await db.select().from(freeTrialAbusePrevention).where(eq2(freeTrialAbusePrevention.email, email)).limit(1);
+    if (emailUsed.length > 0) {
+      return {
+        eligible: false,
+        reason: "Free trial already used with this email address",
+        conflictType: "email"
+      };
+    }
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1e3);
+    const ipUsed = await db.select().from(freeTrialAbusePrevention).where(
+      and2(
+        eq2(freeTrialAbusePrevention.registrationIp, attempt.ip),
+        gte(freeTrialAbusePrevention.freeTrialStartedAt, thirtyDaysAgo)
+      )
+    ).limit(1);
+    if (ipUsed.length > 0) {
+      return {
+        eligible: false,
+        reason: "Free trial already used from this location recently",
+        conflictType: "ip"
+      };
+    }
+    if (attempt.deviceFingerprint) {
+      const fingerprintUsed = await db.select().from(freeTrialAbusePrevention).where(
+        and2(
+          eq2(freeTrialAbusePrevention.deviceFingerprint, attempt.deviceFingerprint),
+          gte(freeTrialAbusePrevention.freeTrialStartedAt, thirtyDaysAgo)
+        )
+      ).limit(1);
+      if (fingerprintUsed.length > 0) {
+        return {
+          eligible: false,
+          reason: "Free trial already used on this device",
+          conflictType: "device"
+        };
+      }
+    }
+    const domainCount = await db.select({ count: count() }).from(freeTrialAbusePrevention).where(
+      and2(
+        eq2(freeTrialAbusePrevention.emailDomain, emailDomain),
+        gte(freeTrialAbusePrevention.freeTrialStartedAt, thirtyDaysAgo)
+      )
+    );
+    const domainTrials = domainCount[0]?.count || 0;
+    if (domainTrials >= 2) {
+      return {
+        eligible: false,
+        reason: "Too many free trials from this email domain",
+        conflictType: "domain"
+      };
+    }
+    return { eligible: true };
+  }
+  // Record a successful free trial start
+  async recordFreeTrialStart(user, ip, deviceFingerprint) {
+    const email = user.email?.toLowerCase();
+    if (!email) return;
+    const emailDomain = this.extractEmailDomain(email);
+    const freeTrialStartedAt = /* @__PURE__ */ new Date();
+    const freeTrialEndedAt = new Date(freeTrialStartedAt.getTime() + 7 * 24 * 60 * 60 * 1e3);
+    await db.insert(freeTrialAbusePrevention).values({
+      email,
+      emailDomain,
+      registrationIp: ip,
+      deviceFingerprint,
+      userId: user.id,
+      freeTrialStartedAt,
+      freeTrialEndedAt
+    });
+    await db.update(users).set({
+      freeTrialUsed: true,
+      freeTrialStartedAt,
+      freeTrialEndedAt,
+      registrationIp: ip,
+      deviceFingerprint,
+      subscriptionTier: "free",
+      subscriptionStatus: "active",
+      updatedAt: /* @__PURE__ */ new Date()
+    }).where(eq2(users.id, user.id));
+    await db.insert(signupAttempts).values({
+      email,
+      registrationIp: ip,
+      deviceFingerprint,
+      attemptedAt: /* @__PURE__ */ new Date(),
+      successful: true
+    });
+  }
+  // Record failed signup attempt
+  async recordFailedSignup(attempt) {
+    await db.insert(signupAttempts).values({
+      email: attempt.email,
+      registrationIp: attempt.ip,
+      deviceFingerprint: attempt.deviceFingerprint,
+      attemptedAt: /* @__PURE__ */ new Date(),
+      successful: false
+    });
+  }
+  // Check if free trial has expired for a user
+  async checkFreeTrialExpired(userId) {
+    const user = await db.select().from(users).where(eq2(users.id, userId)).limit(1);
+    if (!user[0] || !user[0].freeTrialEndedAt) return false;
+    return /* @__PURE__ */ new Date() > user[0].freeTrialEndedAt;
+  }
+  // Get abuse statistics for admin dashboard
+  async getAbuseStatistics() {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1e3);
+    const totalAttempts = await db.select({ count: count() }).from(signupAttempts).where(gte(signupAttempts.attemptedAt, sevenDaysAgo));
+    const blockedAttempts = await db.select({ count: count() }).from(signupAttempts).where(
+      and2(
+        gte(signupAttempts.attemptedAt, sevenDaysAgo),
+        eq2(signupAttempts.successful, false)
+      )
+    );
+    const freeTrialsUsed = await db.select({ count: count() }).from(freeTrialAbusePrevention).where(gte(freeTrialAbusePrevention.freeTrialStartedAt, sevenDaysAgo));
+    const topAbusiveIps = [];
+    const topAbusiveDomains = [];
+    return {
+      totalSignupAttempts: totalAttempts[0]?.count || 0,
+      blockedAttempts: blockedAttempts[0]?.count || 0,
+      freeTrialsUsed: freeTrialsUsed[0]?.count || 0,
+      topAbusiveIps,
+      topAbusiveDomains
+    };
+  }
+  // Clean up old records (run periodically)
+  async cleanupOldRecords() {
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1e3);
+    await db.delete(signupAttempts).where(gte(signupAttempts.attemptedAt, ninetyDaysAgo));
+  }
+};
+var antiAbuseService = new AntiAbuseService();
+
+// server/routes.ts
+var isAuthenticated = (req, res, next) => {
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction) {
+    console.log("Auth check:", {
+      sessionId: req.sessionID,
+      hasSession: !!req.session,
+      hasUser: !!(req.session && req.session.user),
+      userAgent: req.headers["user-agent"]?.substring(0, 50),
+      path: req.path
+    });
+  }
+  if (!req.session || !req.session.user) {
+    console.log("Authentication failed: No session or user data");
+    return res.status(401).json({
+      message: "Unauthorized",
+      debug: isProduction ? void 0 : {
+        hasSession: !!req.session,
+        sessionId: req.sessionID,
+        sessionData: req.session
+      }
+    });
+  }
+  req.user = {
+    ...req.session.user,
+    claims: {
+      sub: req.session.user.id,
+      email: req.session.user.email,
+      first_name: req.session.user.firstName,
+      last_name: req.session.user.lastName
+    }
+  };
+  next();
+};
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error("Missing required Stripe secret: STRIPE_SECRET_KEY");
+}
+var actualSecretKey = process.env.VITE_STRIPE_PUBLIC_KEY;
+console.log("Using Stripe secret key starting with:", actualSecretKey?.substring(0, 3));
+var stripe = new Stripe(actualSecretKey);
+async function registerRoutes(app2) {
+  const isProduction = process.env.NODE_ENV === "production";
+  app2.set("trust proxy", isProduction ? 1 : false);
+  app2.use((req, res, next) => {
+    const allowedOrigins = isProduction ? ["https://*.replit.app", "https://*.replit.dev"] : ["http://localhost:3000", "http://localhost:5000", "http://127.0.0.1:5000"];
+    const origin = req.headers.origin;
+    if (isProduction) {
+      if (origin && (origin.includes(".replit.app") || origin.includes(".replit.dev"))) {
+        res.header("Access-Control-Allow-Origin", origin);
+      }
+    } else {
+      res.header("Access-Control-Allow-Origin", origin || "*");
+    }
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    if (req.method === "OPTIONS") {
+      res.sendStatus(200);
+    } else {
+      next();
+    }
+  });
+  const sessionTtl = 7 * 24 * 60 * 60 * 1e3;
+  const pgStore = connectPg(session);
+  const sessionStore = new pgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: false,
+    ttl: sessionTtl,
+    tableName: "sessions"
+  });
+  app2.use(session({
+    secret: process.env.SESSION_SECRET || "local-auth-secret",
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      // Enable secure cookies in production
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      maxAge: sessionTtl
+    },
+    proxy: process.env.NODE_ENV === "production"
+    // Trust proxy in production
+  }));
+  app2.get("/api/health", async (req, res) => {
+    try {
+      const health = {
+        status: "ok",
+        environment: process.env.NODE_ENV || "development",
+        timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+        database: {
+          connected: !!process.env.DATABASE_URL,
+          sessionStore: "postgresql"
+        },
+        authentication: {
+          sessionSecret: !!process.env.SESSION_SECRET,
+          provider: "local"
+        },
+        deployment: {
+          trustProxy: isProduction,
+          secureCookies: isProduction,
+          corsEnabled: true
+        }
+      };
+      res.json(health);
+    } catch (error) {
+      res.status(500).json({
+        status: "error",
+        message: "Health check failed",
+        error: isProduction ? "Internal server error" : String(error)
+      });
+    }
+  });
+  app2.get("/api/auth/user", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.session.user.id;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+  app2.post("/api/auth/register", async (req, res) => {
+    try {
+      const userData = registerSchema.parse(req.body);
+      const userIP = req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || req.socket.remoteAddress || req.ip || "127.0.0.1";
+      const deviceFingerprint = req.body.deviceFingerprint;
+      const ipCheck = await antiAbuseService.checkIpRateLimit(userIP);
+      if (!ipCheck.allowed) {
+        await antiAbuseService.recordFailedSignup({
+          email: userData.email,
+          ip: userIP,
+          deviceFingerprint,
+          userAgent: req.headers["user-agent"]
+        });
+        return res.status(429).json({
+          message: ipCheck.reason,
+          retryAfter: ipCheck.retryAfter
+        });
+      }
+      const eligibilityCheck = await antiAbuseService.checkFreeTrialEligibility({
+        email: userData.email,
+        ip: userIP,
+        deviceFingerprint,
+        userAgent: req.headers["user-agent"]
+      });
+      if (!eligibilityCheck.eligible) {
+        await antiAbuseService.recordFailedSignup({
+          email: userData.email,
+          ip: userIP,
+          deviceFingerprint,
+          userAgent: req.headers["user-agent"]
+        });
+        return res.status(403).json({
+          message: eligibilityCheck.reason,
+          conflictType: eligibilityCheck.conflictType
+        });
+      }
+      const user = await storage.registerUser(userData);
+      await antiAbuseService.recordFreeTrialStart(user, userIP, deviceFingerprint);
+      console.log("Email verification token:", user.emailVerificationToken);
+      res.status(201).json({
+        message: "Registration successful! Your 7-day free trial has started. Please check your email to verify your account.",
+        userId: user.id,
+        freeTrialEndsAt: user.freeTrialEndedAt
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      const userIP = req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || req.socket.remoteAddress || req.ip || "127.0.0.1";
+      await antiAbuseService.recordFailedSignup({
+        email: req.body.email || "unknown",
+        ip: userIP,
+        deviceFingerprint: req.body.deviceFingerprint,
+        userAgent: req.headers["user-agent"]
+      });
+      if (error.message?.includes("Email already registered") || error.message?.includes("Username already taken")) {
+        return res.status(409).json({ message: error.message });
+      }
+      res.status(400).json({ message: error.message || "Registration failed" });
+    }
+  });
+  app2.post("/api/auth/login", async (req, res) => {
+    try {
+      console.log("Login attempt:", {
+        email: req.body.email,
+        environment: process.env.NODE_ENV,
+        sessionId: req.sessionID,
+        userAgent: req.headers["user-agent"]?.substring(0, 50)
+      });
+      const loginData = loginSchema.parse(req.body);
+      const user = await storage.authenticateUser(loginData.email, loginData.password);
+      if (!user) {
+        console.log("Login failed: Invalid credentials for", loginData.email);
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      if (!user.emailVerified) {
+        console.log("Login failed: Email not verified for", loginData.email);
+        return res.status(401).json({ message: "Please verify your email before signing in" });
+      }
+      if (!user.isActive) {
+        console.log("Login failed: Account deactivated for", loginData.email);
+        return res.status(401).json({ message: "Your account has been deactivated" });
+      }
+      const sessionData = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        loginTime: (/* @__PURE__ */ new Date()).toISOString()
+      };
+      req.session.user = sessionData;
+      await new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error("Session save error:", err);
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+      console.log("Login successful for:", user.email, "sessionId:", req.sessionID);
+      res.json({
+        message: "Login successful",
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName
+        }
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(400).json({
+        message: error.message || "Login failed",
+        debug: isProduction ? void 0 : {
+          error: String(error),
+          sessionId: req.sessionID,
+          environment: process.env.NODE_ENV
+        }
+      });
+    }
+  });
+  app2.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ message: "Logout successful" });
+    });
+  });
+  app2.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = forgotPasswordSchema.parse(req.body);
+      const resetToken = await storage.generatePasswordResetToken(email);
+      if (resetToken) {
+        console.log("Password reset token:", resetToken);
+        console.log("Reset URL:", `${req.protocol}://${req.get("host")}/auth/reset-password?token=${resetToken}`);
+      }
+      res.json({ message: "If an account with that email exists, we've sent password reset instructions." });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(400).json({ message: error.message || "Request failed" });
+    }
+  });
+  app2.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const resetData = resetPasswordSchema.parse(req.body);
+      const success = await storage.resetPassword(resetData.token, resetData.password);
+      if (!success) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+      res.json({ message: "Password reset successful! You can now sign in with your new password." });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(400).json({ message: error.message || "Password reset failed" });
+    }
+  });
+  app2.get("/api/auth/verify-email/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const success = await storage.verifyEmail(token);
+      if (!success) {
+        return res.status(400).json({ message: "Invalid or expired verification token" });
+      }
+      res.json({ message: "Email verified successfully! You can now sign in." });
+    } catch (error) {
+      console.error("Email verification error:", error);
+      res.status(500).json({ message: "Verification failed" });
+    }
+  });
+  app2.get("/api/books", async (req, res) => {
+    try {
+      const { category, search, featured } = req.query;
+      let books2;
+      if (featured === "true") {
+        books2 = await storage.getFeaturedBooks();
+      } else if (category) {
+        books2 = await storage.getBooksByCategory(category);
+      } else if (search) {
+        books2 = await storage.searchBooks(search);
+      } else {
+        books2 = await storage.getAllBooks();
+      }
+      res.json(books2);
+    } catch (error) {
+      console.error("Error fetching books:", error);
+      res.status(500).json({ message: "Failed to fetch books" });
+    }
+  });
+  app2.get("/api/categories", async (req, res) => {
+    try {
+      const books2 = await storage.getAllBooks();
+      const tiers = Array.from(new Set(books2.map((book) => book.requiredTier)));
+      res.json(tiers);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+  app2.get("/api/user/reading-progress", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const progress = await storage.getUserReadingProgress(userId);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching user reading progress:", error);
+      res.status(500).json({ message: "Failed to fetch reading progress" });
+    }
+  });
+  app2.get("/api/books/:id", async (req, res) => {
+    try {
+      const book = await storage.getBook(req.params.id);
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+      res.json(book);
+    } catch (error) {
+      console.error("Error fetching book:", error);
+      res.status(500).json({ message: "Failed to fetch book" });
+    }
+  });
+  app2.post("/api/books", isAuthenticated, async (req, res) => {
+    try {
+      const bookData = insertBookSchema.parse(req.body);
+      const book = await storage.createBook(bookData);
+      res.json(book);
+    } catch (error) {
+      if (error instanceof z2.ZodError) {
+        return res.status(400).json({ message: "Invalid book data", errors: error.errors });
+      }
+      console.error("Error creating book:", error);
+      res.status(500).json({ message: "Failed to create book" });
+    }
+  });
+  app2.get("/api/reading-progress/:bookId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const progress = await storage.getReadingProgress(userId, req.params.bookId);
+      res.json(progress || { currentPage: 1, totalPages: 0, progressPercentage: "0.00" });
+    } catch (error) {
+      console.error("Error fetching reading progress:", error);
+      res.status(500).json({ message: "Failed to fetch reading progress" });
+    }
+  });
+  app2.post("/api/reading-progress", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId, currentPage, totalPages, progressPercentage } = req.body;
+      const currentPageNum = parseInt(currentPage, 10);
+      const totalPagesNum = parseInt(totalPages, 10);
+      if (isNaN(currentPageNum) || isNaN(totalPagesNum)) {
+        return res.status(400).json({ message: "Invalid page numbers" });
+      }
+      const progressData = {
+        userId,
+        bookId,
+        currentPage: currentPageNum,
+        totalPages: totalPagesNum,
+        progressPercentage: String(progressPercentage),
+        lastReadAt: /* @__PURE__ */ new Date()
+      };
+      const progress = await storage.upsertReadingProgress(progressData);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error updating reading progress:", error);
+      res.status(500).json({ message: "Failed to update reading progress" });
+    }
+  });
+  app2.post("/api/progress", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId, pageNumber, currentPage, totalPages } = req.body;
+      const actualPageNumber = pageNumber || currentPage;
+      console.log("Progress update request:", { bookId, pageNumber, currentPage, actualPageNumber, totalPages, userId });
+      const progressPercentage = totalPages > 0 ? (actualPageNumber / totalPages * 100).toFixed(2) : "0.00";
+      const currentPageNum = parseInt(actualPageNumber, 10);
+      const totalPagesNum = parseInt(totalPages || 0, 10);
+      if (isNaN(currentPageNum) || currentPageNum < 1) {
+        console.log("Invalid currentPageNum:", currentPageNum, "from actualPageNumber:", actualPageNumber);
+        return res.status(400).json({ message: "Invalid current page number" });
+      }
+      if (isNaN(totalPagesNum) || totalPagesNum < 1) {
+        console.log("Invalid totalPagesNum:", totalPagesNum, "from totalPages:", totalPages);
+        return res.status(400).json({ message: "Invalid total pages number" });
+      }
+      const progressData = {
+        userId,
+        bookId,
+        currentPage: currentPageNum,
+        totalPages: totalPagesNum,
+        progressPercentage,
+        lastReadAt: /* @__PURE__ */ new Date()
+      };
+      const progress = await storage.upsertReadingProgress(progressData);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error updating reading progress:", error);
+      res.status(500).json({ message: "Failed to update reading progress" });
+    }
+  });
+  app2.get("/api/progress/:bookId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const progress = await storage.getReadingProgress(userId, req.params.bookId);
+      if (progress) {
+        res.json({
+          lastPage: progress.currentPage,
+          totalPages: progress.totalPages,
+          progressPercentage: progress.progressPercentage,
+          lastReadAt: progress.lastReadAt
+        });
+      } else {
+        res.json({
+          lastPage: 1,
+          totalPages: 0,
+          progressPercentage: "0.00",
+          lastReadAt: null
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching last read page:", error);
+      res.status(500).json({ message: "Failed to fetch last read page" });
+    }
+  });
+  app2.get("/api/user/dashboard", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const readingHistory = await storage.getUserReadingHistory(userId);
+      const bookmarks2 = await storage.getUserBookmarks(userId);
+      res.json({
+        user,
+        readingHistory: readingHistory.slice(0, 10),
+        // Last 10 books
+        bookmarks: bookmarks2.slice(0, 10),
+        // Recent bookmarks
+        stats: {
+          booksInProgress: readingHistory.length,
+          totalBookmarks: bookmarks2.length,
+          currentTier: user.subscriptionTier || "free",
+          subscriptionStatus: user.subscriptionStatus || "inactive"
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard data" });
+    }
+  });
+  app2.get("/api/reading-history", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const history = await storage.getUserReadingHistory(userId);
+      const historyWithBooks = await Promise.all(
+        history.map(async (progress) => {
+          const book = await storage.getBook(progress.bookId);
+          return {
+            ...progress,
+            book
+          };
+        })
+      );
+      res.json(historyWithBooks);
+    } catch (error) {
+      console.error("Error fetching reading history:", error);
+      res.status(500).json({ message: "Failed to fetch reading history" });
+    }
+  });
+  app2.get("/api/bookmarks", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId } = req.query;
+      console.log("Fetching bookmarks for user:", userId, "book:", bookId);
+      const bookmarks2 = await storage.getUserBookmarks(userId, bookId);
+      res.json(bookmarks2);
+    } catch (error) {
+      console.error("Error fetching bookmarks:", error);
+      res.status(500).json({ message: "Failed to fetch bookmarks" });
+    }
+  });
+  app2.get("/api/bookmarks/:bookId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId } = req.params;
+      console.log("Fetching bookmarks via path for user:", userId, "book:", bookId);
+      const bookmarks2 = await storage.getUserBookmarks(userId, bookId);
+      res.json(bookmarks2);
+    } catch (error) {
+      console.error("Error fetching bookmarks:", error);
+      res.status(500).json({ message: "Failed to fetch bookmarks" });
+    }
+  });
+  app2.post("/api/bookmarks", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      console.log("Creating bookmark for user:", userId, "data:", req.body);
+      const bookmarkData = {
+        ...req.body,
+        userId
+      };
+      const bookmark = await storage.createBookmark(bookmarkData);
+      console.log("Bookmark created successfully:", bookmark.id);
+      res.json(bookmark);
+    } catch (error) {
+      console.error("Error creating bookmark:", error);
+      res.status(500).json({ message: "Failed to create bookmark" });
+    }
+  });
+  app2.delete("/api/bookmarks/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      console.log("Deleting bookmark:", req.params.id, "for user:", userId);
+      await storage.deleteBookmark(req.params.id);
+      console.log("Bookmark deleted successfully:", req.params.id);
+      res.json({ message: "Bookmark deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting bookmark:", error);
+      res.status(500).json({ message: "Failed to delete bookmark" });
+    }
+  });
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 50 * 1024 * 1024
+      // 50MB limit for PDFs
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Invalid file type. Only JPEG, PNG, GIF, WebP, and PDF are allowed."));
+      }
+    }
+  });
+  const isAdmin = async (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    const userId = req.user.id;
+    const userEmail = req.user.email;
+    try {
+      const user = await storage.getUser(userId);
+      const userRole = user?.role;
+      if (userRole === "admin" || userEmail === "drcwiseman@gmail.com" || userEmail === "prophetclimate@yahoo.com" || userEmail === "admin@wonderfulbooks.com") {
+        return next();
+      }
+      console.log("Admin access denied:", { userId, userEmail, userRole, hasUser: !!user });
+      return res.status(403).json({ message: "Admin access required" });
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      return res.status(500).json({ message: "Error checking admin status" });
+    }
+  };
+  app2.post("/api/admin/upload-image", isAuthenticated, isAdmin, upload.single("image"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+      const uploadsDir = path3.join(process.cwd(), "uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      const fileExtension = path3.extname(req.file.originalname);
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${fileExtension}`;
+      const filePath = path3.join(uploadsDir, fileName);
+      fs.writeFileSync(filePath, req.file.buffer);
+      const imageUrl = `/uploads/${fileName}`;
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error("Image upload error:", error);
+      res.status(500).json({ error: "Failed to upload image" });
+    }
+  });
+  app2.get("/uploads/:subfolder?/:filename?", (req, res) => {
+    const subfolder = req.params.subfolder;
+    const filename = req.params.filename;
+    let filePath;
+    if (subfolder && filename) {
+      filePath = path3.join(process.cwd(), "uploads", subfolder, filename);
+    } else if (subfolder) {
+      filePath = path3.join(process.cwd(), "uploads", subfolder);
+    } else {
+      return res.status(404).json({ error: "File path not specified" });
+    }
+    if (fs.existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      res.status(404).json({ error: "File not found" });
+    }
+  });
+  app2.get("/api/admin/books", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const books2 = await storage.getAllBooks();
+      res.json(books2);
+    } catch (error) {
+      console.error("Error fetching books for admin:", error);
+      res.status(500).json({ message: "Failed to fetch books" });
+    }
+  });
+  app2.delete("/api/admin/books/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const bookId = req.params.id;
+      await storage.deleteBook(bookId);
+      res.json({ message: "Book deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting book:", error);
+      res.status(500).json({ message: "Failed to delete book" });
+    }
+  });
+  app2.post("/api/admin/books/bulk-delete", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { bookIds } = req.body;
+      if (!Array.isArray(bookIds) || bookIds.length === 0) {
+        return res.status(400).json({ message: "Book IDs array is required" });
+      }
+      const result = await storage.deleteMultipleBooks(bookIds);
+      res.json({
+        message: `${result.totalDeleted} book(s) deleted successfully`,
+        totalDeleted: result.totalDeleted,
+        deletedBooks: result.deletedBooks
+      });
+    } catch (error) {
+      console.error("Error bulk deleting books:", error);
+      res.status(500).json({ message: "Failed to delete books" });
+    }
+  });
+  app2.get("/api/admin/analytics", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const analytics = await storage.getAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+  app2.get("/api/admin/subscription-plans", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const plans = await storage.getAllSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ error: "Failed to fetch subscription plans" });
+    }
+  });
+  app2.get("/api/admin/subscription-plans/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const plan = await storage.getSubscriptionPlan(req.params.id);
+      if (!plan) {
+        return res.status(404).json({ error: "Subscription plan not found" });
+      }
+      res.json(plan);
+    } catch (error) {
+      console.error("Error fetching subscription plan:", error);
+      res.status(500).json({ error: "Failed to fetch subscription plan" });
+    }
+  });
+  app2.post("/api/admin/subscription-plans", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const plan = await storage.createSubscriptionPlan(req.body);
+      res.status(201).json(plan);
+    } catch (error) {
+      console.error("Error creating subscription plan:", error);
+      res.status(500).json({ error: "Failed to create subscription plan" });
+    }
+  });
+  app2.put("/api/admin/subscription-plans/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const plan = await storage.updateSubscriptionPlan(req.params.id, req.body);
+      res.json(plan);
+    } catch (error) {
+      console.error("Error updating subscription plan:", error);
+      res.status(500).json({ error: "Failed to update subscription plan" });
+    }
+  });
+  app2.delete("/api/admin/subscription-plans/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSubscriptionPlan(req.params.id);
+      res.json({ message: "Subscription plan deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting subscription plan:", error);
+      res.status(500).json({ error: "Failed to delete subscription plan" });
+    }
+  });
+  app2.post("/api/admin/books", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { categories: categories2, ...bookData } = req.body;
+      if (typeof bookData.rating === "number") {
+        bookData.rating = bookData.rating.toString();
+      }
+      const mappedData = {
+        title: bookData.title,
+        author: bookData.author,
+        description: bookData.description,
+        coverImageUrl: bookData.coverImage,
+        pdfUrl: bookData.fileUrl,
+        rating: bookData.rating,
+        requiredTier: bookData.tier
+      };
+      const validatedData = insertBookSchema.parse(mappedData);
+      const book = await storage.createBook(validatedData, categories2 || []);
+      res.json(book);
+    } catch (error) {
+      console.error("Error creating book:", error);
+      console.error("Validation error details:", error);
+      res.status(500).json({ message: "Failed to create book" });
+    }
+  });
+  app2.post("/api/admin/upload-image", isAuthenticated, isAdmin, upload.single("image"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No image file uploaded" });
+      }
+      const uploadsDir = path3.join(process.cwd(), "uploads/images");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      const fileExtension = path3.extname(req.file.originalname);
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${fileExtension}`;
+      const filePath = path3.join(uploadsDir, fileName);
+      fs.writeFileSync(filePath, req.file.buffer);
+      const imageUrl = `/uploads/images/${fileName}`;
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error("Image upload error:", error);
+      res.status(500).json({ error: "Failed to upload image" });
+    }
+  });
+  app2.post("/api/admin/upload-pdf", isAuthenticated, isAdmin, upload.single("pdf"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No PDF file uploaded" });
+      }
+      const uploadsDir = path3.join(process.cwd(), "uploads/pdfs");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      const fileExtension = path3.extname(req.file.originalname);
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${fileExtension}`;
+      const filePath = path3.join(uploadsDir, fileName);
+      fs.writeFileSync(filePath, req.file.buffer);
+      const fileUrl = `/uploads/pdfs/${fileName}`;
+      res.json({ fileUrl });
+    } catch (error) {
+      console.error("PDF upload error:", error);
+      res.status(500).json({ error: "Failed to upload PDF" });
+    }
+  });
+  app2.patch("/api/admin/books/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const bookId = req.params.id;
+      const { categories: categories2, ...updates } = req.body;
+      const book = await storage.updateBook(bookId, updates, categories2);
+      res.json(book);
+    } catch (error) {
+      console.error("Error updating book:", error);
+      res.status(500).json({ message: "Failed to update book" });
+    }
+  });
+  app2.patch("/api/admin/books/bulk", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { bookIds, updates } = req.body;
+      await storage.bulkUpdateBooks(bookIds, updates);
+      res.json({ message: "Books updated successfully" });
+    } catch (error) {
+      console.error("Error bulk updating books:", error);
+      res.status(500).json({ message: "Failed to update books" });
+    }
+  });
+  app2.patch("/api/admin/books/:id/featured", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isFeatured } = req.body;
+      const book = await storage.toggleFeatured(id, isFeatured);
+      res.json(book);
+    } catch (error) {
+      console.error("Error toggling featured status:", error);
+      res.status(500).json({ message: "Failed to toggle featured status" });
+    }
+  });
+  app2.delete("/api/admin/books/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const bookId = req.params.id;
+      const result = await storage.deleteBook(bookId);
+      if (result.book) {
+        const deleteFileIfExists = (filePath) => {
+          try {
+            const fullPath = path3.join(process.cwd(), filePath.startsWith("/") ? filePath.substring(1) : filePath);
+            if (fs.existsSync(fullPath)) {
+              fs.unlinkSync(fullPath);
+              console.log(`Deleted file: ${fullPath}`);
+            }
+          } catch (error) {
+            console.error(`Failed to delete file ${filePath}:`, error);
+          }
+        };
+        if (result.book.coverImageUrl) {
+          deleteFileIfExists(result.book.coverImageUrl);
+        }
+        if (result.book.pdfUrl) {
+          deleteFileIfExists(result.book.pdfUrl);
+        }
+      }
+      res.json({
+        message: "Book deleted successfully",
+        deletedBook: result.book,
+        filesDeleted: result.filesDeleted
+      });
+    } catch (error) {
+      console.error("Error deleting book:", error);
+      res.status(500).json({ message: "Failed to delete book" });
+    }
+  });
+  app2.delete("/api/admin/books/bulk", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { bookIds } = req.body;
+      if (!bookIds || !Array.isArray(bookIds) || bookIds.length === 0) {
+        return res.status(400).json({ message: "No book IDs provided" });
+      }
+      const result = await storage.deleteMultipleBooks(bookIds);
+      const deleteFileIfExists = (filePath) => {
+        try {
+          const fullPath = path3.join(process.cwd(), filePath.startsWith("/") ? filePath.substring(1) : filePath);
+          if (fs.existsSync(fullPath)) {
+            fs.unlinkSync(fullPath);
+            console.log(`Deleted file: ${fullPath}`);
+          }
+        } catch (error) {
+          console.error(`Failed to delete file ${filePath}:`, error);
+        }
+      };
+      result.deletedBooks.forEach((book) => {
+        if (book) {
+          if (book.coverImageUrl) {
+            deleteFileIfExists(book.coverImageUrl);
+          }
+          if (book.pdfUrl) {
+            deleteFileIfExists(book.pdfUrl);
+          }
+        }
+      });
+      res.json({
+        message: `Successfully deleted ${result.totalDeleted} book(s)`,
+        totalDeleted: result.totalDeleted,
+        deletedBooks: result.deletedBooks.filter((book) => book !== void 0)
+      });
+    } catch (error) {
+      console.error("Error bulk deleting books:", error);
+      res.status(500).json({ message: "Failed to delete books" });
+    }
+  });
+  app2.get("/api/admin/abuse-stats", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const stats = await antiAbuseService.getAbuseStatistics();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching abuse statistics:", error);
+      res.status(500).json({ message: "Failed to fetch abuse statistics" });
+    }
+  });
+  app2.post("/api/admin/cleanup-abuse-records", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await antiAbuseService.cleanupOldRecords();
+      res.json({ message: "Old abuse records cleaned up successfully" });
+    } catch (error) {
+      console.error("Error cleaning up abuse records:", error);
+      res.status(500).json({ message: "Failed to cleanup abuse records" });
+    }
+  });
+  app2.get("/api/admin/users", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { search } = req.query;
+      let users2;
+      if (search) {
+        users2 = await storage.searchUsers(search);
+      } else {
+        users2 = await storage.getAllUsers();
+      }
+      res.json(users2);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+  app2.post("/api/admin/users", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { firstName, lastName, email, password, role, subscriptionTier, subscriptionStatus, isActive } = req.body;
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+      const userData = {
+        id: `manual_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        email,
+        firstName,
+        lastName,
+        role: role || "user",
+        subscriptionTier: subscriptionTier || "free",
+        subscriptionStatus: subscriptionStatus || "active",
+        isActive: isActive !== void 0 ? isActive : true,
+        profileImageUrl: null,
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        booksReadThisMonth: 0,
+        lastLoginAt: null,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date()
+      };
+      const user = await storage.createManualUser(userData);
+      res.json(user);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+  app2.patch("/api/admin/users/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const user = await storage.updateUser(id, updates);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+  app2.delete("/api/admin/users/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const currentUserId = req.user?.claims?.sub;
+      if (id === currentUserId) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      await storage.deleteUser(id);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+  app2.patch("/api/admin/users/bulk", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userIds, updates } = req.body;
+      const currentUserId = req.user?.claims?.sub;
+      if (updates.role && userIds.includes(currentUserId)) {
+        return res.status(400).json({ message: "Cannot modify your own role" });
+      }
+      await storage.bulkUpdateUsers(userIds, updates);
+      res.json({ message: "Users updated successfully" });
+    } catch (error) {
+      console.error("Error bulk updating users:", error);
+      res.status(500).json({ message: "Failed to update users" });
+    }
+  });
+  app2.delete("/api/admin/users/bulk", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userIds } = req.body;
+      const currentUserId = req.user?.claims?.sub;
+      if (userIds.includes(currentUserId)) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      await storage.bulkDeleteUsers(userIds);
+      res.json({ message: "Users deleted successfully" });
+    } catch (error) {
+      console.error("Error bulk deleting users:", error);
+      res.status(500).json({ message: "Failed to delete users" });
+    }
+  });
+  app2.post("/api/admin/users/:id/reset-password", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { newPassword, sendEmail } = req.body;
+      const result = await storage.resetUserPassword(id, newPassword);
+      if (sendEmail) {
+        console.log(`Password reset for user ${id}. Temp password: ${result.tempPassword}`);
+      }
+      res.json({
+        message: "Password reset successfully",
+        tempPassword: result.tempPassword
+      });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+  app2.patch("/api/admin/users/:id/role", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+      const currentUserId = req.user?.claims?.sub;
+      if (id === currentUserId) {
+        return res.status(400).json({ message: "Cannot modify your own role" });
+      }
+      const user = await storage.updateUserRole(id, role);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+  app2.patch("/api/admin/users/:id/status", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isActive } = req.body;
+      const user = await storage.toggleUserStatus(id, isActive);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      res.status(500).json({ message: "Failed to update user status" });
+    }
+  });
+  app2.get("/api/admin/user-analytics", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const analytics = await storage.getUserAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching user analytics:", error);
+      res.status(500).json({ message: "Failed to fetch user analytics" });
+    }
+  });
+  app2.post("/api/create-subscription", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { tier } = req.body;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      if (user.stripeSubscriptionId) {
+        const subscription2 = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+        if (subscription2.status === "active") {
+          const latestInvoice2 = subscription2.latest_invoice;
+          const paymentIntent2 = latestInvoice2?.payment_intent;
+          return res.json({
+            subscriptionId: subscription2.id,
+            clientSecret: paymentIntent2?.client_secret
+          });
+        }
+      }
+      if (!user.email) {
+        throw new Error("No user email on file");
+      }
+      let customer;
+      if (user.stripeCustomerId) {
+        customer = await stripe.customers.retrieve(user.stripeCustomerId);
+      } else {
+        customer = await stripe.customers.create({
+          email: user.email,
+          name: `${user.firstName || ""} ${user.lastName || ""}`.trim()
+        });
+        await storage.updateUserStripeInfo(userId, customer.id, "");
+      }
+      const tierConfig = {
+        basic: { amount: 599, name: "Basic Plan" },
+        // £5.99
+        premium: { amount: 999, name: "Premium Plan" }
+        // £9.99
+      };
+      if (tier === "free") {
+        await storage.updateUserSubscription(userId, "free", "active");
+        return res.json({ message: "Free trial activated" });
+      }
+      const config = tierConfig[tier];
+      if (!config) {
+        return res.status(400).json({ error: { message: "Invalid tier" } });
+      }
+      const products = await stripe.products.list({
+        limit: 100
+      });
+      let product = products.data.find((p) => p.name === config.name);
+      if (!product) {
+        product = await stripe.products.create({
+          name: config.name,
+          description: `Wonderful Books ${config.name}`
+        });
+      }
+      const prices = await stripe.prices.list({
+        product: product.id,
+        limit: 100
+      });
+      let price = prices.data.find((p) => p.unit_amount === config.amount && p.currency === "gbp");
+      if (!price) {
+        price = await stripe.prices.create({
+          product: product.id,
+          unit_amount: config.amount,
+          currency: "gbp",
+          recurring: { interval: "month" }
+        });
+      }
+      const subscription = await stripe.subscriptions.create({
+        customer: customer.id,
+        items: [{
+          price: price.id
+        }],
+        payment_behavior: "default_incomplete",
+        expand: ["latest_invoice.payment_intent"]
+      });
+      await storage.updateUserStripeInfo(userId, customer.id, subscription.id);
+      await storage.updateUserSubscription(userId, tier, "pending");
+      const latestInvoice = subscription.latest_invoice;
+      const paymentIntent = latestInvoice?.payment_intent;
+      res.json({
+        subscriptionId: subscription.id,
+        clientSecret: paymentIntent?.client_secret
+      });
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      res.status(400).json({ error: { message: error.message } });
+    }
+  });
+  app2.post("/api/stripe-webhook", async (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!sig || !webhookSecret) {
+      return res.status(400).send("Missing signature or webhook secret");
+    }
+    try {
+      const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      switch (event.type) {
+        case "customer.subscription.updated":
+        case "customer.subscription.created":
+          const subscription = event.data.object;
+          const customer = await stripe.customers.retrieve(subscription.customer);
+          if (customer.deleted) break;
+          const user = await storage.getUserByEmail(customer.email);
+          if (!user) break;
+          const status = subscription.status === "active" ? "active" : "inactive";
+          const tier = subscription.items.data[0]?.price?.unit_amount === 599 ? "basic" : "premium";
+          await storage.updateUserSubscription(user.id, tier, status);
+          if (subscription.status === "active" && event.type === "customer.subscription.created") {
+            try {
+              const { emailScheduler: emailScheduler2 } = await Promise.resolve().then(() => (init_emailScheduler(), emailScheduler_exports));
+              const planName = tier === "basic" ? "Basic Plan" : "Premium Plan";
+              const planPrice = tier === "basic" ? "\xA35.99/month" : "\xA39.99/month";
+              await emailScheduler2.sendConversionEmail(user.id, planName, planPrice);
+            } catch (error) {
+              console.error("Failed to send conversion email:", error);
+            }
+          }
+          break;
+        case "customer.subscription.deleted":
+          const cancelledSubscription = event.data.object;
+          const cancelledCustomer = await stripe.customers.retrieve(cancelledSubscription.customer);
+          if (cancelledCustomer.deleted) break;
+          const cancelledUser = await storage.getUserByEmail(cancelledCustomer.email);
+          if (!cancelledUser) break;
+          await storage.updateUserSubscription(cancelledUser.id, "free", "cancelled");
+          try {
+            const { emailScheduler: emailScheduler2 } = await Promise.resolve().then(() => (init_emailScheduler(), emailScheduler_exports));
+            const previousTier = cancelledUser.subscriptionTier === "basic" ? "Basic Plan" : "Premium Plan";
+            const endDate = new Date(cancelledSubscription.current_period_end * 1e3).toLocaleDateString();
+            await emailScheduler2.sendCancellationEmail(cancelledUser.id, previousTier, endDate);
+          } catch (error) {
+            console.error("Failed to send cancellation email:", error);
+          }
+          break;
+        case "invoice.payment_succeeded":
+          break;
+        case "invoice.payment_failed":
+          break;
+      }
+      res.json({ received: true });
+    } catch (error) {
+      console.error("Webhook error:", error.message);
+      res.status(400).send(`Webhook Error: ${error.message}`);
+    }
+  });
+  app2.post("/api/pdf-token/:bookId", isAuthenticated, async (req, res) => {
+    try {
+      const { bookId } = req.params;
+      const userId = req.user?.claims?.sub || req.user?.id;
+      console.log("PDF token request - User object:", req.user);
+      console.log("PDF token request - Session:", req.session?.user);
+      console.log("PDF token request - User ID:", userId, "Book:", bookId);
+      if (!userId) {
+        console.log("No user ID found in request");
+        return res.status(401).json({ message: "User ID not found" });
+      }
+      const book = await storage.getBook(bookId);
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      const userTier = user?.subscriptionTier || "free";
+      const canAccess = checkBookAccess(userTier, book.requiredTier || "free");
+      if (!canAccess) {
+        return res.status(403).json({
+          message: `This book requires ${book.requiredTier} subscription. Your current tier: ${userTier}`,
+          requiredTier: book.requiredTier,
+          currentTier: userTier
+        });
+      }
+      const token = `${userId}-${bookId}-${Date.now()}`;
+      const tokenKey = `pdf_token_${token}`;
+      if (!global.pdfTokens) global.pdfTokens = /* @__PURE__ */ new Map();
+      const expiryTime = Date.now() + 5 * 60 * 1e3;
+      global.pdfTokens.set(tokenKey, { userId, bookId, expires: expiryTime });
+      console.log(`Generated PDF token ${tokenKey} for book ${bookId}, expires: ${new Date(expiryTime)}`);
+      res.json({ token });
+    } catch (error) {
+      console.error("Error generating PDF token:", error);
+      res.status(500).json({ message: "Failed to generate access token" });
+    }
+  });
+  app2.get("/api/stream/:bookId", isAuthenticated, async (req, res) => {
+    try {
+      const { bookId } = req.params;
+      const userId = req.user.claims.sub;
+      const book = await storage.getBook(bookId);
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      const userTier = user?.subscriptionTier || "free";
+      const canAccess = checkBookAccess(userTier, book.requiredTier || "free");
+      if (!canAccess) {
+        return res.status(403).json({
+          message: `This book requires ${book.requiredTier} subscription. Your current tier: ${userTier}`,
+          requiredTier: book.requiredTier,
+          currentTier: userTier
+        });
+      }
+      if (!book.pdfUrl) {
+        return res.status(404).json({ message: "PDF file not available for this book" });
+      }
+      if (book.pdfUrl.startsWith("/uploads/")) {
+        const filePath = path3.join(process.cwd(), book.pdfUrl.substring(1));
+        if (!fs.existsSync(filePath)) {
+          console.error("PDF file not found:", filePath);
+          return res.status(404).json({ message: "PDF file not found" });
+        }
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Cache-Control", "private, max-age=3600");
+        res.setHeader("Content-Disposition", "inline");
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        return;
+      }
+      try {
+        const response = await fetch(book.pdfUrl);
+        if (!response.ok) {
+          console.error("Failed to fetch PDF from URL:", book.pdfUrl, response.status);
+          return res.status(404).json({ message: "PDF file not accessible" });
+        }
+        const pdfBuffer = await response.arrayBuffer();
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Cache-Control", "private, max-age=3600");
+        res.setHeader("Content-Disposition", "inline");
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.send(Buffer.from(pdfBuffer));
+      } catch (error) {
+        console.error("Error fetching PDF from URL:", error);
+        return res.status(500).json({ message: "Failed to load PDF file" });
+      }
+    } catch (error) {
+      console.error("Error streaming PDF:", error);
+      res.status(500).json({ message: "Failed to stream PDF" });
+    }
+  });
+  app2.get("/api/stream-token/:token/:bookId", async (req, res) => {
+    try {
+      const { token, bookId } = req.params;
+      const tokenKey = `pdf_token_${token}`;
+      if (!global.pdfTokens) global.pdfTokens = /* @__PURE__ */ new Map();
+      const tokenData = global.pdfTokens.get(tokenKey);
+      if (!tokenData) {
+        console.log(`Token not found: ${tokenKey}`);
+        return res.status(401).json({ message: "Token not found" });
+      }
+      if (tokenData.expires < Date.now()) {
+        console.log(`Token expired: ${tokenKey}, expired ${new Date(tokenData.expires)}`);
+        global.pdfTokens.delete(tokenKey);
+        return res.status(401).json({ message: "Token expired" });
+      }
+      if (tokenData.bookId !== bookId) {
+        console.log(`Token book mismatch: expected ${bookId}, got ${tokenData.bookId}`);
+        return res.status(401).json({ message: "Token book mismatch" });
+      }
+      const book = await storage.getBook(bookId);
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+      if (!book.pdfUrl) {
+        return res.status(404).json({ message: "PDF file not available for this book" });
+      }
+      if (book.pdfUrl.startsWith("/uploads/")) {
+        const filePath = path3.join(process.cwd(), book.pdfUrl.substring(1));
+        if (!fs.existsSync(filePath)) {
+          console.error("PDF file not found:", filePath);
+          return res.status(404).json({ message: "PDF file not found" });
+        }
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Cache-Control", "private, max-age=3600");
+        res.setHeader("Content-Disposition", "inline");
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "GET");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        console.log(`PDF token ${tokenKey} used successfully for book ${bookId}`);
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        return;
+      }
+      try {
+        const response = await fetch(book.pdfUrl);
+        if (!response.ok) {
+          console.error("Failed to fetch PDF from URL:", book.pdfUrl, response.status);
+          return res.status(404).json({ message: "PDF file not accessible" });
+        }
+        const pdfBuffer = await response.arrayBuffer();
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Cache-Control", "private, max-age=3600");
+        res.setHeader("Content-Disposition", "inline");
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "GET");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        console.log(`PDF token ${tokenKey} used successfully for book ${bookId}`);
+        res.send(Buffer.from(pdfBuffer));
+      } catch (error) {
+        console.error("Error fetching PDF from URL:", error);
+        return res.status(500).json({ message: "Failed to load PDF file" });
+      }
+    } catch (error) {
+      console.error("Error streaming PDF with token:", error);
+      res.status(500).json({ message: "Failed to stream PDF" });
+    }
+  });
+  app2.get("/api/admin/categories", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const categories2 = await storage.getAllCategories();
+      res.json(categories2);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+  app2.post("/api/admin/categories", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validatedData = insertCategorySchema.parse(req.body);
+      const category = await storage.createCategory(validatedData);
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      if (error instanceof z2.ZodError) {
+        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+  app2.put("/api/admin/categories/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const updates = insertCategorySchema.partial().parse(req.body);
+      const category = await storage.updateCategory(req.params.id, updates);
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      if (error instanceof z2.ZodError) {
+        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+  app2.delete("/api/admin/categories/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteCategory(req.params.id);
+      res.json({ message: "Category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+  app2.get("/api/categories", async (req, res) => {
+    try {
+      const categories2 = await storage.getActiveCategories();
+      res.json(categories2);
+    } catch (error) {
+      console.error("Error fetching active categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+  app2.get("/api/user/selected-books", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { bookSelectionService: bookSelectionService2 } = await Promise.resolve().then(() => (init_bookSelectionService(), bookSelectionService_exports));
+      const selectedBooks = await bookSelectionService2.getUserSelectedBooks(userId);
+      res.json(selectedBooks);
+    } catch (error) {
+      console.error("Error fetching selected books:", error);
+      res.status(500).json({ message: "Failed to fetch selected books" });
+    }
+  });
+  app2.get("/api/user/can-select-books", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { bookSelectionService: bookSelectionService2 } = await Promise.resolve().then(() => (init_bookSelectionService(), bookSelectionService_exports));
+      const canSelect = await bookSelectionService2.canSelectMoreBooks(userId);
+      res.json(canSelect);
+    } catch (error) {
+      console.error("Error checking book selection availability:", error);
+      res.status(500).json({ message: "Failed to check book selection" });
+    }
+  });
+  app2.post("/api/user/select-book", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { bookId } = req.body;
+      if (!bookId) {
+        return res.status(400).json({ message: "Book ID is required" });
+      }
+      const { bookSelectionService: bookSelectionService2 } = await Promise.resolve().then(() => (init_bookSelectionService(), bookSelectionService_exports));
+      const result = await bookSelectionService2.selectBook(userId, bookId);
+      if (result.success) {
+        res.json({ message: result.message });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error("Error selecting book:", error);
+      res.status(500).json({ message: "Failed to select book" });
+    }
+  });
+  app2.get("/api/user/book-access/:bookId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { bookId } = req.params;
+      const { bookSelectionService: bookSelectionService2 } = await Promise.resolve().then(() => (init_bookSelectionService(), bookSelectionService_exports));
+      const hasAccess = await bookSelectionService2.hasBookAccess(userId, bookId);
+      res.json({ hasAccess });
+    } catch (error) {
+      console.error("Error checking book access:", error);
+      res.status(500).json({ message: "Failed to check book access" });
+    }
+  });
+  app2.get("/api/user/available-books", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { bookSelectionService: bookSelectionService2 } = await Promise.resolve().then(() => (init_bookSelectionService(), bookSelectionService_exports));
+      const availableBooks = await bookSelectionService2.getAvailableBooksForSelection(userId);
+      res.json(availableBooks);
+    } catch (error) {
+      console.error("Error fetching available books:", error);
+      res.status(500).json({ message: "Failed to fetch available books" });
+    }
+  });
+  app2.post("/api/admin/reset-user-books/:userId", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { bookSelectionService: bookSelectionService2 } = await Promise.resolve().then(() => (init_bookSelectionService(), bookSelectionService_exports));
+      await bookSelectionService2.resetBasicUserBooks(userId);
+      res.json({ message: "User books reset successfully" });
+    } catch (error) {
+      console.error("Error resetting user books:", error);
+      res.status(500).json({ message: "Failed to reset user books" });
+    }
+  });
+  app2.post("/api/admin/cleanup-expired", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { bookSelectionService: bookSelectionService2 } = await Promise.resolve().then(() => (init_bookSelectionService(), bookSelectionService_exports));
+      await bookSelectionService2.expireOldSelections();
+      res.json({ message: "Expired selections cleaned up successfully" });
+    } catch (error) {
+      console.error("Error cleaning up expired selections:", error);
+      res.status(500).json({ message: "Failed to cleanup expired selections" });
+    }
+  });
+  app2.get("/unsubscribe", async (req, res) => {
+    try {
+      const { token } = req.query;
+      if (!token) {
+        return res.status(400).send(`
+          <html>
+            <head><title>Invalid Unsubscribe Link</title></head>
+            <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+              <h1>Invalid Unsubscribe Link</h1>
+              <p>The unsubscribe link is invalid or has expired.</p>
+            </body>
+          </html>
+        `);
+      }
+      const preferences = await storage.findEmailPreferencesByToken(token);
+      if (!preferences) {
+        return res.status(404).send(`
+          <html>
+            <head><title>Unsubscribe Link Not Found</title></head>
+            <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+              <h1>Link Not Found</h1>
+              <p>This unsubscribe link was not found or has already been used.</p>
+            </body>
+          </html>
+        `);
+      }
+      await storage.updateEmailPreferences(preferences.userId, {
+        isUnsubscribedAll: true,
+        unsubscribedAt: /* @__PURE__ */ new Date()
+      });
+      res.send(`
+        <html>
+          <head>
+            <title>Successfully Unsubscribed - Wonderful Books</title>
+            <style>
+              body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f8f9fa; }
+              .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .success { color: #28a745; font-size: 48px; margin-bottom: 20px; }
+              h1 { color: #333; margin-bottom: 20px; }
+              p { color: #666; line-height: 1.6; margin-bottom: 15px; }
+              .brand { color: #ff6600; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="success">\u2705</div>
+              <h1>Successfully Unsubscribed</h1>
+              <p>You have been unsubscribed from all <span class="brand">Wonderful Books</span> emails.</p>
+              <p>We're sorry to see you go! If you change your mind, you can update your email preferences in your account settings.</p>
+              <p>Thank you for being part of our reading community.</p>
+            </div>
+          </body>
+        </html>
+      `);
+    } catch (error) {
+      console.error("Error processing unsubscribe:", error);
+      res.status(500).send(`
+        <html>
+          <head><title>Error</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1>Error</h1>
+            <p>An error occurred while processing your request. Please try again later.</p>
+          </body>
+        </html>
+      `);
+    }
+  });
+  app2.get("/api/email-preferences", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const preferences = await storage.getEmailPreferences(userId, req.user.email);
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error fetching email preferences:", error);
+      res.status(500).json({ message: "Failed to fetch email preferences" });
+    }
+  });
+  app2.put("/api/email-preferences", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const updates = req.body;
+      const validKeys = ["marketingEmails", "trialReminders", "subscriptionUpdates", "isUnsubscribedAll"];
+      const filteredUpdates = Object.keys(updates).filter((key) => validKeys.includes(key)).reduce((obj, key) => {
+        obj[key] = updates[key];
+        return obj;
+      }, {});
+      await storage.updateEmailPreferences(userId, filteredUpdates);
+      res.json({ message: "Email preferences updated successfully" });
+    } catch (error) {
+      console.error("Error updating email preferences:", error);
+      res.status(500).json({ message: "Failed to update email preferences" });
+    }
+  });
+  app2.get("/api/admin/email-scheduler/status", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { emailScheduler: emailScheduler2 } = await Promise.resolve().then(() => (init_emailScheduler(), emailScheduler_exports));
+      const status = emailScheduler2.getStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("Error getting email scheduler status:", error);
+      res.status(500).json({ message: "Failed to get scheduler status" });
+    }
+  });
+  app2.post("/api/admin/email-scheduler/trigger-trial-reminder", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { daysFromNow } = req.body;
+      if (!daysFromNow || ![1, 3].includes(parseInt(daysFromNow))) {
+        return res.status(400).json({ message: "daysFromNow must be 1 or 3" });
+      }
+      const { emailScheduler: emailScheduler2 } = await Promise.resolve().then(() => (init_emailScheduler(), emailScheduler_exports));
+      const results = await emailScheduler2.triggerTrialReminderManually(parseInt(daysFromNow));
+      res.json({
+        message: `Trial reminder campaign completed`,
+        results
+      });
+    } catch (error) {
+      console.error("Error triggering trial reminder:", error);
+      res.status(500).json({ message: "Failed to trigger trial reminder" });
+    }
+  });
+  app2.get("/api/admin/email-logs", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { limit = 50, offset = 0, status, emailType } = req.query;
+      const logs = await storage.getEmailLogs({
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        status,
+        emailType
+      });
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching email logs:", error);
+      res.status(500).json({ message: "Failed to fetch email logs" });
+    }
+  });
+  app2.get("/api/admin/email-preview/:templateType", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { templateType } = req.params;
+      const { firstName = "John", lastName = "Doe", email = "preview@example.com" } = req.query;
+      const { emailService: emailService2 } = await Promise.resolve().then(() => (init_emailService(), emailService_exports));
+      const preview = await emailService2.generateEmailPreview(templateType, {
+        firstName,
+        lastName,
+        email
+      });
+      const format = req.query.format === "text" ? "text" : "html";
+      res.setHeader("Content-Type", format === "html" ? "text/html" : "text/plain");
+      res.send(preview[format]);
+    } catch (error) {
+      console.error("Error generating email preview:", error);
+      res.status(500).json({ message: "Failed to generate email preview" });
+    }
+  });
+  registerSEORoutes(app2);
+  const httpServer = createServer(app2);
+  return httpServer;
+}
+function checkBookAccess(userTier, requiredTier) {
+  const tierHierarchy = {
+    "free": 0,
+    "basic": 1,
+    "premium": 2
+  };
+  const userLevel = tierHierarchy[userTier] ?? 0;
+  const requiredLevel = tierHierarchy[requiredTier] ?? 0;
+  return userLevel >= requiredLevel;
+}
+
+// server/vite.ts
+import express from "express";
+import fs2 from "fs";
+import path5 from "path";
+import { createServer as createViteServer, createLogger } from "vite";
+
+// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path4 from "path";
+import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+var vite_config_default = defineConfig({
+  plugins: [
+    react(),
+    runtimeErrorOverlay(),
+    ...process.env.NODE_ENV !== "production" && process.env.REPL_ID !== void 0 ? [
+      await import("@replit/vite-plugin-cartographer").then(
+        (m) => m.cartographer()
+      )
+    ] : []
+  ],
+  resolve: {
+    alias: {
+      "@": path4.resolve(import.meta.dirname, "client", "src"),
+      "@shared": path4.resolve(import.meta.dirname, "shared"),
+      "@assets": path4.resolve(import.meta.dirname, "attached_assets")
+    }
+  },
+  root: path4.resolve(import.meta.dirname, "client"),
+  build: {
+    outDir: path4.resolve(import.meta.dirname, "dist/public"),
+    emptyOutDir: true
+  },
+  server: {
+    fs: {
+      strict: true,
+      deny: ["**/.*"]
+    }
+  }
+});
+
+// server/vite.ts
+import { nanoid as nanoid2 } from "nanoid";
+var viteLogger = createLogger();
+function log(message, source = "express") {
+  const formattedTime = (/* @__PURE__ */ new Date()).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
+async function setupVite(app2, server) {
+  const serverOptions = {
+    middlewareMode: true,
+    hmr: { server },
+    allowedHosts: true
+  };
+  const vite = await createViteServer({
+    ...vite_config_default,
+    configFile: false,
+    customLogger: {
+      ...viteLogger,
+      error: (msg, options) => {
+        viteLogger.error(msg, options);
+        process.exit(1);
+      }
+    },
+    server: serverOptions,
+    appType: "custom"
+  });
+  app2.use(vite.middlewares);
+  app2.use("*", async (req, res, next) => {
+    const url = req.originalUrl;
+    try {
+      const clientTemplate = path5.resolve(
+        import.meta.dirname,
+        "..",
+        "client",
+        "index.html"
+      );
+      let template = await fs2.promises.readFile(clientTemplate, "utf-8");
+      template = template.replace(
+        `src="/src/main.tsx"`,
+        `src="/src/main.tsx?v=${nanoid2()}"`
+      );
+      const page = await vite.transformIndexHtml(url, template);
+      res.status(200).set({ "Content-Type": "text/html" }).end(page);
+    } catch (e) {
+      vite.ssrFixStacktrace(e);
+      next(e);
+    }
+  });
+}
+function serveStatic(app2) {
+  const distPath = path5.resolve(import.meta.dirname, "public");
+  if (!fs2.existsSync(distPath)) {
+    throw new Error(
+      `Could not find the build directory: ${distPath}, make sure to build the client first`
+    );
+  }
+  app2.use(express.static(distPath));
+  app2.use("*", (_req, res) => {
+    res.sendFile(path5.resolve(distPath, "index.html"));
+  });
+}
+
+// server/index.ts
+var app = express2();
+app.use(express2.json());
+app.use(express2.urlencoded({ extended: false }));
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path6 = req.path;
+  let capturedJsonResponse = void 0;
+  const originalResJson = res.json;
+  res.json = function(bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (path6.startsWith("/api")) {
+      let logLine = `${req.method} ${path6} ${res.statusCode} in ${duration}ms`;
+      if (capturedJsonResponse) {
+        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      }
+      if (logLine.length > 80) {
+        logLine = logLine.slice(0, 79) + "\u2026";
+      }
+      log(logLine);
+    }
+  });
+  next();
+});
+(async () => {
+  const server = await registerRoutes(app);
+  try {
+    const { emailScheduler: emailScheduler2 } = await Promise.resolve().then(() => (init_emailScheduler(), emailScheduler_exports));
+    await emailScheduler2.initialize();
+  } catch (error) {
+    console.error("Failed to initialize email scheduler:", error);
+  }
+  app.use((err, _req, res, _next) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    res.status(status).json({ message });
+    throw err;
+  });
+  if (app.get("env") === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
+  const port = parseInt(process.env.PORT || "5000", 10);
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true
+  }, () => {
+    log(`serving on port ${port}`);
+  });
+})();
