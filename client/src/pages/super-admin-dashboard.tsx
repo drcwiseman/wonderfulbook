@@ -68,12 +68,29 @@ export default function SuperAdminDashboard() {
 
   // Users query
   const { data: usersData, isLoading: usersLoading } = useQuery<UsersResponse>({
-    queryKey: ['/api/super-admin/users', { page: userPage, search: userSearch, role: roleFilter === 'all' ? '' : roleFilter }],
+    queryKey: ['/api/super-admin/users', userPage, userSearch, roleFilter],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      params.append('page', userPage.toString());
+      params.append('limit', '20');
+      if (userSearch) params.append('search', userSearch);
+      if (roleFilter && roleFilter !== 'all') params.append('role', roleFilter);
+      
+      return fetch(`/api/super-admin/users?${params}`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(res => {
+        if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+        return res.json();
+      });
+    },
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
   // Audit logs query
-  const { data: auditLogs, isLoading: auditLoading } = useQuery({
+  const { data: auditLogs, isLoading: auditLoading } = useQuery<{ logs: any[]; total: number; page: number; totalPages: number }>({
     queryKey: ['/api/super-admin/audit-logs'],
     enabled: activeTab === 'audit',
   });
@@ -334,74 +351,88 @@ export default function SuperAdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {usersData?.users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{user.firstName} {user.lastName}</div>
-                            <div className="text-sm text-muted-foreground">{user.email}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getRoleBadgeVariant(user.role)}>
-                            {user.role.replace('_', ' ')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getTierBadgeVariant(user.subscriptionTier)}>
-                            {user.subscriptionTier}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.isActive ? 'default' : 'secondary'}>
-                            {user.isActive ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{formatDate(user.createdAt)}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setNewRole(user.role);
-                                setShowRoleDialog(true);
-                              }}
-                            >
-                              <UserCog className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleStatusToggle(user)}
-                            >
-                              {user.isActive ? <Ban className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setShowPasswordDialog(true);
-                              }}
-                            >
-                              <RotateCcw className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setShowDeleteDialog(true);
-                              }}
-                            >
-                              <AlertCircle className="h-4 w-4" />
-                            </Button>
-                          </div>
+                    {usersLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8">
+                          Loading users...
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : usersData?.users && usersData.users.length > 0 ? (
+                      usersData.users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{user.firstName} {user.lastName}</div>
+                              <div className="text-sm text-muted-foreground">{user.email}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getRoleBadgeVariant(user.role)}>
+                              {user.role.replace('_', ' ')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getTierBadgeVariant(user.subscriptionTier)}>
+                              {user.subscriptionTier}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={user.isActive ? 'default' : 'secondary'}>
+                              {user.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{formatDate(user.createdAt)}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setNewRole(user.role);
+                                  setShowRoleDialog(true);
+                                }}
+                              >
+                                <UserCog className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleStatusToggle(user)}
+                              >
+                                {user.isActive ? <Ban className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setShowPasswordDialog(true);
+                                }}
+                              >
+                                <RotateCcw className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setShowDeleteDialog(true);
+                                }}
+                              >
+                                <AlertCircle className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          No users found matching your criteria.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
