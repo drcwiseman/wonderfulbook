@@ -3,16 +3,16 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { db } from "./db";
-import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, feedback } from "@shared/schema";
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, feedback, feedbackComments, insertFeedbackSchema, insertFeedbackCommentSchema, users } from "@shared/schema";
 import { insertBookSchema, insertCategorySchema } from "@shared/schema";
 import { z } from "zod";
-import { sql, eq } from "drizzle-orm";
+import { sql, eq, desc, and } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
-import { registerSEORoutes } from "./routes-seo";
+
 import { antiAbuseService } from "./antiAbuseService";
 
 import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth';
@@ -2325,7 +2325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Register SEO routes
-  registerSEORoutes(app);
+
 
   // ===== SOCIAL READING CHALLENGES ROUTES =====
 
@@ -2565,9 +2565,344 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Register feedback routes
-  const { registerFeedbackRoutes } = await import("./routes-feedback");
-  registerFeedbackRoutes(app);
+  // ============================================================================
+  // FEEDBACK MANAGEMENT ROUTES
+  // ============================================================================
+  
+  // Submit new feedback (public endpoint - no auth required)
+  app.post('/api/feedback', async (req, res) => {
+    try {
+      // Validate the input
+      const validatedData = insertFeedbackSchema.parse({
+        ...req.body,
+        userId: (req.session as any)?.user?.id || null, // Optional user ID from session
+        status: 'open', // Default status for new feedback
+      });
+
+      // Insert feedback into database
+      const [newFeedback] = await db
+        .insert(feedback)
+        .values(validatedData)
+        .returning();
+
+      res.status(201).json({
+        success: true,
+        feedback: newFeedback,
+        message: "Feedback submitted successfully"
+      });
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          error: "Validation error",
+          details: error.errors
+        });
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Failed to submit feedback"
+      });
+    }
+  });
+
+  // Get all feedback (temporarily public for testing)
+  app.get('/api/feedback', async (req, res) => {
+    try {
+      const { status, type, priority, page = 1, limit = 50 } = req.query;
+      const offset = (Number(page) - 1) * Number(limit);
+
+      // Build where conditions
+      const whereConditions = [];
+      if (status) whereConditions.push(eq(feedback.status, status as string));
+      if (type) whereConditions.push(eq(feedback.type, type as string));
+      if (priority) whereConditions.push(eq(feedback.priority, priority as string));
+
+      // Get feedback with user information
+      const feedbackList = await db
+        .select({
+          feedback: feedback,
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          }
+        })
+        .from(feedback)
+        .leftJoin(users, eq(feedback.userId, users.id))
+        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+        .orderBy(desc(feedback.createdAt))
+        .limit(Number(limit))
+        .offset(offset);
+
+      // Get total count
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(feedback)
+        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
+
+      res.json({
+        success: true,
+        feedback: feedbackList,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: count,
+          pages: Math.ceil(count / Number(limit))
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch feedback"
+      });
+    }
+  });
+
+  // Get single feedback with comments (admin only)
+  app.get('/api/feedback/:id', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Get feedback with user info
+      const [feedbackItem] = await db
+        .select({
+          feedback: feedback,
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          }
+        })
+        .from(feedback)
+        .leftJoin(users, eq(feedback.userId, users.id))
+        .where(eq(feedback.id, id));
+
+      if (!feedbackItem) {
+        return res.status(404).json({
+          success: false,
+          error: "Feedback not found"
+        });
+      }
+
+      // Get comments
+      const comments = await db
+        .select({
+          comment: feedbackComments,
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          }
+        })
+        .from(feedbackComments)
+        .leftJoin(users, eq(feedbackComments.userId, users.id))
+        .where(eq(feedbackComments.feedbackId, id))
+        .orderBy(feedbackComments.createdAt);
+
+      res.json({
+        success: true,
+        feedback: feedbackItem.feedback,
+        user: feedbackItem.user,
+        comments
+      });
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch feedback"
+      });
+    }
+  });
+
+  // Update feedback status (admin only)
+  app.patch('/api/feedback/:id', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status, adminResponse } = req.body;
+
+      const updateData: any = { updatedAt: new Date() };
+      if (status) updateData.status = status;
+      if (adminResponse) {
+        updateData.adminResponse = adminResponse;
+        updateData.adminResponseBy = (req as any).user.id;
+        updateData.adminResponseAt = new Date();
+      }
+
+      const [updatedFeedback] = await db
+        .update(feedback)
+        .set(updateData)
+        .where(eq(feedback.id, id))
+        .returning();
+
+      if (!updatedFeedback) {
+        return res.status(404).json({
+          success: false,
+          error: "Feedback not found"
+        });
+      }
+
+      res.json({
+        success: true,
+        feedback: updatedFeedback,
+        message: "Feedback updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating feedback:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to update feedback"
+      });
+    }
+  });
+
+  // Add comment to feedback (admin only)
+  app.post('/api/feedback/:id/comments', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertFeedbackCommentSchema.parse({
+        ...req.body,
+        feedbackId: id,
+        userId: (req as any).user.id,
+      });
+
+      const [newComment] = await db
+        .insert(feedbackComments)
+        .values(validatedData)
+        .returning();
+
+      res.status(201).json({
+        success: true,
+        comment: newComment,
+        message: "Comment added successfully"
+      });
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to add comment"
+      });
+    }
+  });
+
+  // ============================================================================
+  // SEO AND SITEMAP ROUTES
+  // ============================================================================
+  
+  // Serve sitemap.xml
+  app.get('/sitemap.xml', (req, res) => {
+    res.set('Content-Type', 'application/xml');
+    res.sendFile(path.join(process.cwd(), 'public', 'sitemap.xml'));
+  });
+  
+  // Serve robots.txt
+  app.get('/robots.txt', (req, res) => {
+    res.set('Content-Type', 'text/plain');
+    res.sendFile(path.join(process.cwd(), 'public', 'robots.txt'));
+  });
+  
+  // Dynamic sitemap generation endpoint (optional)
+  app.get('/api/sitemap', async (req, res) => {
+    try {
+      const books = await storage.getAllBooks();
+      const baseUrl = 'https://wonderful-books.replit.app';
+      
+      let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/bookstore</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/subscribe</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+
+      // Add individual book pages
+      books.forEach(book => {
+        sitemap += `
+  <url>
+    <loc>${baseUrl}/book/${book.id}</loc>
+    <lastmod>${book.updatedAt ? new Date(book.updatedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+      });
+
+      sitemap += `
+</urlset>`;
+
+      res.set('Content-Type', 'application/xml');
+      res.send(sitemap);
+    } catch (error) {
+      console.error('Error generating sitemap:', error);
+      res.status(500).send('Error generating sitemap');
+    }
+  });
+  
+  // JSON-LD structured data endpoint for books
+  app.get('/api/book/:id/structured-data', async (req, res) => {
+    try {
+      const book = await storage.getBook(req.params.id);
+      if (!book) {
+        return res.status(404).json({ error: 'Book not found' });
+      }
+      
+      const structuredData = {
+        "@context": "https://schema.org",
+        "@type": "Book",
+        "name": book.title,
+        "author": {
+          "@type": "Person",
+          "name": book.author
+        },
+        "description": book.description?.replace(/<[^>]*>/g, '').substring(0, 200) + "...",
+        "image": book.coverImageUrl ? `https://wonderful-books.replit.app${book.coverImageUrl}` : undefined,
+        "url": `https://wonderful-books.replit.app/book/${book.id}`,
+        "aggregateRating": book.rating ? {
+          "@type": "AggregateRating",
+          "ratingValue": book.rating,
+          "ratingCount": book.totalRatings || 1
+        } : undefined,
+        "offers": {
+          "@type": "Offer",
+          "price": book.requiredTier === 'premium' ? "19.99" : book.requiredTier === 'basic' ? "9.99" : "0",
+          "priceCurrency": "GBP",
+          "availability": "https://schema.org/InStock",
+          "url": `https://wonderful-books.replit.app/book/${book.id}`
+        },
+        "inLanguage": "en-US",
+        "genre": "Self-help, Business, Personal Development",
+        "publishingPrinciples": "https://wonderful-books.replit.app/publishing-principles",
+        "educationalAlignment": {
+          "@type": "AlignmentObject",
+          "alignmentType": "teaches",
+          "educationalFramework": "Personal Development"
+        }
+      };
+      
+      res.json(structuredData);
+    } catch (error) {
+      console.error('Error generating structured data:', error);
+      res.status(500).json({ error: 'Error generating structured data' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
