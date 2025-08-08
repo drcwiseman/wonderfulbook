@@ -67,7 +67,7 @@ export default function SuperAdminDashboard() {
   });
 
   // Users query
-  const { data: usersData, isLoading: usersLoading } = useQuery<UsersResponse>({
+  const { data: usersData, isLoading: usersLoading, error: usersError } = useQuery<UsersResponse>({
     queryKey: ['/api/super-admin/users', userPage, userSearch, roleFilter],
     queryFn: () => {
       const params = new URLSearchParams();
@@ -84,10 +84,18 @@ export default function SuperAdminDashboard() {
       }).then(res => {
         if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
         return res.json();
+      }).then(data => {
+        console.log('Users API Response:', data);
+        return data;
       });
     },
     refetchInterval: 10000, // Refresh every 10 seconds
   });
+
+  // Debug logging
+  console.log('Users Data:', usersData);
+  console.log('Users Loading:', usersLoading);
+  console.log('Users Error:', usersError);
 
   // Audit logs query
   const { data: auditLogs, isLoading: auditLoading } = useQuery<{ logs: any[]; total: number; page: number; totalPages: number }>({
@@ -355,6 +363,12 @@ export default function SuperAdminDashboard() {
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8">
                           Loading users...
+                        </TableCell>
+                      </TableRow>
+                    ) : usersError ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-red-500">
+                          Error: {usersError.message}
                         </TableCell>
                       </TableRow>
                     ) : usersData?.users && usersData.users.length > 0 ? (
