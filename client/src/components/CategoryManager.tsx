@@ -1,332 +1,311 @@
-import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Save, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import type { Category, InsertCategory } from "@shared/schema";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { apiRequest } from '@/lib/queryClient';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { Plus, Edit3, Trash2, Folder, Tag } from 'lucide-react';
 
-interface EditableCategory extends Partial<Category> {
-  isEditing?: boolean;
-  isNew?: boolean;
+const categorySchema = z.object({
+  name: z.string().min(1, "Category name is required"),
+  description: z.string().optional(),
+});
+
+type CategoryForm = z.infer<typeof categorySchema>;
+
+interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  bookCount: number;
+  createdAt: string;
 }
 
 export function CategoryManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [categories, setCategories] = useState<EditableCategory[]>([]);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+
+  const form = useForm<CategoryForm>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: "",
+      description: "",
+    },
+  });
+
+  const editForm = useForm<CategoryForm>({
+    resolver: zodResolver(categorySchema),
+  });
 
   // Fetch categories
-  const { data: fetchedCategories, isLoading } = useQuery({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ['/api/admin/categories'],
   });
 
-  // Update local state when data changes
-  React.useEffect(() => {
-    if (fetchedCategories) {
-      setCategories(fetchedCategories.map((cat: Category) => ({ ...cat, isEditing: false })));
-    }
-  }, [fetchedCategories]);
-
   // Create category mutation
-  const createMutation = useMutation({
-    mutationFn: async (categoryData: InsertCategory) => {
-      return await apiRequest('POST', '/api/admin/categories', categoryData);
+  const createCategoryMutation = useMutation({
+    mutationFn: async (data: CategoryForm) => {
+      return apiRequest('POST', '/api/admin/categories', data);
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Category created successfully",
-      });
+      toast({ title: 'Success', description: 'Category created successfully' });
+      form.reset();
       queryClient.invalidateQueries({ queryKey: ['/api/admin/categories'] });
     },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create category",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     },
   });
 
   // Update category mutation
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<InsertCategory> }) => {
-      return await apiRequest('PUT', `/api/admin/categories/${id}`, updates);
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: CategoryForm }) => {
+      return apiRequest('PATCH', `/api/admin/categories/${id}`, data);
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Category updated successfully",
-      });
+      toast({ title: 'Success', description: 'Category updated successfully' });
+      setEditingCategory(null);
+      editForm.reset();
       queryClient.invalidateQueries({ queryKey: ['/api/admin/categories'] });
     },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update category",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     },
   });
 
   // Delete category mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest('DELETE', `/api/admin/categories/${id}`);
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      return apiRequest('DELETE', `/api/admin/categories/${categoryId}`);
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Category deleted successfully",
-      });
+      toast({ title: 'Success', description: 'Category deleted successfully' });
+      setDeleteConfirmOpen(false);
+      setCategoryToDelete(null);
       queryClient.invalidateQueries({ queryKey: ['/api/admin/categories'] });
     },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete category",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     },
   });
 
-  const handleAddNew = () => {
-    const newCategory: EditableCategory = {
-      name: "",
-      description: "",
-      isActive: true,
-      isEditing: true,
-      isNew: true,
-    };
-    setCategories([newCategory, ...categories]);
+  const onSubmit = (data: CategoryForm) => {
+    createCategoryMutation.mutate(data);
   };
 
-  const handleEdit = (index: number) => {
-    const updated = [...categories];
-    updated[index] = { ...updated[index], isEditing: true };
-    setCategories(updated);
-  };
-
-  const handleSave = async (index: number) => {
-    const category = categories[index];
-    
-    if (!category.name?.trim()) {
-      toast({
-        title: "Error",
-        description: "Category name is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (category.isNew) {
-      await createMutation.mutateAsync({
-        name: category.name,
-        description: category.description || null,
-        isActive: category.isActive ?? true,
-      });
-    } else if (category.id) {
-      await updateMutation.mutateAsync({
-        id: category.id,
-        updates: {
-          name: category.name,
-          description: category.description || null,
-          isActive: category.isActive,
-        },
-      });
+  const onEditSubmit = (data: CategoryForm) => {
+    if (editingCategory) {
+      updateCategoryMutation.mutate({ id: editingCategory.id, data });
     }
   };
 
-  const handleCancel = (index: number) => {
-    if (categories[index].isNew) {
-      // Remove new category
-      const updated = categories.filter((_, i) => i !== index);
-      setCategories(updated);
-    } else {
-      // Revert changes
-      if (Array.isArray(fetchedCategories)) {
-        const original = fetchedCategories.find((cat: Category) => cat.id === categories[index].id);
-        if (original) {
-          const updated = [...categories];
-          updated[index] = { ...original, isEditing: false };
-          setCategories(updated);
-        }
-      }
-    }
+  const startEdit = (category: Category) => {
+    setEditingCategory(category);
+    editForm.reset({
+      name: category.name,
+      description: category.description || "",
+    });
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this category? This action cannot be undone.")) {
-      await deleteMutation.mutateAsync(id);
-    }
+  const confirmDelete = (category: Category) => {
+    setCategoryToDelete(category);
+    setDeleteConfirmOpen(true);
   };
-
-  const updateCategory = (index: number, field: keyof Category, value: any) => {
-    const updated = [...categories];
-    updated[index] = { ...updated[index], [field]: value };
-    setCategories(updated);
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Category Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Category Management</CardTitle>
-        <Button onClick={handleAddNew} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Add Category
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {categories.map((category, index) => (
-            <div
-              key={category.id || `new-${index}`}
-              className="border rounded-lg p-4 space-y-4"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 space-y-4">
-                  {category.isEditing ? (
-                    <>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor={`name-${index}`}>Category Name</Label>
-                          <Input
-                            id={`name-${index}`}
-                            value={category.name || ""}
-                            onChange={(e) => updateCategory(index, "name", e.target.value)}
-                            placeholder="Enter category name..."
-                            className="w-full"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor={`active-${index}`}>Active Status</Label>
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              id={`active-${index}`}
-                              checked={category.isActive ?? true}
-                              onCheckedChange={(checked) => updateCategory(index, "isActive", checked)}
-                            />
-                            <Label htmlFor={`active-${index}`} className="text-sm">
-                              {category.isActive ? "Active" : "Inactive"}
-                            </Label>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`description-${index}`}>Description</Label>
-                        <Textarea
-                          id={`description-${index}`}
-                          value={category.description || ""}
-                          onChange={(e) => updateCategory(index, "description", e.target.value)}
-                          placeholder="Enter category description..."
-                          rows={3}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-4">
-                        <h3 className="text-lg font-semibold">{category.name}</h3>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            category.isActive
-                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                          }`}
-                        >
-                          {category.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-                      {category.description && (
-                        <p className="text-gray-600 dark:text-gray-400">{category.description}</p>
-                      )}
-                      {category.createdAt && (
-                        <p className="text-sm text-gray-500">
-                          Created: {new Date(category.createdAt).toLocaleDateString()}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-2 ml-4">
-                  {category.isEditing ? (
-                    <>
-                      <Button
-                        onClick={() => handleSave(index)}
-                        disabled={createMutation.isPending || updateMutation.isPending}
-                        size="sm"
-                        className="flex items-center gap-1"
-                      >
-                        <Save className="w-4 h-4" />
-                        Save
-                      </Button>
-                      <Button
-                        onClick={() => handleCancel(index)}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1"
-                      >
-                        <X className="w-4 h-4" />
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        onClick={() => handleEdit(index)}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1"
-                      >
-                        <Edit className="w-4 h-4" />
-                        Edit
-                      </Button>
-                      <Button
-                        onClick={() => category.id && handleDelete(category.id)}
-                        variant="destructive"
-                        size="sm"
-                        disabled={deleteMutation.isPending}
-                        className="flex items-center gap-1"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Delete
-                      </Button>
-                    </>
-                  )}
-                </div>
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Folder className="h-5 w-5" />
+        <h3 className="text-lg font-semibold">Category Management</h3>
+      </div>
+
+      {/* Create New Category */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add New Category
+          </CardTitle>
+          <CardDescription>
+            Create a new book category for organizing content
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Category Name</Label>
+                <Input
+                  id="name"
+                  {...form.register("name")}
+                  placeholder="Enter category name"
+                />
+                {form.formState.errors.name && (
+                  <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Input
+                  id="description"
+                  {...form.register("description")}
+                  placeholder="Enter category description"
+                />
               </div>
             </div>
-          ))}
-          
-          {categories.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No categories found. Click "Add Category" to create your first category.
+            <Button 
+              type="submit" 
+              disabled={createCategoryMutation.isPending}
+              className="w-full md:w-auto"
+            >
+              {createCategoryMutation.isPending ? "Creating..." : "Create Category"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Edit Category */}
+      {editingCategory && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Edit3 className="h-4 w-4" />
+              Edit Category: {editingCategory.name}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="editName">Category Name</Label>
+                  <Input
+                    id="editName"
+                    {...editForm.register("name")}
+                    placeholder="Enter category name"
+                  />
+                  {editForm.formState.errors.name && (
+                    <p className="text-sm text-red-500">{editForm.formState.errors.name.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editDescription">Description (Optional)</Label>
+                  <Input
+                    id="editDescription"
+                    {...editForm.register("description")}
+                    placeholder="Enter category description"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  type="submit" 
+                  disabled={updateCategoryMutation.isPending}
+                >
+                  {updateCategoryMutation.isPending ? "Updating..." : "Update Category"}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => setEditingCategory(null)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Categories List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            Existing Categories
+          </CardTitle>
+          <CardDescription>
+            Manage and organize book categories
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {categoriesLoading ? (
+            <div className="text-center py-8">Loading categories...</div>
+          ) : categories.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Folder className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No categories found</p>
+              <p className="text-sm">Create your first category above</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {categories.map((category: Category) => (
+                <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <h4 className="font-medium">{category.name}</h4>
+                      <Badge variant="outline">
+                        {category.bookCount || 0} books
+                      </Badge>
+                    </div>
+                    {category.description && (
+                      <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => startEdit(category)}
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => confirmDelete(category)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Category</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{categoryToDelete?.name}"? 
+              This action cannot be undone and will remove the category from all associated books.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => categoryToDelete && deleteCategoryMutation.mutate(categoryToDelete.id)}
+              disabled={deleteCategoryMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteCategoryMutation.isPending ? "Deleting..." : "Delete Category"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }
