@@ -447,6 +447,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Book Reviews API Routes
+  app.get('/api/books/:id/reviews', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { page = 1, limit = 10, sort = 'newest' } = req.query;
+      
+      const reviews = await storage.getBookReviews(id, {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        sort: sort as string
+      });
+      
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching book reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  app.post('/api/books/:id/reviews', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.claims.sub;
+      const reviewData = {
+        userId,
+        bookId: id,
+        ...req.body
+      };
+      
+      const review = await storage.createBookReview(reviewData);
+      res.status(201).json(review);
+    } catch (error) {
+      console.error("Error creating book review:", error);
+      res.status(500).json({ message: "Failed to create review" });
+    }
+  });
+
+  app.post('/api/reviews/:reviewId/helpful', isAuthenticated, async (req: any, res) => {
+    try {
+      const { reviewId } = req.params;
+      const userId = req.user.claims.sub;
+      const { isHelpful } = req.body;
+      
+      const vote = await storage.voteReviewHelpful(reviewId, userId, isHelpful);
+      res.json(vote);
+    } catch (error) {
+      console.error("Error voting on review:", error);
+      res.status(500).json({ message: "Failed to vote on review" });
+    }
+  });
+
   // Protected book creation route (admin only)
   app.post('/api/books', isAuthenticated, async (req, res) => {
     try {

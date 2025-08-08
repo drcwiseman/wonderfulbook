@@ -84,12 +84,21 @@ export const books = pgTable("books", {
   title: text("title").notNull(),
   author: text("author").notNull(),
   description: text("description"),
+  longDescription: text("long_description"), // Extended book description
+  authorBio: text("author_bio"), // Author biography
+  publishedYear: integer("published_year"),
+  pageCount: integer("page_count"),
+  tableOfContents: text("table_of_contents").array(), // Chapter/section titles
+  keyTakeaways: text("key_takeaways").array(), // Main learning points
+  targetAudience: text("target_audience"), // Who this book is for
   coverImageUrl: text("cover_image_url"),
   pdfUrl: text("pdf_url"),
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),
   totalRatings: integer("total_ratings").default(0),
+  totalReviews: integer("total_reviews").default(0),
   isFeatured: boolean("is_featured").default(false),
   requiredTier: varchar("required_tier").default("free"),
+  previewPageCount: integer("preview_page_count").default(5), // Pages available for preview
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -208,6 +217,34 @@ export const bookCategories = pgTable("book_categories", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Book reviews table
+export const bookReviews = pgTable("book_reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  bookId: varchar("book_id").references(() => books.id, { onDelete: "cascade" }).notNull(),
+  rating: integer("rating").notNull(), // 1-5 stars
+  reviewTitle: varchar("review_title", { length: 200 }),
+  reviewText: text("review_text"),
+  isVerifiedPurchase: boolean("is_verified_purchase").default(false),
+  helpfulVotes: integer("helpful_votes").default(0),
+  isApproved: boolean("is_approved").default(true), // For moderation
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  uniqueUserBookReview: unique("unique_user_book_review").on(table.userId, table.bookId),
+}));
+
+// Review helpfulness votes
+export const reviewHelpfulVotes = pgTable("review_helpful_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  reviewId: varchar("review_id").references(() => bookReviews.id, { onDelete: "cascade" }).notNull(),
+  isHelpful: boolean("is_helpful").notNull(), // true for helpful, false for not helpful
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  uniqueUserReviewVote: unique("unique_user_review_vote").on(table.userId, table.reviewId),
+}));
+
 // Schemas for validation
 export const upsertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -215,6 +252,12 @@ export const upsertUserSchema = createInsertSchema(users).omit({
 });
 
 export const insertBookSchema = createInsertSchema(books).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBookReviewSchema = createInsertSchema(bookReviews).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -397,6 +440,10 @@ export type InsertEmailPreferences = z.infer<typeof insertEmailPreferencesSchema
 export type UpdateEmailPreferences = z.infer<typeof updateEmailPreferencesSchema>;
 export type EmailLog = typeof emailLogs.$inferSelect;
 export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;
+export type BookReview = typeof bookReviews.$inferSelect;
+export type InsertBookReview = z.infer<typeof insertBookReviewSchema>;
+export type ReviewHelpfulVote = typeof reviewHelpfulVotes.$inferSelect;
+export type InsertReviewHelpfulVote = typeof reviewHelpfulVotes.$inferInsert;
 
 // ===== SOCIAL READING CHALLENGES =====
 

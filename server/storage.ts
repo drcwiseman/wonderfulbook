@@ -12,6 +12,8 @@ import {
   challengeParticipants,
   challengeActivities,
   challengeComments,
+  bookReviews,
+  reviewHelpfulVotes,
   type User,
   type UpsertUser,
   type Book,
@@ -40,6 +42,10 @@ import {
   type InsertActivity,
   type ChallengeComment,
   type InsertComment,
+  type BookReview,
+  type InsertBookReview,
+  type ReviewHelpfulVote,
+  type InsertReviewHelpfulVote,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, ilike, sql, count } from "drizzle-orm";
@@ -173,6 +179,14 @@ export interface IStorage {
   createChallengeComment(commentData: InsertComment): Promise<ChallengeComment>;
   getChallengeComments(challengeId: string): Promise<ChallengeComment[]>;
   deleteChallengeComment(commentId: string): Promise<void>;
+
+  // Book review operations
+  getBookReviews(bookId: string, options?: { page?: number; limit?: number; sort?: string }): Promise<BookReview[]>;
+  createBookReview(reviewData: InsertBookReview): Promise<BookReview>;
+  updateBookReview(reviewId: string, updates: Partial<BookReview>): Promise<BookReview>;
+  deleteBookReview(reviewId: string): Promise<void>;
+  voteReviewHelpful(reviewId: string, userId: string, isHelpful: boolean): Promise<ReviewHelpfulVote>;
+  getUserBookReview(userId: string, bookId: string): Promise<BookReview | undefined>;
   likeChallengeComment(commentId: string, userId: string): Promise<ChallengeComment>;
 }
 
@@ -1375,6 +1389,172 @@ export class DatabaseStorage implements IStorage {
     
     // Finally delete the user
     await db.delete(users).where(eq(users.id, userId));
+  }
+
+  // Book review operations
+  async getBookReviews(bookId: string, options?: { page?: number; limit?: number; sort?: string }): Promise<BookReview[]> {
+    const { page = 1, limit = 10, sort = 'newest' } = options || {};
+    const offset = (page - 1) * limit;
+    
+    let orderBy;
+    switch (sort) {
+      case 'oldest':
+        orderBy = bookReviews.createdAt;
+        break;
+      case 'rating_high':
+        orderBy = desc(bookReviews.rating);
+        break;
+      case 'rating_low':
+        orderBy = bookReviews.rating;
+        break;
+      case 'helpful':
+        orderBy = desc(bookReviews.helpfulVotes);
+        break;
+      default:
+        orderBy = desc(bookReviews.createdAt);
+    }
+
+    return await db.select({
+      id: bookReviews.id,
+      userId: bookReviews.userId,
+      bookId: bookReviews.bookId,
+      rating: bookReviews.rating,
+      reviewTitle: bookReviews.reviewTitle,
+      reviewText: bookReviews.reviewText,
+      isVerifiedPurchase: bookReviews.isVerifiedPurchase,
+      helpfulVotes: bookReviews.helpfulVotes,
+      isApproved: bookReviews.isApproved,
+      createdAt: bookReviews.createdAt,
+      updatedAt: bookReviews.updatedAt,
+      user: {
+        firstName: users.firstName,
+        lastName: users.lastName,
+      }
+    })
+    .from(bookReviews)
+    .leftJoin(users, eq(bookReviews.userId, users.id))
+    .where(and(
+      eq(bookReviews.bookId, bookId),
+      eq(bookReviews.isApproved, true)
+    ))
+    .orderBy(orderBy)
+    .limit(limit)
+    .offset(offset) as any;
+  }
+
+  async createBookReview(reviewData: InsertBookReview): Promise<BookReview> {
+    // Check if user already reviewed this book
+    const existing = await this.getUserBookReview(reviewData.userId, reviewData.bookId);
+    if (existing) {
+      throw new Error("You have already reviewed this book");
+    }
+
+    const [review] = await db.insert(bookReviews)
+      .values(reviewData)
+      .returning();
+
+    // Update book's review statistics
+    await db.update(books)
+      .set({
+        totalReviews: sql`${books.totalReviews} + 1`,
+        rating: sql`(
+          SELECT ROUND(AVG(rating)::numeric, 2) 
+          FROM ${bookReviews} 
+          WHERE ${bookReviews.bookId} = ${reviewData.bookId} 
+          AND ${bookReviews.isApproved} = true
+        )`,
+        totalRatings: sql`${books.totalRatings} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(books.id, reviewData.bookId));
+
+    return review;
+  }
+
+  async updateBookReview(reviewId: string, updates: Partial<BookReview>): Promise<BookReview> {
+    const [review] = await db.update(bookReviews)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(bookReviews.id, reviewId))
+      .returning();
+    return review;
+  }
+
+  async deleteBookReview(reviewId: string): Promise<void> {
+    const [review] = await db.select().from(bookReviews).where(eq(bookReviews.id, reviewId));
+    if (!review) return;
+
+    await db.delete(bookReviews).where(eq(bookReviews.id, reviewId));
+
+    // Update book's review statistics
+    await db.update(books)
+      .set({
+        totalReviews: sql`${books.totalReviews} - 1`,
+        rating: sql`(
+          SELECT COALESCE(ROUND(AVG(rating)::numeric, 2), 0) 
+          FROM ${bookReviews} 
+          WHERE ${bookReviews.bookId} = ${review.bookId} 
+          AND ${bookReviews.isApproved} = true
+        )`,
+        totalRatings: sql`${books.totalRatings} - 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(books.id, review.bookId));
+  }
+
+  async voteReviewHelpful(reviewId: string, userId: string, isHelpful: boolean): Promise<ReviewHelpfulVote> {
+    // Check if user already voted
+    const [existingVote] = await db.select()
+      .from(reviewHelpfulVotes)
+      .where(and(
+        eq(reviewHelpfulVotes.reviewId, reviewId),
+        eq(reviewHelpfulVotes.userId, userId)
+      ));
+
+    if (existingVote) {
+      // Update existing vote
+      const [vote] = await db.update(reviewHelpfulVotes)
+        .set({ isHelpful })
+        .where(eq(reviewHelpfulVotes.id, existingVote.id))
+        .returning();
+      
+      // Recalculate helpful votes for the review
+      const helpfulCount = await db.select({ count: count() })
+        .from(reviewHelpfulVotes)
+        .where(and(
+          eq(reviewHelpfulVotes.reviewId, reviewId),
+          eq(reviewHelpfulVotes.isHelpful, true)
+        ));
+
+      await db.update(bookReviews)
+        .set({ helpfulVotes: helpfulCount[0].count })
+        .where(eq(bookReviews.id, reviewId));
+
+      return vote;
+    } else {
+      // Create new vote
+      const [vote] = await db.insert(reviewHelpfulVotes)
+        .values({ reviewId, userId, isHelpful })
+        .returning();
+
+      // Update helpful votes count
+      if (isHelpful) {
+        await db.update(bookReviews)
+          .set({ helpfulVotes: sql`${bookReviews.helpfulVotes} + 1` })
+          .where(eq(bookReviews.id, reviewId));
+      }
+
+      return vote;
+    }
+  }
+
+  async getUserBookReview(userId: string, bookId: string): Promise<BookReview | undefined> {
+    const [review] = await db.select()
+      .from(bookReviews)
+      .where(and(
+        eq(bookReviews.userId, userId),
+        eq(bookReviews.bookId, bookId)
+      ));
+    return review;
   }
 }
 

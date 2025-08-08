@@ -12,7 +12,7 @@ import Home from "@/pages/home";
 import BookStore from "@/pages/bookstore";
 import Library from "@/pages/library";
 import Dashboard from "@/pages/dashboard";
-import BookDetail from "@/pages/book-detail";
+import BookDetail from "@/pages/book-detail-enhanced";
 import Subscribe from "@/pages/subscribe";
 import ReaderPage from "@/pages/reader";
 import AdminPanel from "@/pages/admin";

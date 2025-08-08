@@ -13,7 +13,7 @@ import { Star, Bookmark, Book, ArrowLeft } from "lucide-react";
 import type { Book as BookType, ReadingProgress, Bookmark as BookmarkType } from "@shared/schema";
 import { SEOHead, getBookSEO } from "@/components/SEOHead";
 
-export default function BookDetail() {
+export default function BookDetailOld() {
   const [, params] = useRoute("/book/:id");
   const [, setLocation] = useLocation();
   const { user, isAuthenticated } = useAuth();
