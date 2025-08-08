@@ -205,9 +205,9 @@ export default function BookDetail() {
                     )}
                   </div>
                   
-                  <p className="text-gray-700 text-lg leading-relaxed">
-                    {book.description}
-                  </p>
+                  <div className="text-gray-700 text-lg leading-relaxed prose dark:prose-invert max-w-none">
+                    <div dangerouslySetInnerHTML={{ __html: book.description || '' }} />
+                  </div>
                 </div>
 
                 {/* Subscription Gate */}
@@ -308,9 +308,9 @@ export default function BookDetail() {
                   </CardHeader>
                   <CardContent>
                     <div className="prose prose-gray max-w-none">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                        {book.longDescription}
-                      </p>
+                      <div className="text-gray-700 leading-relaxed prose dark:prose-invert max-w-none">
+                        <div dangerouslySetInnerHTML={{ __html: book.longDescription || '' }} />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
