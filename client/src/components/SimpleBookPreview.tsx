@@ -15,7 +15,6 @@ interface BookPreviewProps {
 }
 
 const generateSimplePages = (book: any) => {
-  console.log('Generating simple preview pages for:', book.title);
   
   const pages = [
     {
@@ -128,7 +127,6 @@ const generateSimplePages = (book: any) => {
     });
   }
 
-  console.log('Generated', pages.length, 'simple pages');
   return pages;
 };
 
@@ -136,13 +134,7 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
   const [currentPage, setCurrentPage] = useState(0);
   const [pages] = useState(() => generateSimplePages(book));
 
-  // Debug log
-  console.log('SimpleBookPreview render:', {
-    isOpen,
-    currentPage,
-    totalPages: pages.length,
-    currentPageContent: pages[currentPage]?.title
-  });
+
 
   // Keyboard navigation
   useEffect(() => {
@@ -199,16 +191,9 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
         </div>
 
         {/* Content */}
-        <div className="relative bg-white flex-1 overflow-auto min-h-0 border border-red-200">
+        <div className="relative bg-white flex-1 overflow-auto min-h-0">
           <div className="p-8 min-h-full">
-            {pages[currentPage]?.content || (
-              <div className="text-center text-red-500 p-8">
-                <p>Debug: No content found</p>
-                <p>Current page: {currentPage}</p>
-                <p>Total pages: {pages.length}</p>
-                <p>Page title: {pages[currentPage]?.title}</p>
-              </div>
-            )}
+            {pages[currentPage]?.content}
           </div>
         </div>
 
@@ -261,7 +246,7 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
                 Enjoying the preview? Get full access to continue reading.
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                💡 Use arrow keys or buttons above to navigate pages
+                Use arrow keys or buttons above to navigate pages
               </p>
             </div>
             <div className="space-x-2">
