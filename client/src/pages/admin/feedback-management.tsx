@@ -52,12 +52,16 @@ export default function AdminFeedbackManagement() {
   });
 
   // Fetch feedback statistics
-  const { data: stats } = useQuery({
+  const { data: stats, error: statsError } = useQuery({
     queryKey: ['/api/feedback/stats'],
     queryFn: async () => {
       const response = await fetch('/api/feedback/stats');
+      if (!response.ok) {
+        throw new Error('Failed to fetch stats');
+      }
       return response.json();
-    }
+    },
+    retry: false
   });
 
   // Fetch selected feedback details

@@ -2622,6 +2622,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public feedback stats endpoint (for admin panel)
+  app.get('/api/feedback/stats', async (req, res) => {
+    try {
+      const { feedback } = await import("@shared/schema");
+      const { sql, eq } = await import("drizzle-orm");
+      
+      // Get various statistics
+      const [totalCount] = await db.select({ count: sql<number>`count(*)` }).from(feedback);
+      const [openCount] = await db.select({ count: sql<number>`count(*)` }).from(feedback).where(eq(feedback.status, 'open'));
+      const [bugCount] = await db.select({ count: sql<number>`count(*)` }).from(feedback).where(eq(feedback.type, 'bug'));
+      const [criticalCount] = await db.select({ count: sql<number>`count(*)` }).from(feedback).where(eq(feedback.priority, 'critical'));
+
+      // Get feedback by type
+      const typeStats = await db
+        .select({
+          type: feedback.type,
+          count: sql<number>`count(*)`
+        })
+        .from(feedback)
+        .groupBy(feedback.type);
+
+      // Get feedback by status
+      const statusStats = await db
+        .select({
+          status: feedback.status,
+          count: sql<number>`count(*)`
+        })
+        .from(feedback)
+        .groupBy(feedback.status);
+
+      res.json({
+        success: true,
+        stats: {
+          total: totalCount.count,
+          open: openCount.count,
+          bugs: bugCount.count,
+          critical: criticalCount.count,
+          byType: typeStats,
+          byStatus: statusStats
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching feedback stats:', error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch feedback statistics"
+      });
+    }
+  });
+
   // Register feedback routes
   const { registerFeedbackRoutes } = await import("./routes-feedback");
   registerFeedbackRoutes(app);

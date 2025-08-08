@@ -20,7 +20,7 @@ export function registerFeedbackRoutes(app: Express) {
       // Validate the input
       const validatedData = insertFeedbackSchema.parse({
         ...req.body,
-        userId: req.session?.user?.id || null, // Optional user ID from session
+        userId: (req.session as any)?.user?.id || null, // Optional user ID from session
         status: 'open', // Default status for new feedback
       });
 
@@ -272,50 +272,5 @@ export function registerFeedbackRoutes(app: Express) {
     }
   });
 
-  // Get feedback statistics (temporarily public for testing)  
-  app.get('/api/feedback/stats', async (req, res) => {
-    try {
-      // Get various statistics
-      const [totalCount] = await db.select({ count: sql<number>`count(*)` }).from(feedback);
-      const [openCount] = await db.select({ count: sql<number>`count(*)` }).from(feedback).where(eq(feedback.status, 'open'));
-      const [bugCount] = await db.select({ count: sql<number>`count(*)` }).from(feedback).where(eq(feedback.type, 'bug'));
-      const [criticalCount] = await db.select({ count: sql<number>`count(*)` }).from(feedback).where(eq(feedback.priority, 'critical'));
-
-      // Get feedback by type
-      const typeStats = await db
-        .select({
-          type: feedback.type,
-          count: sql<number>`count(*)`
-        })
-        .from(feedback)
-        .groupBy(feedback.type);
-
-      // Get feedback by status
-      const statusStats = await db
-        .select({
-          status: feedback.status,
-          count: sql<number>`count(*)`
-        })
-        .from(feedback)
-        .groupBy(feedback.status);
-
-      res.json({
-        success: true,
-        stats: {
-          total: totalCount.count,
-          open: openCount.count,
-          bugs: bugCount.count,
-          critical: criticalCount.count,
-          byType: typeStats,
-          byStatus: statusStats
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching feedback stats:', error);
-      res.status(500).json({
-        success: false,
-        error: "Failed to fetch feedback statistics"
-      });
-    }
-  });
+  // Note: Stats endpoint moved to main routes.ts as public endpoint
 }
