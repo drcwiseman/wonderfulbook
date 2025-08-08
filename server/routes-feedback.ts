@@ -4,14 +4,7 @@ import { feedback, feedbackComments, insertFeedbackSchema, insertFeedbackComment
 import { eq, desc, and, sql } from "drizzle-orm";
 import { z } from "zod";
 
-// Local authentication middleware (copied from main routes)
-const isAuthenticated = (req: any, res: any, next: any) => {
-  if (!req.session || !req.session.user) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  req.user = { ...req.session.user };
-  next();
-};
+import { isAuthenticated, requireAdmin } from './middleware/auth';
 
 export function registerFeedbackRoutes(app: Express) {
   // Submit new feedback (public endpoint - no auth required)
@@ -109,19 +102,9 @@ export function registerFeedbackRoutes(app: Express) {
   });
 
   // Get single feedback with comments (admin only)
-  app.get('/api/feedback/:id', isAuthenticated, async (req, res) => {
+  app.get('/api/feedback/:id', requireAdmin, async (req, res) => {
     try {
-      // Check if user is admin
-      const user = await db.query.users.findFirst({
-        where: (users, { eq }) => eq(users.id, (req as any).user.id),
-      });
 
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          error: "Access denied. Admin privileges required."
-        });
-      }
 
       const { id } = req.params;
 
@@ -179,19 +162,8 @@ export function registerFeedbackRoutes(app: Express) {
   });
 
   // Update feedback status (admin only)
-  app.patch('/api/feedback/:id', isAuthenticated, async (req, res) => {
+  app.patch('/api/feedback/:id', requireAdmin, async (req, res) => {
     try {
-      // Check if user is admin
-      const user = await db.query.users.findFirst({
-        where: (users, { eq }) => eq(users.id, (req as any).user.id),
-      });
-
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          error: "Access denied. Admin privileges required."
-        });
-      }
 
       const { id } = req.params;
       const { status, adminResponse } = req.body;
@@ -232,19 +204,8 @@ export function registerFeedbackRoutes(app: Express) {
   });
 
   // Add comment to feedback (admin only)
-  app.post('/api/feedback/:id/comments', isAuthenticated, async (req, res) => {
+  app.post('/api/feedback/:id/comments', requireAdmin, async (req, res) => {
     try {
-      // Check if user is admin
-      const user = await db.query.users.findFirst({
-        where: (users, { eq }) => eq(users.id, (req as any).user.id),
-      });
-
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          error: "Access denied. Admin privileges required."
-        });
-      }
 
       const { id } = req.params;
       const validatedData = insertFeedbackCommentSchema.parse({

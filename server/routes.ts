@@ -15,45 +15,7 @@ import connectPg from "connect-pg-simple";
 import { registerSEORoutes } from "./routes-seo";
 import { antiAbuseService } from "./antiAbuseService";
 
-// Local authentication middleware with production debugging
-const isAuthenticated = (req: any, res: any, next: any) => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  
-  // Debug session information in production
-  if (isProduction) {
-    console.log('Auth check:', {
-      sessionId: req.sessionID,
-      hasSession: !!req.session,
-      hasUser: !!(req.session && req.session.user),
-      userAgent: req.headers['user-agent']?.substring(0, 50),
-      path: req.path
-    });
-  }
-  
-  if (!req.session || !req.session.user) {
-    console.log('Authentication failed: No session or user data');
-    return res.status(401).json({ 
-      message: "Unauthorized",
-      debug: isProduction ? undefined : {
-        hasSession: !!req.session,
-        sessionId: req.sessionID,
-        sessionData: req.session
-      }
-    });
-  }
-  
-  // Set user object with both session data and claims structure for compatibility
-  req.user = {
-    ...req.session.user,
-    claims: {
-      sub: req.session.user.id,
-      email: req.session.user.email,
-      first_name: req.session.user.firstName,
-      last_name: req.session.user.lastName
-    }
-  };
-  next();
-};
+import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth';
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
