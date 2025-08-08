@@ -45,7 +45,7 @@ export const users = pgTable("users", {
   subscriptionTier: varchar("subscription_tier").default("free"),
   subscriptionStatus: varchar("subscription_status").default("inactive"),
   booksReadThisMonth: integer("books_read_this_month").default(0),
-  role: varchar("role").default("user"), // user, admin, moderator
+  role: varchar("role").default("user"), // user, admin, super_admin
   isActive: boolean("is_active").default(true),
   lastLoginAt: timestamp("last_login_at"),
   passwordResetToken: varchar("password_reset_token"),

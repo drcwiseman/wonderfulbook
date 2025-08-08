@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Home, BookOpen, Library, BarChart3, User, LogOut, Crown, Trophy } from "lucide-react";
+import { Menu, X, Home, BookOpen, Library, BarChart3, User, LogOut, Crown, Trophy, Settings, Shield } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -153,6 +153,42 @@ export default function Header() {
                     </div>
                   )}
                 </motion.div>
+                
+                {/* Admin Panel Link - Only show for admin/super admin users */}
+                {((user as any)?.role === 'admin' || (user as any)?.role === 'super_admin' || (user as any)?.email === 'prophetclimate@yahoo.com' || (user as any)?.email === 'admin@wonderfulbooks.com') ? (
+                  <motion.a
+                    href="/admin"
+                    className={`nav-link flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
+                      isActive('/admin')
+                        ? 'bg-orange-500/20 text-orange-400 shadow-lg active'
+                        : 'text-white hover:text-orange-300 hover:bg-white/5'
+                    }`}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span className="hidden sm:inline">Admin</span>
+                  </motion.a>
+                ) : null}
+
+                {/* Super Admin Dashboard Link - Only show for super admin users */}
+                {((user as any)?.role === 'super_admin' || (user as any)?.email === 'prophetclimate@yahoo.com') ? (
+                  <motion.a
+                    href="/super-admin"
+                    className={`nav-link flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
+                      isActive('/super-admin')
+                        ? 'bg-red-500/20 text-red-400 shadow-lg active'
+                        : 'text-white hover:text-red-300 hover:bg-white/5'
+                    }`}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Shield className="w-4 h-4" />
+                    <span className="hidden sm:inline">Super Admin</span>
+                  </motion.a>
+                ) : null}
                 
                 {/* User Profile */}
                 <motion.div 

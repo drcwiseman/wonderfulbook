@@ -42,7 +42,7 @@ import {
   type InsertComment,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, ilike } from "drizzle-orm";
+import { eq, and, desc, or, ilike, sql, count } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 import type { RegisterData } from "@shared/schema";
@@ -64,7 +64,7 @@ export interface IStorage {
   generatePasswordResetToken(email: string): Promise<string | null>;
   
   // Admin user management operations
-  getAllUsers(): Promise<User[]>;
+  getAllUsers(options?: { page?: number; limit?: number; search?: string; role?: string }): Promise<{ users: User[]; total: number; page: number; totalPages: number }>;
   searchUsers(query: string): Promise<User[]>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
   deleteUser(id: string): Promise<void>;
@@ -72,14 +72,18 @@ export interface IStorage {
   bulkDeleteUsers(ids: string[]): Promise<void>;
   resetUserPassword(userId: string, newPassword?: string): Promise<{ success: boolean; tempPassword?: string }>;
   updateUserRole(userId: string, role: string): Promise<User>;
-  toggleUserStatus(userId: string, isActive: boolean): Promise<User>;
-  getUserAnalytics(): Promise<{
+  updateUserStatus(userId: string, isActive: boolean): Promise<User>;
+  getSystemStats(): Promise<{
     totalUsers: number;
     activeUsers: number;
     adminUsers: number;
+    superAdminUsers: number;
     subscriptionBreakdown: { [key: string]: number };
     recentSignups: number;
+    totalBooks: number;
+    totalChallenges: number;
   }>;
+  getAuditLogs(options?: { page?: number; limit?: number }): Promise<{ logs: any[]; total: number; page: number; totalPages: number }>;
   
   // Book operations
   getAllBooks(): Promise<Book[]>;
@@ -685,8 +689,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Admin user management operations
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(desc(users.createdAt));
+  async getAllUsers(options?: { page?: number; limit?: number; search?: string; role?: string }): Promise<{ users: User[]; total: number; page: number; totalPages: number }> {
+    const page = options?.page || 1;
+    const limit = options?.limit || 20;
+    const offset = (page - 1) * limit;
+    
+    let query = db.select().from(users);
+    
+    // Apply filters
+    const conditions: any[] = [];
+    
+    if (options?.search) {
+      conditions.push(
+        or(
+          ilike(users.email, `%${options.search}%`),
+          ilike(users.firstName, `%${options.search}%`),
+          ilike(users.lastName, `%${options.search}%`),
+          ilike(users.username, `%${options.search}%`)
+        )
+      );
+    }
+    
+    if (options?.role) {
+      conditions.push(eq(users.role, options.role));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    // Get total count
+    const countQuery = db.select({ count: sql<number>`count(*)` }).from(users);
+    if (conditions.length > 0) {
+      countQuery.where(and(...conditions));
+    }
+    const [{ count }] = await countQuery;
+    
+    // Get paginated results
+    const usersList = await query
+      .orderBy(desc(users.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      users: usersList,
+      total: count,
+      page,
+      totalPages: Math.ceil(count / limit)
+    };
   }
 
   async searchUsers(query: string): Promise<User[]> {
@@ -734,20 +784,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async resetUserPassword(userId: string, newPassword?: string): Promise<{ success: boolean; tempPassword?: string }> {
-    const tempPassword = newPassword || Math.random().toString(36).slice(-8);
-    const resetToken = Math.random().toString(36).slice(-16);
-    const resetExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    
-    await db
-      .update(users)
-      .set({ 
-        passwordResetToken: resetToken,
-        passwordResetExpires: resetExpires,
-        updatedAt: new Date()
-      })
-      .where(eq(users.id, userId));
-    
-    return { success: true, tempPassword };
+    try {
+      const tempPassword = newPassword || Math.random().toString(36).slice(-12);
+      const saltRounds = 12;
+      const passwordHash = await bcrypt.hash(tempPassword, saltRounds);
+
+      await db.update(users)
+        .set({ passwordHash, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+
+      return { success: true, tempPassword: newPassword ? undefined : tempPassword };
+    } catch (error) {
+      console.error('Error resetting user password:', error);
+      return { success: false };
+    }
   }
 
   async updateUserRole(userId: string, role: string): Promise<User> {
@@ -759,13 +809,104 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async toggleUserStatus(userId: string, isActive: boolean): Promise<User> {
+  async updateUserStatus(userId: string, isActive: boolean): Promise<User> {
     const [user] = await db
       .update(users)
       .set({ isActive, updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
     return user;
+  }
+
+  async getSystemStats(): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    adminUsers: number;
+    superAdminUsers: number;
+    subscriptionBreakdown: { [key: string]: number };
+    recentSignups: number;
+    totalBooks: number;
+    totalChallenges: number;
+  }> {
+    // Get user statistics
+    const totalUsersResult = await db.select({ count: sql<number>`count(*)` }).from(users);
+    const activeUsersResult = await db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.isActive, true));
+    const adminUsersResult = await db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.role, 'admin'));
+    const superAdminUsersResult = await db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.role, 'super_admin'));
+    
+    // Get subscription breakdown
+    const subscriptionBreakdown = await db
+      .select({ 
+        tier: users.subscriptionTier, 
+        count: sql<number>`count(*)` 
+      })
+      .from(users)
+      .groupBy(users.subscriptionTier);
+    
+    // Get recent signups (last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const recentSignupsResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(sql`${users.createdAt} >= ${thirtyDaysAgo}`);
+    
+    // Get book count
+    const totalBooksResult = await db.select({ count: sql<number>`count(*)` }).from(books);
+    
+    // Get challenge count
+    const totalChallengesResult = await db.select({ count: sql<number>`count(*)` }).from(readingChallenges);
+    
+    const subscriptionBreakdownObj: { [key: string]: number } = {};
+    subscriptionBreakdown.forEach(item => {
+      subscriptionBreakdownObj[item.tier || 'unknown'] = item.count;
+    });
+    
+    return {
+      totalUsers: totalUsersResult[0]?.count || 0,
+      activeUsers: activeUsersResult[0]?.count || 0,
+      adminUsers: adminUsersResult[0]?.count || 0,
+      superAdminUsers: superAdminUsersResult[0]?.count || 0,
+      subscriptionBreakdown: subscriptionBreakdownObj,
+      recentSignups: recentSignupsResult[0]?.count || 0,
+      totalBooks: totalBooksResult[0]?.count || 0,
+      totalChallenges: totalChallengesResult[0]?.count || 0,
+    };
+  }
+
+  async getAuditLogs(options?: { page?: number; limit?: number }): Promise<{ logs: any[]; total: number; page: number; totalPages: number }> {
+    const page = options?.page || 1;
+    const limit = options?.limit || 50;
+    const offset = (page - 1) * limit;
+    
+    // For now, we'll return reading activity as audit logs
+    // In a full implementation, you'd have a dedicated audit_logs table
+    const logsQuery = db
+      .select({
+        id: readingProgress.id,
+        userId: readingProgress.userId,
+        action: sql<string>`'reading_progress'`,
+        resource: readingProgress.bookId,
+        timestamp: readingProgress.lastReadAt,
+        details: sql<string>`json_build_object('currentPage', ${readingProgress.currentPage}, 'progressPercentage', ${readingProgress.progressPercentage})`
+      })
+      .from(readingProgress)
+      .orderBy(desc(readingProgress.lastReadAt))
+      .limit(limit)
+      .offset(offset);
+    
+    const countQuery = db.select({ count: sql<number>`count(*)` }).from(readingProgress);
+    
+    const [logs, [{ count }]] = await Promise.all([
+      logsQuery,
+      countQuery
+    ]);
+    
+    return {
+      logs,
+      total: count,
+      page,
+      totalPages: Math.ceil(count / limit)
+    };
   }
 
   async getUserAnalytics(): Promise<{

@@ -716,8 +716,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       const userRole = user?.role;
       
-      // Check for admin role or specific admin users
-      if (userRole === "admin" || userEmail === "drcwiseman@gmail.com" || userEmail === "prophetclimate@yahoo.com" || userEmail === "admin@wonderfulbooks.com") {
+      // Check for admin role or super_admin role or specific admin users
+      if (userRole === "admin" || userRole === "super_admin" || userEmail === "drcwiseman@gmail.com" || userEmail === "prophetclimate@yahoo.com" || userEmail === "admin@wonderfulbooks.com") {
+        req.userRole = userRole; // Add role to request for use in routes
         return next();
       }
       
@@ -728,6 +729,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Error checking admin status" });
     }
   };
+
+  const isSuperAdmin = async (req: any, res: any, next: any) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    // Get fresh user data from database to ensure we have the role
+    const userId = req.user.id;
+    const userEmail = req.user.email;
+    
+    try {
+      const user = await storage.getUser(userId);
+      const userRole = user?.role;
+      
+      // Check for super_admin role or specific super admin users
+      if (userRole === "super_admin" || userEmail === "prophetclimate@yahoo.com") {
+        req.userRole = userRole; // Add role to request for use in routes
+        return next();
+      }
+      
+      console.log('Super admin access denied:', { userId, userEmail, userRole, hasUser: !!user });
+      return res.status(403).json({ message: "Super admin access required" });
+    } catch (error) {
+      console.error('Error checking super admin status:', error);
+      return res.status(500).json({ message: "Error checking super admin status" });
+    }
+  };
+
+  // Super Admin Routes - User Management
+  
+  // Get all users with pagination and filters
+  app.get('/api/super-admin/users', isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 20;
+      const search = req.query.search || '';
+      const role = req.query.role || '';
+      
+      const users = await storage.getAllUsers({ page, limit, search, role });
+      res.json(users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  // Update user role
+  app.patch('/api/super-admin/users/:userId/role', isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { role } = req.body;
+      
+      if (!['user', 'admin', 'super_admin'].includes(role)) {
+        return res.status(400).json({ message: 'Invalid role' });
+      }
+      
+      const updatedUser = await storage.updateUserRole(userId, role);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      res.status(500).json({ message: 'Failed to update user role' });
+    }
+  });
+
+  // Deactivate/activate user
+  app.patch('/api/super-admin/users/:userId/status', isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { isActive } = req.body;
+      
+      const updatedUser = await storage.updateUserStatus(userId, isActive);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      res.status(500).json({ message: 'Failed to update user status' });
+    }
+  });
+
+  // Get system statistics
+  app.get('/api/super-admin/stats', isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const stats = await storage.getSystemStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching system stats:', error);
+      res.status(500).json({ message: 'Failed to fetch system stats' });
+    }
+  });
+
+  // Get audit logs
+  app.get('/api/super-admin/audit-logs', isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      
+      const logs = await storage.getAuditLogs({ page, limit });
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching audit logs:', error);
+      res.status(500).json({ message: 'Failed to fetch audit logs' });
+    }
+  });
+
+  // Delete user (soft delete)
+  app.delete('/api/super-admin/users/:userId', isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const currentUserId = req.user.id;
+      
+      // Prevent self-deletion
+      if (userId === currentUserId) {
+        return res.status(400).json({ message: 'Cannot delete your own account' });
+      }
+      
+      await storage.deleteUser(userId);
+      res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Failed to delete user' });
+    }
+  });
+
+  // Reset user password (super admin only)
+  app.post('/api/super-admin/users/:userId/reset-password', isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { newPassword } = req.body;
+      
+      if (!newPassword || newPassword.length < 8) {
+        return res.status(400).json({ message: 'Password must be at least 8 characters' });
+      }
+      
+      await storage.resetUserPassword(userId, newPassword);
+      res.json({ message: 'Password reset successfully' });
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      res.status(500).json({ message: 'Failed to reset password' });
+    }
+  });
 
   // Admin image upload route
   app.post('/api/admin/upload-image', isAuthenticated, isAdmin, upload.single('image'), async (req, res) => {
