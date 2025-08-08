@@ -201,29 +201,35 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
             variant="outline"
             onClick={prevPage}
             disabled={currentPage === 0}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 bg-white hover:bg-orange-50 border-orange-200"
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Previous</span>
           </Button>
 
-          <div className="flex items-center space-x-2">
-            {pages.map((_, i) => (
-              <button
-                key={i}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  i === currentPage ? 'bg-orange-500' : 'bg-gray-300'
-                }`}
-                onClick={() => setCurrentPage(i)}
-              />
-            ))}
+          <div className="flex items-center space-x-3">
+            <span className="text-sm text-gray-600 font-medium">
+              {currentPage + 1} of {pages.length}
+            </span>
+            <div className="flex items-center space-x-2">
+              {pages.map((_, i) => (
+                <button
+                  key={i}
+                  className={`w-4 h-4 rounded-full transition-all duration-200 hover:scale-110 ${
+                    i === currentPage ? 'bg-orange-500 shadow-md' : 'bg-gray-300 hover:bg-gray-400'
+                  }`}
+                  onClick={() => setCurrentPage(i)}
+                  title={`Go to page ${i + 1}`}
+                />
+              ))}
+            </div>
           </div>
 
           <Button
             variant="outline"
             onClick={nextPage}
             disabled={currentPage >= pages.length - 1}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 bg-white hover:bg-orange-50 border-orange-200"
           >
             <span>Next</span>
             <ChevronRight className="w-4 h-4" />
