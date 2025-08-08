@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, X, Book, Maximize2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface BookPreviewProps {
   book: {
@@ -108,7 +107,6 @@ const generatePreviewPages = (book: any): PreviewPage[] => {
 
 export default function BookPreview({ book, isOpen, onClose }: BookPreviewProps) {
   const [currentSpread, setCurrentSpread] = useState(0); // 0 = cover, 1 = pages 1-2, etc.
-  const [isFlipping, setIsFlipping] = useState(false);
   const [previewPages] = useState(() => generatePreviewPages(book));
 
   // Keyboard navigation
@@ -135,28 +133,18 @@ export default function BookPreview({ book, isOpen, onClose }: BookPreviewProps)
     return () => {
       document.removeEventListener('keydown', handleKeyPress);
     };
-  }, [isOpen, currentSpread, isFlipping]);
+  }, [isOpen, currentSpread]);
 
   const nextSpread = () => {
-    if (isFlipping) return;
     const maxSpread = Math.ceil(previewPages.length / 2) - 1;
     if (currentSpread < maxSpread) {
-      setIsFlipping(true);
-      setTimeout(() => {
-        setCurrentSpread(prev => prev + 1);
-        setIsFlipping(false);
-      }, 150);
+      setCurrentSpread(prev => prev + 1);
     }
   };
 
   const prevSpread = () => {
-    if (isFlipping) return;
     if (currentSpread > 0) {
-      setIsFlipping(true);
-      setTimeout(() => {
-        setCurrentSpread(prev => prev - 1);
-        setIsFlipping(false);
-      }, 150);
+      setCurrentSpread(prev => prev - 1);
     }
   };
 
@@ -198,63 +186,37 @@ export default function BookPreview({ book, isOpen, onClose }: BookPreviewProps)
 
         {/* Book Content */}
         <div className="relative bg-gray-100 p-8">
-          <div className="relative mx-auto" style={{ width: '800px', height: '600px', perspective: '1000px' }}>
+          <div className="relative mx-auto bg-white rounded-lg shadow-2xl overflow-hidden" style={{ width: '800px', height: '600px' }}>
             
-            {/* Book Base */}
-            <div className="absolute inset-0 bg-gray-800 rounded-r-lg shadow-2xl" 
-                 style={{ transform: 'rotateY(-5deg)' }}>
+            {/* Book Pages Container */}
+            <div className="flex h-full">
+              {/* Left Page */}
+              <div className="w-1/2 h-full border-r border-gray-300 overflow-hidden">
+                <div className="h-full relative transition-all duration-300 ease-in-out">
+                  {getLeftPage() && (
+                    <div 
+                      className="h-full w-full p-6"
+                      dangerouslySetInnerHTML={{ __html: getLeftPage()!.content }}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Right Page */}
+              <div className="w-1/2 h-full overflow-hidden">
+                <div className="h-full relative transition-all duration-300 ease-in-out">
+                  {getRightPage() && (
+                    <div 
+                      className="h-full w-full p-6"
+                      dangerouslySetInnerHTML={{ __html: getRightPage()!.content }}
+                    />
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Left Page */}
-            <motion.div
-              key={`left-${currentSpread}`}
-              className="absolute left-0 top-0 w-1/2 h-full bg-white shadow-lg border-r border-gray-300 overflow-hidden rounded-l-lg"
-              animate={{ 
-                rotateY: 0,
-                scale: 1
-              }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              style={{ 
-                transformOrigin: 'right center',
-                transformStyle: 'preserve-3d'
-              }}
-            >
-              <div className="h-full relative">
-                {getLeftPage() && (
-                  <div 
-                    className="h-full w-full p-4"
-                    dangerouslySetInnerHTML={{ __html: getLeftPage()!.content }}
-                  />
-                )}
-              </div>
-            </motion.div>
-
-            {/* Right Page */}
-            <motion.div
-              key={`right-${currentSpread}`}
-              className="absolute right-0 top-0 w-1/2 h-full bg-white shadow-lg overflow-hidden rounded-r-lg"
-              animate={{ 
-                rotateY: 0,
-                scale: 1
-              }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              style={{ 
-                transformOrigin: 'left center',
-                transformStyle: 'preserve-3d'
-              }}
-            >
-              <div className="h-full relative">
-                {getRightPage() && (
-                  <div 
-                    className="h-full w-full p-4"
-                    dangerouslySetInnerHTML={{ __html: getRightPage()!.content }}
-                  />
-                )}
-              </div>
-            </motion.div>
-
             {/* Page Numbers */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-sm text-gray-500">
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-sm text-gray-500 bg-white px-3 py-1 rounded-full shadow">
               {currentSpread === 0 ? 'Cover' : `Pages ${(currentSpread - 1) * 2 + 1}-${Math.min((currentSpread - 1) * 2 + 2, previewPages.length)}`}
             </div>
           </div>
@@ -280,12 +242,8 @@ export default function BookPreview({ book, isOpen, onClose }: BookPreviewProps)
                   i === currentSpread ? 'bg-orange-500' : 'bg-gray-300'
                 }`}
                 onClick={() => {
-                  if (!isFlipping && i !== currentSpread) {
-                    setIsFlipping(true);
-                    setTimeout(() => {
-                      setCurrentSpread(i);
-                      setIsFlipping(false);
-                    }, 150);
+                  if (i !== currentSpread) {
+                    setCurrentSpread(i);
                   }
                 }}
               />
