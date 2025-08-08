@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 interface BookPreviewProps {
   book: {
@@ -133,6 +134,7 @@ const generateSimplePages = (book: any) => {
 export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreviewProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [pages] = useState(() => generateSimplePages(book));
+  const [, setLocation] = useLocation();
 
 
 
@@ -172,6 +174,11 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
     if (currentPage > 0) {
       setCurrentPage(prev => prev - 1);
     }
+  };
+
+  const handleStartReading = () => {
+    onClose();
+    setLocation(`/book/${book.id}/read`);
   };
 
   if (!isOpen) return null;
@@ -253,7 +260,7 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
               <Button variant="outline" onClick={onClose}>
                 Close Preview
               </Button>
-              <Button className="bg-orange-600 hover:bg-orange-700">
+              <Button className="bg-orange-600 hover:bg-orange-700" onClick={handleStartReading}>
                 Start Reading
               </Button>
             </div>
