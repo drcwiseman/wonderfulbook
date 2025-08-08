@@ -15,7 +15,8 @@ import Dashboard from "@/pages/dashboard";
 import BookDetail from "@/pages/book-detail-enhanced";
 import Subscribe from "@/pages/subscribe";
 import ReaderPage from "@/pages/reader";
-import UnifiedAdminDashboard from "@/pages/unified-admin-dashboard";
+import AdminPanel from "@/pages/admin";
+import SuperAdminDashboard from "@/pages/super-admin-dashboard";
 import AdminEmailManagement from "@/pages/AdminEmailManagement";
 import ChallengesPage from "@/pages/challenges";
 import ChallengeDetailPage from "@/pages/challenge-detail";
@@ -65,7 +66,10 @@ function Router() {
           <PageWrapper><ReaderPage /></PageWrapper>
         </Route>
         <Route path="/admin">
-          <PageWrapper><UnifiedAdminDashboard /></PageWrapper>
+          <PageWrapper><AdminPanel /></PageWrapper>
+        </Route>
+        <Route path="/super-admin">
+          <PageWrapper><SuperAdminDashboard /></PageWrapper>
         </Route>
         <Route path="/admin/email-management">
           <PageWrapper><AdminEmailManagement /></PageWrapper>
