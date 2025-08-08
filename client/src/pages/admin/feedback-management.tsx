@@ -46,20 +46,20 @@ export default function AdminFeedbackManagement() {
       if (typeFilter !== 'all') params.set('type', typeFilter);
       if (priorityFilter !== 'all') params.set('priority', priorityFilter);
       
-      return await apiRequest(`/api/feedback?${params}`);
+      return await apiRequest(`/api/feedback?${params}`, 'GET');
     }
   });
 
   // Fetch feedback statistics
   const { data: stats } = useQuery({
     queryKey: ['/api/feedback/stats'],
-    queryFn: async () => await apiRequest('/api/feedback/stats')
+    queryFn: async () => await apiRequest('/api/feedback/stats', 'GET')
   });
 
   // Fetch selected feedback details
   const { data: selectedFeedbackData } = useQuery({
     queryKey: ['/api/feedback', selectedFeedback],
-    queryFn: async () => await apiRequest(`/api/feedback/${selectedFeedback}`),
+    queryFn: async () => await apiRequest(`/api/feedback/${selectedFeedback}`, 'GET'),
     enabled: !!selectedFeedback
   });
 
