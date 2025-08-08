@@ -22,6 +22,7 @@ import ChallengesPage from "@/pages/challenges";
 import ChallengeDetailPage from "@/pages/challenge-detail";
 import SuperAdminDashboard from "@/pages/super-admin-dashboard";
 import TestingQA from "@/pages/testing-qa";
+import AccessibilityTestDemo from "@/components/AccessibilityTestDemo";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import ForgotPassword from "@/pages/auth/forgot-password";
@@ -78,6 +79,9 @@ function Router() {
         </Route>
         <Route path="/testing-qa">
           <PageWrapper><TestingQA /></PageWrapper>
+        </Route>
+        <Route path="/accessibility-test">
+          <PageWrapper><AccessibilityTestDemo /></PageWrapper>
         </Route>
         <Route path="/challenges">
           <PageWrapper><ChallengesPage /></PageWrapper>
