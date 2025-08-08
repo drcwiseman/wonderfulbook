@@ -31,6 +31,7 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AccessibleContent from "@/components/AccessibleContent";
+import BookPreview from "@/components/BookPreview";
 import type { Book as BookType, BookReview } from "@shared/schema";
 import { SEOHead, getBookSEO } from "@/components/SEOHead";
 
@@ -46,6 +47,7 @@ export default function BookDetail() {
   const [, setLocation] = useLocation();
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const { data: book, isLoading: bookLoading } = useQuery<BookType>({
     queryKey: ["/api/books", params?.id],
@@ -172,9 +174,13 @@ export default function BookDetail() {
                         )}
                         
                         {book.previewPageCount && book.previewPageCount > 0 && (
-                          <Button variant="outline" className="w-full border-orange-500 text-orange-600 hover:bg-orange-50">
+                          <Button 
+                            variant="outline" 
+                            className="w-full border-orange-500 text-orange-600 hover:bg-orange-50"
+                            onClick={() => setIsPreviewOpen(true)}
+                          >
                             <Book className="w-4 h-4 mr-2" />
-                            Preview ({book.previewPageCount} pages)
+                            Interactive Preview ({book.previewPageCount} pages)
                           </Button>
                         )}
                       </div>
@@ -461,6 +467,15 @@ export default function BookDetail() {
         
         <Footer />
       </div>
+      
+      {/* Book Preview Modal */}
+      {book && (
+        <BookPreview
+          book={book}
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+        />
+      )}
     </>
   );
 }
