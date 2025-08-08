@@ -9,8 +9,8 @@ interface BookPreviewProps {
     id: string;
     title: string;
     author: string;
-    coverImageUrl?: string;
-    previewPageCount?: number;
+    coverImageUrl?: string | null;
+    previewPageCount?: number | null;
   };
   isOpen: boolean;
   onClose: () => void;

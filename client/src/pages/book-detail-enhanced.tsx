@@ -413,7 +413,7 @@ export default function BookDetail() {
                               )}
                               <p className="text-gray-700 mb-3">{review.reviewText}</p>
                               <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                <span>{new Date(review.createdAt).toLocaleDateString()}</span>
+                                <span>{review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ''}</span>
                                 <button className="flex items-center space-x-1 hover:text-gray-700">
                                   <ThumbsUp className="w-4 h-4" />
                                   <span>Helpful ({review.helpfulVotes})</span>
