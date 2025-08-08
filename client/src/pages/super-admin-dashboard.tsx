@@ -158,6 +158,21 @@ export default function SuperAdminDashboard() {
     },
   });
 
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: string) => apiRequest('DELETE', `/api/super-admin/users/${userId}`),
+    onSuccess: () => {
+      toast({ title: 'Success', description: 'User deleted successfully' });
+      queryClient.invalidateQueries({ queryKey: ['/api/super-admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/super-admin/stats'] });
+      setShowDeleteDialog(false);
+      setSelectedUser(null);
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
   // Update user details mutation
   const updateUserMutation = useMutation({
     mutationFn: ({ userId, userData }: { userId: string; userData: { firstName: string; lastName: string; email: string } }) =>
