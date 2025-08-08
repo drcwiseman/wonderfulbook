@@ -178,7 +178,7 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
 
   const handleStartReading = () => {
     onClose();
-    setLocation(`/book/${book.id}/read`);
+    setLocation(`/reader/${book.id}`);
   };
 
   if (!isOpen) return null;
