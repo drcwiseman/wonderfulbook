@@ -22,7 +22,7 @@ const generateSimplePages = (book: any) => {
       id: 1,
       title: 'Cover',
       content: (
-        <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-gradient-to-br from-orange-50 to-amber-50">
+        <div className="flex flex-col items-center justify-center text-center bg-gradient-to-br from-orange-50 to-amber-50">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">{book.title}</h1>
           <p className="text-xl text-gray-600 mb-8">by {book.author}</p>
           <div className="text-orange-600 font-semibold">PREVIEW EDITION</div>
@@ -34,7 +34,7 @@ const generateSimplePages = (book: any) => {
       id: 2,
       title: 'Table of Contents',
       content: (
-        <div className="h-full p-8">
+        <div>
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Table of Contents</h2>
           <div className="space-y-4">
             <div className="flex justify-between border-b pb-2">
@@ -65,7 +65,7 @@ const generateSimplePages = (book: any) => {
       id: 3,
       title: 'Chapter 1',
       content: (
-        <div className="h-full p-8">
+        <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Chapter 1: Introduction</h2>
           <div className="prose prose-gray max-w-none">
             <p className="text-gray-700 leading-relaxed mb-4">
@@ -105,7 +105,7 @@ const generateSimplePages = (book: any) => {
       id: i,
       title: `Chapter ${i - 1}`,
       content: (
-        <div className="h-full p-8">
+        <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Chapter {i - 1}: Sample Content</h2>
           <div className="prose prose-gray max-w-none">
             <p className="text-gray-700 leading-relaxed mb-4">
@@ -177,10 +177,10 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full h-full max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+        <div className="flex items-center justify-between p-4 border-b bg-gray-50 flex-shrink-0">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{book.title}</h3>
             <p className="text-sm text-gray-600">Preview - {pages[currentPage]?.title}</p>
@@ -191,12 +191,14 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
         </div>
 
         {/* Content */}
-        <div className="relative bg-white" style={{ height: '600px' }}>
-          {pages[currentPage]?.content}
+        <div className="relative bg-white flex-1 overflow-auto">
+          <div className="h-full p-8">
+            {pages[currentPage]?.content}
+          </div>
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between p-4 bg-gray-50 border-t">
+        <div className="flex items-center justify-between p-4 bg-gray-50 border-t flex-shrink-0">
           <Button
             variant="outline"
             onClick={prevPage}
@@ -237,7 +239,7 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
         </div>
 
         {/* Call to Action */}
-        <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 border-t">
+        <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 border-t flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">
