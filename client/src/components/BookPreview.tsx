@@ -111,15 +111,41 @@ export default function BookPreview({ book, isOpen, onClose }: BookPreviewProps)
   const [isFlipping, setIsFlipping] = useState(false);
   const [previewPages] = useState(() => generatePreviewPages(book));
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+      
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        prevSpread();
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        nextSpread();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyPress);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [isOpen, currentSpread, isFlipping]);
+
   const nextSpread = () => {
     if (isFlipping) return;
     const maxSpread = Math.ceil(previewPages.length / 2) - 1;
     if (currentSpread < maxSpread) {
       setIsFlipping(true);
       setTimeout(() => {
-        setCurrentSpread(currentSpread + 1);
+        setCurrentSpread(prev => prev + 1);
         setIsFlipping(false);
-      }, 300);
+      }, 150);
     }
   };
 
@@ -128,9 +154,9 @@ export default function BookPreview({ book, isOpen, onClose }: BookPreviewProps)
     if (currentSpread > 0) {
       setIsFlipping(true);
       setTimeout(() => {
-        setCurrentSpread(currentSpread - 1);
+        setCurrentSpread(prev => prev - 1);
         setIsFlipping(false);
-      }, 300);
+      }, 150);
     }
   };
 
@@ -180,54 +206,52 @@ export default function BookPreview({ book, isOpen, onClose }: BookPreviewProps)
             </div>
 
             {/* Left Page */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`left-${currentSpread}`}
-                className="absolute left-0 top-0 w-1/2 h-full bg-white shadow-lg border-r border-gray-300 overflow-hidden"
-                initial={{ rotateY: isFlipping ? -180 : 0 }}
-                animate={{ rotateY: 0 }}
-                exit={{ rotateY: 180 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-                style={{ 
-                  transformOrigin: 'right center',
-                  transformStyle: 'preserve-3d'
-                }}
-              >
-                <div className="h-full relative">
-                  {getLeftPage() && (
-                    <div 
-                      className="h-full w-full"
-                      dangerouslySetInnerHTML={{ __html: getLeftPage()!.content }}
-                    />
-                  )}
-                </div>
-              </motion.div>
-            </AnimatePresence>
+            <motion.div
+              key={`left-${currentSpread}`}
+              className="absolute left-0 top-0 w-1/2 h-full bg-white shadow-lg border-r border-gray-300 overflow-hidden rounded-l-lg"
+              animate={{ 
+                rotateY: 0,
+                scale: 1
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              style={{ 
+                transformOrigin: 'right center',
+                transformStyle: 'preserve-3d'
+              }}
+            >
+              <div className="h-full relative">
+                {getLeftPage() && (
+                  <div 
+                    className="h-full w-full p-4"
+                    dangerouslySetInnerHTML={{ __html: getLeftPage()!.content }}
+                  />
+                )}
+              </div>
+            </motion.div>
 
             {/* Right Page */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`right-${currentSpread}`}
-                className="absolute right-0 top-0 w-1/2 h-full bg-white shadow-lg overflow-hidden"
-                initial={{ rotateY: isFlipping ? 180 : 0 }}
-                animate={{ rotateY: 0 }}
-                exit={{ rotateY: -180 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-                style={{ 
-                  transformOrigin: 'left center',
-                  transformStyle: 'preserve-3d'
-                }}
-              >
-                <div className="h-full relative">
-                  {getRightPage() && (
-                    <div 
-                      className="h-full w-full"
-                      dangerouslySetInnerHTML={{ __html: getRightPage()!.content }}
-                    />
-                  )}
-                </div>
-              </motion.div>
-            </AnimatePresence>
+            <motion.div
+              key={`right-${currentSpread}`}
+              className="absolute right-0 top-0 w-1/2 h-full bg-white shadow-lg overflow-hidden rounded-r-lg"
+              animate={{ 
+                rotateY: 0,
+                scale: 1
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              style={{ 
+                transformOrigin: 'left center',
+                transformStyle: 'preserve-3d'
+              }}
+            >
+              <div className="h-full relative">
+                {getRightPage() && (
+                  <div 
+                    className="h-full w-full p-4"
+                    dangerouslySetInnerHTML={{ __html: getRightPage()!.content }}
+                  />
+                )}
+              </div>
+            </motion.div>
 
             {/* Page Numbers */}
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-sm text-gray-500">
@@ -261,7 +285,7 @@ export default function BookPreview({ book, isOpen, onClose }: BookPreviewProps)
                     setTimeout(() => {
                       setCurrentSpread(i);
                       setIsFlipping(false);
-                    }, 300);
+                    }, 150);
                   }
                 }}
               />
