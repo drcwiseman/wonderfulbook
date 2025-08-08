@@ -23,6 +23,7 @@ import ChallengeDetailPage from "@/pages/challenge-detail";
 import SuperAdminDashboard from "@/pages/super-admin-dashboard";
 import TestingQA from "@/pages/testing-qa";
 import AccessibilityTestDemo from "@/components/AccessibilityTestDemo";
+import AdminFeedbackManagement from "@/pages/admin/feedback-management";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import ForgotPassword from "@/pages/auth/forgot-password";
@@ -31,6 +32,7 @@ import NotFound from "@/pages/not-found";
 import ScrollToTop from "@/components/ScrollToTop";
 import AccessibilityButton from "@/components/AccessibilityButton";
 import AccessibilityMenu from "@/components/AccessibilityMenu";
+import FeedbackButton from "@/components/FeedbackButton";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -73,6 +75,9 @@ function Router() {
         </Route>
         <Route path="/admin/email-management">
           <PageWrapper><AdminEmailManagement /></PageWrapper>
+        </Route>
+        <Route path="/admin/feedback">
+          <PageWrapper><AdminFeedbackManagement /></PageWrapper>
         </Route>
         <Route path="/super-admin">
           <PageWrapper><SuperAdminDashboard /></PageWrapper>
@@ -124,6 +129,7 @@ function App() {
           <ScrollToTop />
           <AccessibilityButton />
           <AccessibilityMenu />
+          <FeedbackButton />
         </TooltipProvider>
       </QueryClientProvider>
     </ProductionErrorBoundary>

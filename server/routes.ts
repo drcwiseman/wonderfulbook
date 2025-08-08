@@ -2622,6 +2622,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Register feedback routes
+  const { registerFeedbackRoutes } = await import("./routes-feedback");
+  registerFeedbackRoutes(app);
+
   const httpServer = createServer(app);
   return httpServer;
 }
