@@ -149,12 +149,24 @@ export default function SuperAdminDashboard() {
       apiRequest('POST', `/api/super-admin/users/${userId}/reset-password`, { newPassword }),
     onSuccess: () => {
       toast({ title: 'Success', description: 'Password reset successfully' });
+      queryClient.invalidateQueries({ queryKey: ['/api/super-admin/users'] });
       setShowPasswordDialog(false);
       setSelectedUser(null);
       setNewPassword('');
     },
     onError: (error: any) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        toast({ 
+          title: 'Session Expired', 
+          description: 'Your session has expired. Please refresh the page and try again.', 
+          variant: 'destructive' 
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      }
     },
   });
 
@@ -169,7 +181,18 @@ export default function SuperAdminDashboard() {
       setSelectedUser(null);
     },
     onError: (error: any) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        toast({ 
+          title: 'Session Expired', 
+          description: 'Your session has expired. Please refresh the page and try again.', 
+          variant: 'destructive' 
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      }
     },
   });
 
@@ -185,7 +208,18 @@ export default function SuperAdminDashboard() {
       setSelectedUser(null);
     },
     onError: (error: any) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        toast({ 
+          title: 'Session Expired', 
+          description: 'Your session has expired. Please refresh the page and try again.', 
+          variant: 'destructive' 
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      }
     },
   });
 

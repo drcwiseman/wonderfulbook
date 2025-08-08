@@ -731,8 +731,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   const isSuperAdmin = async (req: any, res: any, next: any) => {
+    console.log('isSuperAdmin middleware check:', {
+      hasUser: !!req.user,
+      userId: req.user?.id,
+      userEmail: req.user?.email,
+      sessionExists: !!req.session,
+      hasSession: !!req.session?.user
+    });
+
     if (!req.user) {
-      return res.status(401).json({ message: "Not authenticated" });
+      return res.status(401).json({ 
+        message: "Not authenticated",
+        debug: {
+          hasUser: !!req.user,
+          hasSession: !!req.session,
+          sessionUser: !!req.session?.user
+        }
+      });
     }
     
     // Get fresh user data from database to ensure we have the role
@@ -742,6 +757,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = await storage.getUser(userId);
       const userRole = user?.role;
+      
+      console.log('Super admin role check:', { userId, userEmail, userRole, hasUser: !!user });
       
       // Check for super_admin role or specific super admin users
       if (userRole === "super_admin" || userEmail === "prophetclimate@yahoo.com") {
