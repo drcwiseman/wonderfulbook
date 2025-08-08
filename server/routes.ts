@@ -2347,6 +2347,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Testing & QA API routes
+  app.post('/api/testing/integration', isSuperAdmin, async (req, res) => {
+    try {
+      const { runIntegrationTests } = await import('./test-automation');
+      const results = await runIntegrationTests(req, res);
+    } catch (error) {
+      console.error('Failed to run integration tests:', error);
+      res.status(500).json({ error: 'Failed to run integration tests' });
+    }
+  });
+
+  app.post('/api/testing/accessibility', isSuperAdmin, async (req, res) => {
+    try {
+      const { runAccessibilityTests } = await import('./test-automation');
+      const results = await runAccessibilityTests(req, res);
+    } catch (error) {
+      console.error('Failed to run accessibility tests:', error);
+      res.status(500).json({ error: 'Failed to run accessibility tests' });
+    }
+  });
+
+  app.post('/api/testing/performance', isSuperAdmin, async (req, res) => {
+    try {
+      const { runPerformanceTests } = await import('./test-automation');
+      const results = await runPerformanceTests(req, res);
+    } catch (error) {
+      console.error('Failed to run performance tests:', error);
+      res.status(500).json({ error: 'Failed to run performance tests' });
+    }
+  });
+
+  app.get('/api/testing/results/:suiteId?', isSuperAdmin, async (req, res) => {
+    try {
+      const { getTestResults } = await import('./test-automation');
+      await getTestResults(req, res);
+    } catch (error) {
+      console.error('Failed to get test results:', error);
+      res.status(500).json({ error: 'Failed to get test results' });
+    }
+  });
+
+  // Testing & QA API routes
+  app.post('/api/testing/integration', isSuperAdmin, async (req, res) => {
+    try {
+      const { runIntegrationTests } = await import('./test-automation');
+      const results = await runIntegrationTests(req, res);
+    } catch (error) {
+      console.error('Failed to run integration tests:', error);
+      res.status(500).json({ error: 'Failed to run integration tests' });
+    }
+  });
+
+  app.post('/api/testing/accessibility', isSuperAdmin, async (req, res) => {
+    try {
+      const { runAccessibilityTests } = await import('./test-automation');
+      const results = await runAccessibilityTests(req, res);
+    } catch (error) {
+      console.error('Failed to run accessibility tests:', error);
+      res.status(500).json({ error: 'Failed to run accessibility tests' });
+    }
+  });
+
+  app.post('/api/testing/performance', isSuperAdmin, async (req, res) => {
+    try {
+      const { runPerformanceTests } = await import('./test-automation');
+      const results = await runPerformanceTests(req, res);
+    } catch (error) {
+      console.error('Failed to run performance tests:', error);
+      res.status(500).json({ error: 'Failed to run performance tests' });
+    }
+  });
+
+  app.get('/api/testing/results/:suiteId?', isSuperAdmin, async (req, res) => {
+    try {
+      const { getTestResults } = await import('./test-automation');
+      await getTestResults(req, res);
+    } catch (error) {
+      console.error('Failed to get test results:', error);
+      res.status(500).json({ error: 'Failed to get test results' });
+    }
+  });
+
   // Register SEO routes
   registerSEORoutes(app);
 
