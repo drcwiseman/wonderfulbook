@@ -272,10 +272,9 @@ export function registerFeedbackRoutes(app: Express) {
     }
   });
 
-  // Get feedback statistics (temporarily public for testing)
+  // Get feedback statistics (temporarily public for testing)  
   app.get('/api/feedback/stats', async (req, res) => {
     try {
-
       // Get various statistics
       const [totalCount] = await db.select({ count: sql<number>`count(*)` }).from(feedback);
       const [openCount] = await db.select({ count: sql<number>`count(*)` }).from(feedback).where(eq(feedback.status, 'open'));

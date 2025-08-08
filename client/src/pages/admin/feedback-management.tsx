@@ -46,20 +46,27 @@ export default function AdminFeedbackManagement() {
       if (typeFilter !== 'all') params.set('type', typeFilter);
       if (priorityFilter !== 'all') params.set('priority', priorityFilter);
       
-      return await apiRequest(`/api/feedback?${params}`, 'GET');
+      const response = await fetch(`/api/feedback?${params}`);
+      return response.json();
     }
   });
 
   // Fetch feedback statistics
   const { data: stats } = useQuery({
     queryKey: ['/api/feedback/stats'],
-    queryFn: async () => await apiRequest('/api/feedback/stats', 'GET')
+    queryFn: async () => {
+      const response = await fetch('/api/feedback/stats');
+      return response.json();
+    }
   });
 
   // Fetch selected feedback details
   const { data: selectedFeedbackData } = useQuery({
     queryKey: ['/api/feedback', selectedFeedback],
-    queryFn: async () => await apiRequest(`/api/feedback/${selectedFeedback}`, 'GET'),
+    queryFn: async () => {
+      const response = await fetch(`/api/feedback/${selectedFeedback}`);
+      return response.json();
+    },
     enabled: !!selectedFeedback
   });
 
@@ -137,7 +144,7 @@ export default function AdminFeedbackManagement() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Feedback</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.stats.total}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.stats?.total || 0}</p>
                   </div>
                   <MessageSquare className="h-8 w-8 text-gray-400" />
                 </div>
@@ -149,7 +156,7 @@ export default function AdminFeedbackManagement() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Open Issues</p>
-                    <p className="text-2xl font-bold text-yellow-600">{stats.stats.open}</p>
+                    <p className="text-2xl font-bold text-yellow-600">{stats?.stats?.open || 0}</p>
                   </div>
                   <Clock className="h-8 w-8 text-yellow-400" />
                 </div>
@@ -161,7 +168,7 @@ export default function AdminFeedbackManagement() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Bug Reports</p>
-                    <p className="text-2xl font-bold text-red-600">{stats.stats.bugs}</p>
+                    <p className="text-2xl font-bold text-red-600">{stats?.stats?.bugs || 0}</p>
                   </div>
                   <Bug className="h-8 w-8 text-red-400" />
                 </div>
@@ -173,7 +180,7 @@ export default function AdminFeedbackManagement() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Critical</p>
-                    <p className="text-2xl font-bold text-red-800">{stats.stats.critical}</p>
+                    <p className="text-2xl font-bold text-red-800">{stats?.stats?.critical || 0}</p>
                   </div>
                   <AlertTriangle className="h-8 w-8 text-red-600" />
                 </div>
