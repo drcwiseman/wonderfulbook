@@ -261,54 +261,62 @@ export default function AdminFeedbackManagement() {
                   </div>
                 ) : (
                   <div className="divide-y">
-                    {feedbackData?.feedback?.map((item: any) => (
-                      <div
-                        key={item.feedback.id}
-                        className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                          selectedFeedback === item.feedback.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                        }`}
-                        onClick={() => setSelectedFeedback(item.feedback.id)}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {getTypeIcon(item.feedback.type)}
-                            <h3 className="font-medium text-gray-900 dark:text-white">
-                              {item.feedback.title}
-                            </h3>
+                    {feedbackData?.feedback?.map((item: any) => {
+                      // Handle both nested and flat data structures with null safety
+                      const feedback = item?.feedback || item;
+                      if (!feedback || !feedback.id) return null;
+                      
+                      return (
+                        <div
+                          key={feedback.id}
+                          className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                            selectedFeedback === feedback.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                          }`}
+                          onClick={() => setSelectedFeedback(feedback.id)}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {getTypeIcon(feedback.type || 'feedback')}
+                              <h3 className="font-medium text-gray-900 dark:text-white">
+                                {feedback.title || 'Untitled'}
+                              </h3>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge className={getPriorityColor(feedback.priority || 'medium')}>
+                                {feedback.priority || 'medium'}
+                              </Badge>
+                              <div className="flex items-center gap-1">
+                                {getStatusIcon(feedback.status || 'open')}
+                                <span className="text-sm capitalize">
+                                  {(feedback.status || 'open').replace('_', ' ')}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className={getPriorityColor(item.feedback.priority)}>
-                              {item.feedback.priority}
-                            </Badge>
+                          
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+                            {feedback.description || 'No description provided'}
+                          </p>
+                          
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            {item.user && (
+                              <div className="flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                {item.user.firstName || 'Unknown'} {item.user.lastName || 'User'}
+                              </div>
+                            )}
                             <div className="flex items-center gap-1">
-                              {getStatusIcon(item.feedback.status)}
-                              <span className="text-sm capitalize">{item.feedback.status.replace('_', ' ')}</span>
+                              <Calendar className="h-3 w-3" />
+                              {feedback.createdAt ? new Date(feedback.createdAt).toLocaleDateString() : 'Unknown date'}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Globe className="h-3 w-3" />
+                              {feedback.category || 'General'}
                             </div>
                           </div>
                         </div>
-                        
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
-                          {item.feedback.description}
-                        </p>
-                        
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          {item.user && (
-                            <div className="flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              {item.user.firstName} {item.user.lastName}
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(item.feedback.createdAt).toLocaleDateString()}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Globe className="h-3 w-3" />
-                            {item.feedback.category}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    }).filter(Boolean)}
                   </div>
                 )}
               </CardContent>
