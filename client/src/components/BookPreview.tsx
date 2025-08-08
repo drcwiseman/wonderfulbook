@@ -227,7 +227,7 @@ export default function BookPreview({ book, isOpen, onClose }: BookPreviewProps)
           <Button
             variant="outline"
             onClick={prevSpread}
-            disabled={currentSpread === 0 || isFlipping}
+            disabled={currentSpread === 0}
             className="flex items-center space-x-2"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -253,7 +253,7 @@ export default function BookPreview({ book, isOpen, onClose }: BookPreviewProps)
           <Button
             variant="outline"
             onClick={nextSpread}
-            disabled={currentSpread >= Math.ceil(previewPages.length / 2) - 1 || isFlipping}
+            disabled={currentSpread >= Math.ceil(previewPages.length / 2) - 1}
             className="flex items-center space-x-2"
           >
             <span>Next</span>
