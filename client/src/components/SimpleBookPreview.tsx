@@ -243,6 +243,9 @@ export default function SimpleBookPreview({ book, isOpen, onClose }: BookPreview
               <p className="text-sm text-gray-600">
                 Enjoying the preview? Get full access to continue reading.
               </p>
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Use arrow keys or buttons above to navigate pages
+              </p>
             </div>
             <div className="space-x-2">
               <Button variant="outline" onClick={onClose}>
