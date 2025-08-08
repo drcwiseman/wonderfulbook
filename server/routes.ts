@@ -2,9 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "@shared/schema";
+import { db } from "./db";
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, feedback } from "@shared/schema";
 import { insertBookSchema, insertCategorySchema } from "@shared/schema";
 import { z } from "zod";
+import { sql, eq } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -2625,8 +2627,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public feedback stats endpoint (for admin panel)
   app.get('/api/feedback/stats', async (req, res) => {
     try {
-      const { feedback } = await import("@shared/schema");
-      const { sql, eq } = await import("drizzle-orm");
       
       // Get various statistics
       const [totalCount] = await db.select({ count: sql<number>`count(*)` }).from(feedback);
