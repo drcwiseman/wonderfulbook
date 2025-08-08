@@ -58,15 +58,15 @@ class EmailService {
   private templatesPath: string;
 
   constructor() {
-    // Load SMTP configuration from environment variables
+    // Load SMTP configuration from environment variables with trimming
     this.config = {
-      host: process.env.SMTP_HOST || 'mail.thekingdomclub.org',
-      port: parseInt(process.env.SMTP_PORT || '465'),
-      secure: true, // Use SSL/TLS
-      user: process.env.SMTP_USER || 'books@thekingdomclub.org',
-      pass: process.env.SMTP_PASS || '@@Brave@@2017',
-      fromEmail: process.env.SMTP_FROM_EMAIL || 'books@thekingdomclub.org',
-      fromName: process.env.SMTP_FROM_NAME || 'Wonderfulbooks.net',
+      host: (process.env.SMTP_HOST || 'smtp.gmail.com').trim(),
+      port: parseInt((process.env.SMTP_PORT || '587').trim()),
+      secure: parseInt((process.env.SMTP_PORT || '587').trim()) === 465, // SSL for port 465, STARTTLS for 587
+      user: (process.env.SMTP_USER || '').trim(),
+      pass: (process.env.SMTP_PASS || '').trim(),
+      fromEmail: (process.env.EMAIL_FROM || process.env.SMTP_USER || '').trim(),
+      fromName: 'Wonderful Books',
     };
 
     this.templatesPath = path.join(process.cwd(), 'server', 'email-templates');
