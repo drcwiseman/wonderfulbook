@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Star, Bookmark, Book, ArrowLeft } from "lucide-react";
+import { Star, Bookmark, Book, ArrowLeft, Home, Library } from "lucide-react";
 import type { Book as BookType, ReadingProgress, Bookmark as BookmarkType } from "@shared/schema";
 import { SEOHead, getBookSEO } from "@/components/SEOHead";
+import PageHeader from "@/components/PageHeader";
+import Header from "@/components/Header";
 
 export default function BookDetailOld() {
   const [, params] = useRoute("/book/:id");
@@ -132,40 +134,51 @@ export default function BookDetailOld() {
 
   if (bookLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full" />
-      </div>
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-20">
+          <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full" />
+        </div>
+      </>
     );
   }
 
   if (!book) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Book className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Book Not Found</h1>
-              <p className="text-gray-600">The requested book could not be found.</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-20">
+          <Card className="w-full max-w-md mx-4">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Book className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Book Not Found</h1>
+                <p className="text-gray-600">The requested book could not be found.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 
   if (!canAccessBook()) {
     return (
-      <div className="min-h-screen bg-gray-50 text-gray-900">
-        <div className="container mx-auto px-4 py-8">
-          <Button
-            variant="ghost"
-            onClick={() => window.history.back()}
-            className="mb-6 text-gray-700 hover:text-orange-600"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 text-gray-900 pt-20">
+          <PageHeader 
+            title="Upgrade Required"
+            subtitle="This book requires a higher subscription tier"
+            breadcrumbs={[
+              { label: "Home", href: "/", icon: Home },
+              { label: "Library", href: "/library", icon: Library },
+              { label: book.title, icon: BookOpen }
+            ]}
+            backButtonLabel="Back to Library"
+            backButtonHref="/library"
+          />
+          <div className="container mx-auto px-4 py-8">
           
           <div className="max-w-4xl mx-auto">
             <div className="grid md:grid-cols-3 gap-8">
@@ -217,37 +230,40 @@ export default function BookDetailOld() {
               </div>
             </div>
           </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      {book && <SEOHead {...getBookSEO(book)} />}
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => window.history.back()}
-            className="text-gray-700 hover:text-orange-600"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Library
-          </Button>
-          
-          <div className="flex items-center space-x-4">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-50 text-gray-900 pt-20">
+        {book && <SEOHead {...getBookSEO(book)} />}
+        <PageHeader 
+          title={book.title}
+          subtitle={`by ${book.author}`}
+          breadcrumbs={[
+            { label: "Home", href: "/", icon: Home },
+            { label: "Library", href: "/library", icon: Library },
+            { label: book.title, icon: BookOpen }
+          ]}
+          backButtonLabel="Back to Library"
+          backButtonHref="/library"
+          actions={
             <Button
               variant="outline"
               onClick={handleAddBookmark}
               disabled={createBookmarkMutation.isPending}
-              className="border-gray-600 text-white hover:bg-gray-800"
+              className="border-gray-600 text-gray-900 hover:bg-gray-100"
             >
               <Bookmark className="w-4 h-4 mr-2" />
               Bookmark
             </Button>
-          </div>
-        </div>
+          }
+        />
+        <div className="container mx-auto px-4 py-8">
 
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-4 gap-8">

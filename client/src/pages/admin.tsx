@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X, AlertTriangle, Star, BarChart3, Settings, Library, UserCheck, Plus } from 'lucide-react';
+import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X, AlertTriangle, Star, BarChart3, Settings, Library, UserCheck, Plus, Home, Shield } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RichTextEditor } from '@/components/RichTextEditor';
@@ -22,6 +22,8 @@ import { CategoryManager } from '@/components/CategoryManager';
 import { UserManagement } from '@/components/UserManagement';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
+import Header from '@/components/Header';
+import PageHeader from '@/components/PageHeader';
 
 const uploadSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -238,14 +240,28 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center gap-3 mb-8">
-        <Settings className="h-8 w-8 text-orange-600" />
-        <div>
-          <h1 className="text-3xl font-bold">Admin Panel</h1>
-          <p className="text-muted-foreground">Content management and platform administration</p>
-        </div>
-      </div>
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <PageHeader 
+          title="Admin Panel"
+          subtitle="Content management and platform administration"
+          breadcrumbs={[
+            { label: "Home", href: "/", icon: Home },
+            { label: "Admin Panel", icon: Shield }
+          ]}
+          backButtonLabel="Back to Home"
+          backButtonHref="/"
+          actions={
+            <div className="flex items-center gap-3">
+              <Settings className="h-8 w-8 text-orange-600" />
+              <Badge variant="secondary">
+                {(user as any)?.role === "super_admin" ? "Super Admin" : "Admin"}
+              </Badge>
+            </div>
+          }
+        />
+        <div className="container mx-auto px-4 py-8">
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
@@ -692,6 +708,8 @@ export default function AdminPanel() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }

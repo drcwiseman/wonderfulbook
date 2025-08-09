@@ -11,13 +11,17 @@ import {
   CreditCard,
   Settings,
   Bookmark,
-  TrendingUp
+  TrendingUp,
+  Home,
+  BarChart3
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
+import Header from "@/components/Header";
+import PageHeader from "@/components/PageHeader";
 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -91,9 +95,12 @@ export default function Dashboard() {
 
   if (!isAuthenticated || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full" />
-      </div>
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-20">
+          <div className="animate-spin w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full" />
+        </div>
+      </>
     );
   }
 
@@ -113,32 +120,27 @@ export default function Dashboard() {
     currentConfig.limit === 'Unlimited' ? 100 : (booksRead / (currentConfig.limit as number)) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <div className="h-16 w-16 rounded-full bg-blue-500 flex items-center justify-center text-white text-xl font-semibold">
-              {(user as any)?.firstName?.charAt(0) || 'U'}{(user as any)?.lastName?.charAt(0) || ''}
+    <>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 pt-20">
+        <PageHeader 
+          title={`Welcome back, ${(user as any)?.firstName || 'Reader'}!`}
+          subtitle="Continue your learning journey"
+          breadcrumbs={[
+            { label: "Home", href: "/", icon: Home },
+            { label: "Dashboard", icon: BarChart3 }
+          ]}
+          backButtonLabel="Browse Books"
+          backButtonHref="/"
+          actions={
+            <div className="flex items-center space-x-4">
+              <div className="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-semibold">
+                {(user as any)?.firstName?.charAt(0) || 'U'}{(user as any)?.lastName?.charAt(0) || ''}
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Welcome back, {(user as any)?.firstName || 'Reader'}!
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300">
-                Continue your learning journey
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => setLocation('/')}
-            className="flex items-center space-x-2"
-          >
-            <BookOpen className="w-4 h-4" />
-            <span>Browse Books</span>
-          </Button>
-        </div>
+          }
+        />
+        <div className="container mx-auto px-4 py-8">
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Main Content */}
@@ -369,7 +371,8 @@ export default function Dashboard() {
             </Card>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

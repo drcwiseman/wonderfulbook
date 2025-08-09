@@ -18,7 +18,9 @@ import {
   Clock,
   Medal,
   Star,
-  TrendingUp
+  TrendingUp,
+  Home,
+  Zap
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +33,7 @@ import { z } from "zod";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AccessibleContent, { SpeakableText } from "@/components/AccessibleContent";
+import PageHeader from "@/components/PageHeader";
 
 // Challenge creation form schema
 const createChallengeSchema = z.object({
@@ -179,42 +182,37 @@ export default function ChallengesPage() {
   }
 
   return (
-    <AccessibleContent>
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <Header />
-        
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          {/* Page Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              <SpeakableText>Reading Challenges</SpeakableText>
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              <SpeakableText>
-                Join exciting reading challenges and compete with fellow book lovers. 
-                Create your own challenges or participate in community challenges!
-              </SpeakableText>
-            </p>
-          </div>
-
-          {/* Action Bar */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-8">
-            <div className="flex items-center gap-2">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <PageHeader 
+          title="Reading Challenges"
+          subtitle="Join exciting reading challenges and compete with fellow book lovers"
+          breadcrumbs={[
+            { label: "Home", href: "/", icon: Home },
+            { label: "Challenges", icon: Zap }
+          ]}
+          backButtonLabel="Back to Home"
+          backButtonHref="/"
+          actions={
+            <div className="flex items-center gap-3">
               <Trophy className="h-6 w-6 text-orange-500" />
-              <SpeakableText>
-                <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {challenges.length} Active Challenges
-                </span>
-              </SpeakableText>
+              <span className="text-lg font-semibold text-gray-900">
+                {challenges.length} Active Challenges
+              </span>
             </div>
-            
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Challenge
-                </Button>
-              </DialogTrigger>
+          }
+        />
+        <AccessibleContent>
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex justify-end mb-8">
+              <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Challenge
+                  </Button>
+                </DialogTrigger>
               
               <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
@@ -491,10 +489,9 @@ export default function ChallengesPage() {
               </Button>
             </div>
           )}
-        </div>
-        
-        <Footer />
+          </div>
+        </AccessibleContent>
       </div>
-    </AccessibleContent>
+    </>
   );
 }

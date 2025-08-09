@@ -5,6 +5,9 @@ import { PremiumPDFReader } from "@/components/PremiumPDFReader";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Home, BookOpen } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function ReaderPage() {
   const { bookId } = useParams();

@@ -7,7 +7,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, ArrowLeft } from "lucide-react";
+import { Check, ArrowLeft, Home, Crown } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
+import Header from "@/components/Header";
 
 // Check which environment variable actually contains the publishable key
 const publicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY?.startsWith('pk_') 
@@ -167,94 +169,108 @@ export default function Subscribe() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full" />
-      </div>
+      <>
+        <Header />
+        <div className="min-h-screen bg-white flex items-center justify-center pt-20">
+          <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full" />
+        </div>
+      </>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-white text-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl mb-4 text-gray-900">Please Login to Continue</h2>
-          <p className="text-gray-600 mb-6">You need to be logged in to access subscription plans</p>
-          <Button 
-            onClick={() => window.location.href = "/auth/login"}
-            className="btn-orange-accessible"
-          >
-            Login Now
-          </Button>
+      <>
+        <Header />
+        <div className="min-h-screen bg-white text-gray-900 flex items-center justify-center pt-20">
+          <div className="text-center">
+            <h2 className="text-2xl mb-4 text-gray-900">Please Login to Continue</h2>
+            <p className="text-gray-600 mb-6">You need to be logged in to access subscription plans</p>
+            <Button 
+              onClick={() => window.location.href = "/auth/login"}
+              className="btn-orange-accessible"
+            >
+              Login Now
+            </Button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (clientSecret && selectedTier) {
     return (
-      <div className="min-h-screen bg-white text-gray-900">
-        <div className="container mx-auto px-4 py-8">
-          <Button
-            variant="ghost"
-            onClick={() => {
+      <>
+        <Header />
+        <div className="min-h-screen bg-white text-gray-900 pt-20">
+          <PageHeader 
+            title="Complete Payment"
+            subtitle={`Finish your ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} subscription`}
+            breadcrumbs={[
+              { label: "Home", href: "/", icon: Home },
+              { label: "Subscribe", href: "/subscribe", icon: Crown },
+              { label: "Payment" }
+            ]}
+            backButtonLabel="Back to Plans"
+            onBackClick={() => {
               setClientSecret("");
               setSelectedTier("");
             }}
-            className="mb-6 text-gray-700 hover:text-orange-600"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Plans
-          </Button>
-
-          <div className="max-w-md mx-auto">
-            <Card className="bg-white border-gray-200 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-gray-900 text-center">
-                  Complete Your {selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} Subscription
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Elements stripe={stripePromise} options={{ clientSecret }}>
-                  <SubscribeForm tier={selectedTier} />
-                </Elements>
-                {/* Reset loading states once payment form is rendered */}
-                {(() => {
-                  if (isCreatingSubscription) {
-                    setTimeout(() => {
-                      setIsCreatingSubscription(false);
-                      setLoadingTier(null);
-                    }, 500);
-                  }
-                  return null;
-                })()}
-              </CardContent>
-            </Card>
+          />
+          <div className="container mx-auto px-4 py-8">
+            <div className="max-w-md mx-auto">
+              <Card className="bg-white border-gray-200 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-gray-900 text-center">
+                    Complete Your {selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} Subscription
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Elements stripe={stripePromise} options={{ clientSecret }}>
+                    <SubscribeForm tier={selectedTier} />
+                  </Elements>
+                  {/* Reset loading states once payment form is rendered */}
+                  {(() => {
+                    if (isCreatingSubscription) {
+                      setTimeout(() => {
+                        setIsCreatingSubscription(false);
+                        setLoadingTier(null);
+                      }, 500);
+                    }
+                    return null;
+                  })()}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <Button
-          variant="ghost"
-          onClick={() => window.history.back()}
-          className="mb-6 text-gray-700 hover:text-orange-600"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
+    <>
+      <Header />
+      <div className="min-h-screen bg-white text-gray-900 pt-20">
+        <PageHeader 
+          title="Choose Your Plan"
+          subtitle="Select the perfect subscription for your reading journey"
+          breadcrumbs={[
+            { label: "Home", href: "/", icon: Home },
+            { label: "Subscription", icon: Crown }
+          ]}
+          backButtonLabel="Back to Home"
+          backButtonHref="/"
+        />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center mb-16">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">Choose Your Reading Journey</h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Select the perfect plan for your transformational reading experience
+            </p>
+          </div>
 
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">Choose Your Reading Journey</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Select the perfect plan for your transformational reading experience
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Free Trial */}
           <Card className="bg-white border-2 border-gray-200 hover:border-orange-300 transition-all duration-300 shadow-lg">
             <CardContent className="p-8 text-center">
@@ -395,9 +411,9 @@ export default function Subscribe() {
                 )}
               </Button>
             </CardContent>
-          </Card>
-        </div>
+        </Card>
       </div>
     </div>
+    </>
   );
 }

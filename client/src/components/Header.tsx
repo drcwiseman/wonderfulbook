@@ -69,7 +69,23 @@ export default function Header() {
     ...(isAuthenticated ? [
       { href: "/library", label: "My Library", icon: Library },
       { href: "/challenges", label: "Challenges", icon: Trophy },
-      { href: "/dashboard", label: "Dashboard", icon: BarChart3 }
+      { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
+      { href: "/subscribe", label: "Subscription", icon: Crown }
+    ] : [])
+  ];
+
+  // Admin navigation items (shown in dropdown)
+  const adminItems = [
+    ...(isAuthenticated && (user as any)?.role === 'admin' ? [
+      { href: "/admin", label: "Admin Panel", icon: Shield },
+      { href: "/admin/email-management", label: "Email Management", icon: Settings },
+      { href: "/testing-qa", label: "Testing & QA", icon: Settings }
+    ] : []),
+    ...(isAuthenticated && (user as any)?.role === 'super_admin' ? [
+      { href: "/super-admin", label: "Super Admin", icon: Crown },
+      { href: "/admin", label: "Admin Panel", icon: Shield },
+      { href: "/admin/email-management", label: "Email Management", icon: Settings },
+      { href: "/testing-qa", label: "Testing & QA", icon: Settings }
     ] : [])
   ];
 
@@ -358,49 +374,86 @@ export default function Header() {
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 + index * 0.1, duration: 0.3 }}
-                        whileHover={{ scale: 1.02, x: 5 }}
-                        whileTap={{ scale: 0.98 }}
                         onClick={toggleMobileMenu}
                       >
                         <Icon className="w-5 h-5" />
-                        <span className="text-lg">{item.label}</span>
+                        {item.label}
                       </motion.a>
                     );
                   })}
+                  
+                  {/* Admin Links in Mobile */}
+                  {adminItems.length > 0 && (
+                    <>
+                      <div className="border-t border-gray-700/50 my-4 pt-4">
+                        <p className="text-gray-400 text-sm font-medium mb-2 px-4">Admin</p>
+                        {adminItems.map((item, index) => {
+                          const Icon = item.icon;
+                          return (
+                            <motion.a
+                              key={item.href}
+                              href={item.href}
+                              className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-200 font-medium ${
+                                isActive(item.href)
+                                  ? 'bg-orange-500/20 text-orange-400 shadow-lg border border-orange-500/30'
+                                  : 'text-white hover:text-orange-300 hover:bg-white/10'
+                              }`}
+                              initial={{ opacity: 0, x: 50 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.3 + index * 0.1, duration: 0.3 }}
+                              onClick={toggleMobileMenu}
+                            >
+                              <Icon className="w-5 h-5" />
+                              {item.label}
+                            </motion.a>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </nav>
                 
-                {/* Mobile Actions */}
-                <div className="mt-8 pt-6 border-t border-gray-700/50 space-y-3">
-                  {isAuthenticated ? (
-                    <motion.button
-                      onClick={handleLogout}
+                {/* Mobile Auth Actions */}
+                {!isAuthenticated ? (
+                  <div className="mt-6 space-y-3">
+                    <Button 
+                      onClick={() => {
+                        toggleMobileMenu();
+                        window.location.href = "/auth/login";
+                      }}
+                      variant="ghost"
+                      className="w-full text-white hover:text-orange-300 hover:bg-white/10 justify-start"
+                    >
+                      <User className="w-5 h-5 mr-3" />
+                      Sign In
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        toggleMobileMenu();
+                        window.location.href = "/auth/register";
+                      }}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white justify-start"
+                    >
+                      <Crown className="w-5 h-5 mr-3" />
+                      Get Started
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="mt-6">
+                    <Button
+                      onClick={() => {
+                        toggleMobileMenu();
+                        handleLogout();
+                      }}
+                      variant="ghost"
                       disabled={logoutMutation.isPending}
-                      className="flex items-center gap-3 w-full p-4 text-white hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 font-medium"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5, duration: 0.3 }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      className="w-full text-white hover:text-red-300 hover:bg-red-500/10 justify-start"
                     >
-                      <LogOut className="w-5 h-5" />
-                      <span className="text-lg">{logoutMutation.isPending ? 'Logging out...' : 'Sign Out'}</span>
-                    </motion.button>
-                  ) : (
-                    <motion.a
-                      href="/auth/login"
-                      className="flex items-center justify-center gap-2 w-full p-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium shadow-lg hover:shadow-orange-500/25 transition-all duration-300"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5, duration: 0.3 }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={toggleMobileMenu}
-                    >
-                      <User className="w-5 h-5" />
-                      <span className="text-lg">Sign In</span>
-                    </motion.a>
-                  )}
-                </div>
+                      <LogOut className="w-5 h-5 mr-3" />
+                      {logoutMutation.isPending ? "Signing out..." : "Sign Out"}
+                    </Button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </>

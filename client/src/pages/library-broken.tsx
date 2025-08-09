@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { 
   Search, 
   Star, 
@@ -34,32 +34,34 @@ interface LibraryBook extends Book {
     currentPage: number;
     totalPages: number;
     progressPercentage: string;
-    lastReadAt: Date | string;
+    lastReadAt: Date;
   };
   isBookmarked?: boolean;
-  accessGranted: Date;
+  accessGranted?: Date;
 }
 
 export default function Library() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("recent");
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const { data: allBooks = [], isLoading: booksLoading } = useQuery({
-    queryKey: ["/api/books"],
-    enabled: isAuthenticated,
+  // Get user's accessible books based on subscription
+  const { data: allBooks = [], isLoading: booksLoading } = useQuery<Book[]>({
+    queryKey: ['/api/books']
   });
 
-  const { data: progressData = [], isLoading: progressLoading } = useQuery({
-    queryKey: ["/api/reading-progress"],
-    enabled: isAuthenticated,
+  // Get user's reading progress
+  const { data: progressData = [], isLoading: progressLoading } = useQuery<any[]>({
+    queryKey: ['/api/user/reading-progress'],
+    enabled: isAuthenticated
   });
 
-  const { data: bookmarks = [], isLoading: bookmarksLoading } = useQuery({
-    queryKey: ["/api/bookmarks"],
-    enabled: isAuthenticated,
+  // Get user's bookmarks
+  const { data: bookmarks = [], isLoading: bookmarksLoading } = useQuery<any[]>({
+    queryKey: ['/api/bookmarks'],
+    enabled: isAuthenticated
   });
 
   // Filter books based on user's subscription tier
@@ -144,7 +146,7 @@ export default function Library() {
     !book.readingProgress || book.readingProgress.currentPage === 0
   );
 
-  const isLoadingState = booksLoading || progressLoading || bookmarksLoading;
+  const isLoading = booksLoading || progressLoading || bookmarksLoading;
 
   if (!isAuthenticated) {
     return (
@@ -164,7 +166,7 @@ export default function Library() {
     );
   }
 
-  if (isLoadingState) {
+  if (isLoading) {
     return (
       <>
         <Header />
@@ -203,88 +205,94 @@ export default function Library() {
           }
         />
         <div className="container mx-auto px-4 py-8">
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <Card className="bg-white border-orange-200">
-              <CardContent className="p-4 text-center">
-                <BookOpen className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900">{libraryBooks.length}</div>
-                <div className="text-sm text-gray-600">Total Books</div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-white border-orange-200">
-              <CardContent className="p-4 text-center">
-                <Play className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900">{readingBooks.length}</div>
-                <div className="text-sm text-gray-600">Reading</div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-white border-orange-200">
-              <CardContent className="p-4 text-center">
-                <Award className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900">{completedBooks.length}</div>
-                <div className="text-sm text-gray-600">Completed</div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-white border-orange-200">
-              <CardContent className="p-4 text-center">
-                <Heart className="w-8 h-8 text-red-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900">{bookmarkedBooks.length}</div>
-                <div className="text-sm text-gray-600">Bookmarked</div>
-              </CardContent>
-            </Card>
-          </div>
 
-          {/* Search and Controls */}
-          <div className="flex flex-col md:flex-row gap-4 mb-8">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search your library..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-12 border-orange-200 focus:border-orange-400"
-              />
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <Card className="bg-white border-orange-200">
+                <CardContent className="p-4 text-center">
+                  <BookOpen className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-gray-900">{libraryBooks.length}</div>
+                  <div className="text-sm text-gray-600">Total Books</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white border-orange-200">
+                <CardContent className="p-4 text-center">
+                  <Play className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-gray-900">{readingBooks.length}</div>
+                  <div className="text-sm text-gray-600">Reading</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white border-orange-200">
+                <CardContent className="p-4 text-center">
+                  <Award className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-gray-900">{completedBooks.length}</div>
+                  <div className="text-sm text-gray-600">Completed</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white border-orange-200">
+                <CardContent className="p-4 text-center">
+                  <Heart className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-gray-900">{bookmarkedBooks.length}</div>
+                  <div className="text-sm text-gray-600">Bookmarked</div>
+                </CardContent>
+              </Card>
             </div>
-            
-            <div className="flex gap-2">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-orange-200 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                <option value="recent">Recently Read</option>
-                <option value="progress">Most Progress</option>
-                <option value="rating">Highest Rated</option>
-                <option value="title">Title A-Z</option>
-                <option value="author">Author A-Z</option>
-              </select>
+
+            {/* Search and Controls */}
+            <div className="flex flex-col md:flex-row gap-4 mb-8">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search your library..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-12 border-orange-200 focus:border-orange-400"
+                />
+              </div>
               
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className={viewMode === 'grid' ? 'bg-orange-500 hover:bg-orange-600' : 'border-orange-200 hover:border-orange-400'}
-              >
-                <Grid3x3 className="w-4 h-4" />
-              </Button>
-              
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-orange-500 hover:bg-orange-600' : 'border-orange-200 hover:border-orange-400'}
-              >
-                <List className="w-4 h-4" />
-              </Button>
+              <div className="flex gap-2">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-4 py-2 border border-orange-200 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="recent">Recently Read</option>
+                  <option value="progress">Most Progress</option>
+                  <option value="rating">Highest Rated</option>
+                  <option value="title">Title A-Z</option>
+                  <option value="author">Author A-Z</option>
+                </select>
+                
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className={viewMode === 'grid' ? 'bg-orange-500 hover:bg-orange-600' : 'border-orange-200 hover:border-orange-400'}
+                >
+                  <Grid3x3 className="w-4 h-4" />
+                </Button>
+                
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className={viewMode === 'list' ? 'bg-orange-500 hover:bg-orange-600' : 'border-orange-200 hover:border-orange-400'}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
-          
-          {/* Library Content */}
+        </div>
+      </div>
+
+      {/* Library Content */}
+      <section className="px-6 pb-16">
+        <div className="container mx-auto max-w-7xl">
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
             <TabsList className="grid w-full md:w-auto grid-cols-5 bg-white border border-orange-200 mb-8">
               <TabsTrigger value="all" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">
@@ -382,27 +390,125 @@ interface LibraryBookCardProps {
 
 function LibraryBookCard({ book, layout }: LibraryBookCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  
-  const progressPercent = book.readingProgress ? 
-    parseFloat(book.readingProgress.progressPercentage) : 0;
-  
-  const isStarted = progressPercent > 0;
+  const progressPercent = parseFloat(book.readingProgress?.progressPercentage || '0');
   const isCompleted = progressPercent >= 95;
+  const isStarted = progressPercent > 0;
+
+  const handleBookClick = () => {
+    if (isStarted && !isCompleted) {
+      window.location.href = `/reader/${book.id}`;
+    } else {
+      window.location.href = `/book/${book.id}`;
+    }
+  };
+
+  const getReadingStatus = () => {
+    if (isCompleted) return { text: 'Completed', color: 'text-green-600 bg-green-100' };
+    if (isStarted) return { text: 'Reading', color: 'text-blue-600 bg-blue-100' };
+    return { text: 'Unread', color: 'text-gray-600 bg-gray-100' };
+  };
+
+  const status = getReadingStatus();
+
+  if (layout === 'list') {
+    return (
+      <Card 
+        className="bg-white hover:shadow-xl transition-all duration-300 cursor-pointer border-orange-200 hover:border-orange-400"
+        onClick={handleBookClick}
+      >
+        <CardContent className="p-6">
+          <div className="flex gap-6">
+            <div className="relative">
+              <img
+                src={book.coverImageUrl || "/api/placeholder/120/160"}
+                alt={book.title}
+                className="w-20 h-28 object-cover rounded-md shadow-md"
+              />
+              {book.isBookmarked && (
+                <div className="absolute -top-2 -right-2">
+                  <Heart className="w-5 h-5 text-red-500 fill-current" />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <h3 className="font-semibold text-lg text-gray-900 line-clamp-2">{book.title}</h3>
+                  <p className="text-orange-600 font-medium">{book.author}</p>
+                </div>
+                
+                <Badge className={`${status.color} text-xs font-bold px-2 py-1 rounded-full`}>
+                  {status.text}
+                </Badge>
+              </div>
+              
+              <p className="text-gray-600 text-sm line-clamp-2 mb-3">{book.description}</p>
+              
+              {isStarted && (
+                <div className="mb-3">
+                  <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                    <span>Progress</span>
+                    <span>{Math.round(progressPercent)}%</span>
+                  </div>
+                  <Progress value={progressPercent} className="h-2" />
+                  <div className="text-xs text-gray-500 mt-1">
+                    Page {book.readingProgress?.currentPage} of {book.readingProgress?.totalPages}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                    <span className="text-sm font-medium">{book.rating || '0.0'}</span>
+                  </div>
+                  
+                  {book.readingProgress?.lastReadAt && (
+                    <div className="text-xs text-gray-500">
+                      Last read: {new Date(book.readingProgress.lastReadAt).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+                
+                <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
+                  {isStarted && !isCompleted ? 'Continue' : isCompleted ? 'Read Again' : 'Start Reading'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card 
-      className="group cursor-pointer transition-all duration-300 hover:shadow-lg border-orange-100 hover:border-orange-300"
+      className="bg-white hover:shadow-2xl transition-all duration-300 cursor-pointer border-orange-200 hover:border-orange-400 hover:scale-105 group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => window.location.href = `/book-detail/${book.id}`}
+      onClick={handleBookClick}
     >
       <CardContent className="p-4">
-        <div className="relative mb-3">
+        <div className="relative mb-4">
           <img
-            src={book.coverImageUrl || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=400"}
+            src={book.coverImageUrl || "/api/placeholder/200/280"}
             alt={book.title}
-            className="w-full aspect-[3/4] object-cover rounded-lg"
+            className="w-full aspect-[3/4] object-cover rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300"
           />
+          
+          <div className="absolute top-2 left-2">
+            <Badge className={`${status.color} text-xs font-bold px-2 py-1 rounded-full`}>
+              {status.text}
+            </Badge>
+          </div>
+          
+          {book.isBookmarked && (
+            <div className="absolute top-2 right-2">
+              <Heart className="w-5 h-5 text-red-500 fill-current" />
+            </div>
+          )}
           
           {isStarted && (
             <div className="absolute bottom-2 left-2 right-2">
