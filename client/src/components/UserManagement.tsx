@@ -42,6 +42,18 @@ export function UserManagement() {
   // Users query
   const { data: usersData, isLoading: usersLoading } = useQuery<UsersResponse>({
     queryKey: ['/api/admin/users', userPage, userSearch, roleFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (userSearch) params.append('search', userSearch);
+      if (roleFilter && roleFilter !== 'all') params.append('role', roleFilter);
+      params.append('page', userPage.toString());
+      params.append('limit', '10');
+      
+      const url = `/api/admin/users?${params.toString()}`;
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+      return response.json();
+    },
   });
 
   // Update user status mutation

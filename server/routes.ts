@@ -721,6 +721,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Regular Admin Users Endpoint (limited to 5 users for overview)
+  app.get('/api/admin/users', requireAdmin, async (req: any, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = Math.min(parseInt(req.query.limit) || 5, 5); // Max 5 for overview
+      const search = req.query.search || '';
+      const role = req.query.role || '';
+      
+      const users = await storage.getAllUsers({ page, limit, search, role });
+      res.json(users);
+    } catch (error) {
+      console.error('Error fetching users for admin:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  // Update user status (admin only)
+  app.patch('/api/admin/users/:userId/status', requireAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { isActive } = req.body;
+      
+      const updatedUser = await storage.updateUserStatus(userId, isActive);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      res.status(500).json({ message: 'Failed to update user status' });
+    }
+  });
+
   // Super Admin Routes - User Management
   
   // Get all users with pagination and filters
@@ -1649,8 +1679,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             const { emailScheduler } = await import('./emailScheduler');
             const previousTier = cancelledUser.subscriptionTier === 'basic' ? 'Basic Plan' : 'Premium Plan';
-            const endDate = cancelledSubscription.current_period_end 
-              ? new Date(cancelledSubscription.current_period_end * 1000).toLocaleDateString()
+            const endDate = (cancelledSubscription as any).current_period_end 
+              ? new Date((cancelledSubscription as any).current_period_end * 1000).toLocaleDateString()
               : 'your subscription end date';
             
             await emailScheduler.sendCancellationEmail(cancelledUser.id, previousTier, endDate);
