@@ -101,6 +101,6 @@ export function getSchedulerStatus(): {
     isRunning: !!healthCheckTask,
     isHealthCheckRunning: isRunning,
     cronPattern: process.env.HEALTH_CRON || '*/5 * * * *',
-    nextExecution: healthCheckTask ? healthCheckTask.nextDate()?.toDate() : undefined
+    nextExecution: healthCheckTask ? (healthCheckTask.getStatus ? healthCheckTask.getStatus().next?.toDate() : undefined) : undefined
   };
 }
