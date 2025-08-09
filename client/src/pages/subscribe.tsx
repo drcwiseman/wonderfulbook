@@ -167,18 +167,18 @@ export default function Subscribe() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-netflix-black flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-netflix-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-white text-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl mb-4">Please Login to Continue</h2>
-          <p className="text-gray-400 mb-6">You need to be logged in to access subscription plans</p>
+          <h2 className="text-2xl mb-4 text-gray-900">Please Login to Continue</h2>
+          <p className="text-gray-600 mb-6">You need to be logged in to access subscription plans</p>
           <Button 
             onClick={() => window.location.href = "/auth/login"}
             className="btn-orange-accessible"
@@ -192,7 +192,7 @@ export default function Subscribe() {
 
   if (clientSecret && selectedTier) {
     return (
-      <div className="min-h-screen bg-netflix-black text-white">
+      <div className="min-h-screen bg-white text-gray-900">
         <div className="container mx-auto px-4 py-8">
           <Button
             variant="ghost"
@@ -200,16 +200,16 @@ export default function Subscribe() {
               setClientSecret("");
               setSelectedTier("");
             }}
-            className="mb-6 text-white hover:text-netflix-red"
+            className="mb-6 text-gray-700 hover:text-orange-600"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Plans
           </Button>
 
           <div className="max-w-md mx-auto">
-            <Card className="bg-netflix-gray border-gray-700">
+            <Card className="bg-white border-gray-200 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-white text-center">
+                <CardTitle className="text-gray-900 text-center">
                   Complete Your {selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} Subscription
                 </CardTitle>
               </CardHeader>
@@ -236,48 +236,48 @@ export default function Subscribe() {
   }
 
   return (
-    <div className="min-h-screen bg-netflix-black text-white">
+    <div className="min-h-screen bg-white text-gray-900">
       <div className="container mx-auto px-4 py-8">
         <Button
           variant="ghost"
           onClick={() => window.history.back()}
-          className="mb-6 text-white hover:text-netflix-red"
+          className="mb-6 text-gray-700 hover:text-orange-600"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
 
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Choose Your Reading Journey</h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">Choose Your Reading Journey</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Select the perfect plan for your transformational reading experience
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Free Trial */}
-          <Card className="bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-700 hover:border-trial-gray transition-all duration-300">
+          <Card className="bg-white border-2 border-gray-200 hover:border-orange-300 transition-all duration-300 shadow-lg">
             <CardContent className="p-8 text-center">
-              <h3 className="text-2xl font-bold mb-2">Free Trial</h3>
-              <div className="text-trial-gray text-lg mb-4">Perfect for exploring</div>
-              <div className="text-4xl font-bold mb-2">£0</div>
-              <div className="text-gray-400 mb-6">14 days free</div>
+              <h3 className="text-2xl font-bold mb-2 text-gray-900">Free Trial</h3>
+              <div className="text-orange-600 text-lg mb-4">Perfect for exploring</div>
+              <div className="text-4xl font-bold mb-2 text-gray-900">£0</div>
+              <div className="text-gray-600 mb-6">7 days free</div>
               
               <ul className="space-y-3 mb-8 text-left">
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-trial-gray mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Access to 3 featured books
                 </li>
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-trial-gray mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Basic reading features
                 </li>
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-trial-gray mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Mobile & desktop access
                 </li>
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-trial-gray mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Progress tracking
                 </li>
               </ul>
@@ -285,7 +285,7 @@ export default function Subscribe() {
               <Button 
                 onClick={() => handleTierSelection('free')}
                 disabled={isCreatingSubscription}
-                className="w-full bg-trial-gray hover:bg-gray-600 text-white disabled:opacity-50"
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300 disabled:opacity-50"
               >
                 {loadingTier === 'free' ? (
                   <>
@@ -300,33 +300,33 @@ export default function Subscribe() {
           </Card>
 
           {/* Basic Plan */}
-          <Card className="bg-gradient-to-b from-purple-900 to-purple-800 border-2 border-basic-purple hover:border-purple-400 transition-all duration-300 transform hover:scale-105">
+          <Card className="bg-white border-2 border-orange-500 hover:border-orange-600 transition-all duration-300 transform hover:scale-105 shadow-lg">
             <CardContent className="p-8 text-center">
-              <Badge className="bg-basic-purple text-white mb-4">Most Popular</Badge>
-              <h3 className="text-2xl font-bold mb-2">Basic</h3>
-              <div className="text-basic-purple text-lg mb-4">Great for regular readers</div>
-              <div className="text-4xl font-bold mb-2">£9.99</div>
-              <div className="text-gray-300 mb-6">per month</div>
+              <Badge className="bg-orange-600 text-white mb-4">Most Popular</Badge>
+              <h3 className="text-2xl font-bold mb-2 text-gray-900">Basic</h3>
+              <div className="text-orange-600 text-lg mb-4">Great for regular readers</div>
+              <div className="text-4xl font-bold mb-2 text-gray-900">£5.99</div>
+              <div className="text-gray-600 mb-6">per month</div>
               
               <ul className="space-y-3 mb-8 text-left">
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-basic-purple mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Access to 10 books monthly
                 </li>
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-basic-purple mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   All reading features
                 </li>
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-basic-purple mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Bookmarks & annotations
                 </li>
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-basic-purple mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Offline reading
                 </li>
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-basic-purple mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Personal recommendations
                 </li>
               </ul>
@@ -334,7 +334,7 @@ export default function Subscribe() {
               <Button 
                 onClick={() => handleTierSelection('basic')}
                 disabled={isCreatingSubscription}
-                className="w-full bg-basic-purple hover:bg-purple-600 text-white disabled:opacity-50"
+                className="w-full btn-orange-accessible disabled:opacity-50"
               >
                 {loadingTier === 'basic' ? (
                   <>
@@ -349,33 +349,33 @@ export default function Subscribe() {
           </Card>
 
           {/* Premium Plan */}
-          <Card className="bg-gradient-to-b from-yellow-900 to-yellow-800 border-2 border-premium-gold hover:border-yellow-400 transition-all duration-300">
+          <Card className="bg-white border-2 border-orange-400 hover:border-orange-500 transition-all duration-300 shadow-lg">
             <CardContent className="p-8 text-center">
-              <Badge className="bg-premium-gold text-netflix-black mb-4">BEST VALUE</Badge>
-              <h3 className="text-2xl font-bold mb-2">Premium</h3>
-              <div className="text-premium-gold text-lg mb-4">Unlimited access</div>
-              <div className="text-4xl font-bold mb-2">£19.99</div>
-              <div className="text-gray-300 mb-6">per month</div>
+              <Badge className="bg-orange-700 text-white mb-4">BEST VALUE</Badge>
+              <h3 className="text-2xl font-bold mb-2 text-gray-900">Premium</h3>
+              <div className="text-orange-600 text-lg mb-4">Unlimited access</div>
+              <div className="text-4xl font-bold mb-2 text-gray-900">£9.99</div>
+              <div className="text-gray-600 mb-6">per month</div>
               
               <ul className="space-y-3 mb-8 text-left">
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-premium-gold mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Unlimited book access
                 </li>
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-premium-gold mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Premium reading features
                 </li>
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-premium-gold mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Advanced annotations
                 </li>
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-premium-gold mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Priority support
                 </li>
                 <li className="flex items-center">
-                  <Check className="h-5 w-5 text-premium-gold mr-3" />
+                  <Check className="h-5 w-5 text-orange-600 mr-3" />
                   Exclusive early access
                 </li>
               </ul>
@@ -383,11 +383,11 @@ export default function Subscribe() {
               <Button 
                 onClick={() => handleTierSelection('premium')}
                 disabled={isCreatingSubscription}
-                className="w-full bg-premium-gold hover:bg-yellow-400 text-netflix-black disabled:opacity-50"
+                className="w-full btn-orange-accessible disabled:opacity-50"
               >
                 {loadingTier === 'premium' ? (
                   <>
-                    <div className="animate-spin w-4 h-4 border-2 border-netflix-black border-t-transparent rounded-full mr-2" />
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                     Setting up...
                   </>
                 ) : (
