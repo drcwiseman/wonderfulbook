@@ -231,10 +231,10 @@ export default function Header() {
                     size="sm"
                     onClick={handleLogout}
                     disabled={logoutMutation.isPending}
-                    className="text-white hover:text-orange-400 hover:bg-white/10 transition-all duration-200 hidden sm:flex items-center gap-2"
+                    className="text-white hover:text-orange-400 hover:bg-white/10 transition-all duration-200 flex items-center gap-2"
                   >
                     <LogOut className="w-4 h-4" />
-                    {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                    <span className="hidden sm:inline">{logoutMutation.isPending ? 'Logging out...' : 'Logout'}</span>
                   </Button>
                 </motion.div>
               </div>
