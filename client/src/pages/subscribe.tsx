@@ -126,14 +126,40 @@ export default function Subscribe() {
     try {
       const response = await apiRequest("POST", "/api/create-subscription", { tier });
       const data = await response.json();
-      setClientSecret(data.clientSecret);
-    } catch (error) {
+      
+      if (data.message === "Free trial activated") {
+        toast({
+          title: "Free Trial Activated!",
+          description: "You now have access to 3 books for 7 days",
+        });
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
+        return;
+      }
+
+      if (data.clientSecret) {
+        setClientSecret(data.clientSecret);
+        // Don't reset loading states until payment form is ready
+      } else if (data.subscriptionId) {
+        toast({
+          title: "Already Subscribed",
+          description: "You already have an active subscription",
+        });
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1500);
+        return;
+      } else {
+        throw new Error("Invalid response from subscription service");
+      }
+    } catch (error: any) {
+      console.error("Subscription creation error:", error);
       toast({
         title: "Error",
-        description: "Failed to create subscription",
+        description: error.message || "Failed to create subscription",
         variant: "destructive",
       });
-    } finally {
       setIsCreatingSubscription(false);
       setLoadingTier(null);
     }
@@ -191,6 +217,16 @@ export default function Subscribe() {
                 <Elements stripe={stripePromise} options={{ clientSecret }}>
                   <SubscribeForm tier={selectedTier} />
                 </Elements>
+                {/* Reset loading states once payment form is rendered */}
+                {(() => {
+                  if (isCreatingSubscription) {
+                    setTimeout(() => {
+                      setIsCreatingSubscription(false);
+                      setLoadingTier(null);
+                    }, 500);
+                  }
+                  return null;
+                })()}
               </CardContent>
             </Card>
           </div>
