@@ -1,11 +1,11 @@
 export default function Footer() {
   return (
-    <footer className="bg-netflix-gray py-16 px-4 md:px-8">
+    <footer className="bg-gray-50 py-16 px-4 md:px-8 border-t border-orange-100">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="font-semibold mb-4">Books</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
+            <h3 className="font-semibold mb-4 text-gray-900">Books</h3>
+            <ul className="space-y-2 text-sm text-gray-600">
               <li><a href="#categories" className="hover:text-white transition-colors">Categories</a></li>
               <li><a href="#featured" className="hover:text-white transition-colors">New Releases</a></li>
               <li><a href="#featured" className="hover:text-white transition-colors">Bestsellers</a></li>
