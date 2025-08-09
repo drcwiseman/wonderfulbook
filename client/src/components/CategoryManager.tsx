@@ -48,7 +48,7 @@ export function CategoryManager() {
   });
 
   // Fetch categories
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: ['/api/admin/categories'],
   });
 
