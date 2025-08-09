@@ -44,11 +44,15 @@ export function useCopyProtection(bookId: string) {
   // Record copy attempt mutation
   const recordCopyMutation = useMutation({
     mutationFn: async (charactersCopied: number): Promise<CopyAttemptResult> => {
+      console.log('Making copy attempt request with:', { bookId, charactersCopied });
       const response = await apiRequest('POST', '/api/copy-attempt', {
         bookId,
         charactersCopied
       });
-      return response as CopyAttemptResult;
+      console.log('Raw API response:', response);
+      const jsonData = await response.json();
+      console.log('Parsed JSON data:', jsonData);
+      return jsonData as CopyAttemptResult;
     },
     onSuccess: (result: CopyAttemptResult) => {
       console.log('Copy attempt result:', result);
@@ -74,7 +78,8 @@ export function useCopyProtection(bookId: string) {
       }
       refetch(); // Refresh tracking data
     },
-    onError: () => {
+    onError: (error) => {
+      console.log('Copy attempt error:', error);
       toast({
         title: "Error",
         description: "Failed to process copy request",
