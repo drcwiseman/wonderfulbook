@@ -725,7 +725,7 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
-    if (options?.role) {
+    if (options?.role && options.role !== 'all') {
       conditions.push(eq(users.role, options.role));
     }
     
