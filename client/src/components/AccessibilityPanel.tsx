@@ -219,7 +219,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPan
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-black/50 z-30"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -228,7 +228,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPan
           
           {/* Panel */}
           <motion.div
-            className="fixed top-0 right-0 h-full w-96 max-w-[90vw] bg-white dark:bg-gray-900 shadow-2xl z-50 overflow-y-auto"
+            className="fixed top-20 right-0 h-[calc(100vh-5rem)] w-96 max-w-[90vw] bg-white dark:bg-gray-900 shadow-2xl z-40 overflow-y-auto"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
