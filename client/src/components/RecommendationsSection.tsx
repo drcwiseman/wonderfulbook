@@ -29,7 +29,7 @@ export default function RecommendationsSection() {
           <h2 className="text-3xl md:text-4xl font-bold mb-8">Recommended for You</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[...Array(4)].map((_, i) => (
-              <Card key={i} className="bg-netflix-gray border-gray-700 animate-pulse">
+              <Card key={i} className="bg-gray-100 border-gray-200 animate-pulse">
                 <div className="w-full h-48 bg-gray-700"></div>
                 <CardContent className="p-4">
                   <div className="h-4 bg-gray-700 rounded mb-2"></div>
@@ -53,13 +53,13 @@ export default function RecommendationsSection() {
     <section className="py-16 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold mb-8">Recommended for You</h2>
-        <p className="text-gray-400 mb-8">Based on your reading history and preferences</p>
+        <p className="text-gray-600 mb-8">Based on your reading history and preferences</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {recommendedBooks.map((book, index) => (
             <Card 
               key={book.id}
-              className="bg-netflix-gray border-gray-700 hover:bg-gray-800 transition-colors duration-300 cursor-pointer"
+              className="bg-white border-gray-200 hover:border-orange-300 hover:shadow-lg transition-all duration-300 cursor-pointer"
               onClick={() => handleBookClick(book.id)}
             >
               <img
@@ -68,8 +68,8 @@ export default function RecommendationsSection() {
                 className="w-full h-48 object-cover rounded-t-lg"
               />
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-2 text-white truncate">{book.title}</h3>
-                <p className="text-gray-400 text-sm mb-2 truncate">{book.author}</p>
+                <h3 className="font-semibold mb-2 text-gray-900 truncate">{book.title}</h3>
+                <p className="text-gray-600 text-sm mb-2 truncate">{book.author}</p>
                 <div className="flex items-center justify-between">
                   <div className="flex text-yellow-400 text-sm">
                     {[...Array(5)].map((_, i) => (
@@ -83,7 +83,7 @@ export default function RecommendationsSection() {
                       />
                     ))}
                   </div>
-                  <span className="text-sm text-gray-400">{book.rating}</span>
+                  <span className="text-sm text-gray-600">{book.rating}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   {Math.floor(Math.random() * 20) + 80}% match

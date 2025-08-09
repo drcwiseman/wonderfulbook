@@ -6,7 +6,7 @@ export default function HeroSection() {
 
   return (
     <section className="relative h-screen flex items-center">
-      <div className="absolute inset-0 bg-gradient-to-r from-netflix-black via-netflix-black/70 to-transparent z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent z-10"></div>
       <div 
         style={{
           backgroundImage: "url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080')",
@@ -27,14 +27,14 @@ export default function HeroSection() {
           {isAuthenticated ? (
             <Button 
               onClick={() => window.location.href = "#featured"}
-              className="bg-netflix-red hover:bg-red-700 text-white px-8 py-3 rounded-md font-semibold transition-colors text-lg"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-md font-semibold transition-colors text-lg"
             >
               Browse Books
             </Button>
           ) : (
             <Button 
               onClick={() => window.location.href = "/auth/login"}
-              className="bg-netflix-red hover:bg-red-700 text-white px-8 py-3 rounded-md font-semibold transition-colors text-lg"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-md font-semibold transition-colors text-lg"
             >
               Start Free Trial
             </Button>

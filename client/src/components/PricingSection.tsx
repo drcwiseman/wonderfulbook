@@ -23,7 +23,7 @@ export default function PricingSection() {
       name: "Free Trial",
       price: "£0",
       period: "forever",
-      icon: <Zap className="w-6 h-6 text-trial-gray" />,
+      icon: <Zap className="w-6 h-6 text-orange-500" />,
       description: "Perfect for getting started",
       features: [
         "Access to 3 featured books",
@@ -33,8 +33,8 @@ export default function PricingSection() {
         "No credit card required"
       ],
       buttonText: "Start Free Trial",
-      buttonClass: "bg-trial-gray hover:bg-gray-600 text-white",
-      cardClass: "border-gray-200 hover:border-trial-gray",
+      buttonClass: "bg-orange-500 hover:bg-orange-600 text-white",
+      cardClass: "border-gray-200 hover:border-orange-500",
       popular: false
     },
     {
@@ -42,7 +42,7 @@ export default function PricingSection() {
       name: "Basic Plan",
       price: "£9.99",
       period: "per month",
-      icon: <Star className="w-6 h-6 text-basic-purple" />,
+      icon: <Star className="w-6 h-6 text-orange-600" />,
       description: "Great for regular readers",
       features: [
         "Access to 10 books per month",
@@ -53,8 +53,8 @@ export default function PricingSection() {
         "Offline reading"
       ],
       buttonText: "Choose Basic",
-      buttonClass: "bg-basic-purple hover:bg-purple-600 text-white",
-      cardClass: "border-gray-200 hover:border-basic-purple",
+      buttonClass: "bg-orange-600 hover:bg-orange-700 text-white",
+      cardClass: "border-gray-200 hover:border-orange-600",
       popular: false
     },
     {
@@ -62,7 +62,7 @@ export default function PricingSection() {
       name: "Premium Plan",
       price: "£19.99",
       period: "per month",
-      icon: <Crown className="w-6 h-6 text-premium-gold" />,
+      icon: <Crown className="w-6 h-6 text-orange-700" />,
       description: "Best value for book lovers",
       features: [
         "Unlimited access to all books",
@@ -75,14 +75,14 @@ export default function PricingSection() {
         "Ad-free experience"
       ],
       buttonText: "Go Premium",
-      buttonClass: "bg-premium-gold hover:bg-yellow-400 text-netflix-black",
-      cardClass: "border-premium-gold hover:border-yellow-400 ring-2 ring-premium-gold/20",
+      buttonClass: "bg-orange-700 hover:bg-orange-800 text-white",
+      cardClass: "border-orange-700 hover:border-orange-800 ring-2 ring-orange-700/20",
       popular: true
     }
   ];
 
   return (
-    <section className="py-16 bg-gradient-to-b from-netflix-black to-netflix-gray">
+    <section className="py-16 bg-gradient-to-b from-gray-900 to-gray-800">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-white mb-4">
@@ -98,7 +98,7 @@ export default function PricingSection() {
           {plans.map((plan) => (
             <Card
               key={plan.id}
-              className={`relative bg-netflix-gray/50 backdrop-blur-sm ${plan.cardClass} transition-all duration-300 ${
+              className={`relative bg-gray-800/50 backdrop-blur-sm ${plan.cardClass} transition-all duration-300 ${
                 isHovered === plan.id ? 'transform scale-105' : ''
               }`}
               onMouseEnter={() => setIsHovered(plan.id)}
@@ -106,7 +106,7 @@ export default function PricingSection() {
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-premium-gold text-netflix-black px-4 py-1 text-sm font-bold">
+                  <Badge className="bg-orange-600 text-white px-4 py-1 text-sm font-bold">
                     MOST POPULAR
                   </Badge>
                 </div>

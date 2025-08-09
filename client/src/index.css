@@ -489,13 +489,13 @@ textarea:focus-visible {
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
 
-  /* Netflix-style colors */
-  --netflix-red: hsl(355, 83%, 45%);
+  /* easyJet Orange theme colors */
+  --netflix-red: hsl(20, 100%, 40%); /* Orange for brand consistency */
   --netflix-black: hsl(0, 0%, 0%);
   --netflix-gray: hsl(0, 0%, 13%);
-  --premium-gold: hsl(51, 100%, 50%);
-  --basic-purple: hsl(249, 70%, 65%);
-  --trial-gray: hsl(220, 9%, 46%);
+  --premium-gold: hsl(20, 100%, 40%); /* Orange for premium */
+  --basic-purple: hsl(20, 100%, 45%); /* Lighter orange for basic */
+  --trial-gray: hsl(20, 100%, 50%); /* Light orange for trial */
 }
 
 .dark {

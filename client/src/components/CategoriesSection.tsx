@@ -31,7 +31,7 @@ export default function CategoriesSection() {
     return (
       <div className="mb-12">
         <h3 className="text-xl font-semibold mb-4 flex items-center">
-          <IconComponent className="h-5 w-5 text-netflix-red mr-3" />
+          <IconComponent className="h-5 w-5 text-orange-600 mr-3" />
           {category.name}
         </h3>
         <div className="flex space-x-4 overflow-x-auto scrollbar-hide pb-4">
@@ -59,7 +59,7 @@ export default function CategoriesSection() {
   };
 
   return (
-    <section id="categories" className="py-16 px-4 md:px-8 bg-netflix-gray/50">
+    <section id="categories" className="py-16 px-4 md:px-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold mb-8">Browse by Category</h2>
         
