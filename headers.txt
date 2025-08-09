@@ -1,0 +1,13 @@
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization
+Vary: Origin
+Content-Type: text/html; charset=utf-8
+Date: Sat, 09 Aug 2025 01:38:45 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Content-Length: 46883
+
