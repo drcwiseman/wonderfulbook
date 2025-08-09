@@ -75,6 +75,21 @@ export default function SuperAdminDashboard() {
   // Users query
   const { data: usersData, isLoading: usersLoading } = useQuery<UsersResponse>({
     queryKey: ['/api/super-admin/users', userPage, userSearch, roleFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        page: userPage.toString(),
+        search: userSearch,
+        role: roleFilter,
+        limit: '20'
+      });
+      const response = await fetch(`/api/super-admin/users?${params}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      return response.json();
+    }
   });
 
   // Update user role mutation
@@ -531,6 +546,32 @@ export default function SuperAdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+              )}
+
+              {usersData && usersData.totalPages > 1 && (
+                <div className="flex justify-center mt-6">
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setUserPage(Math.max(1, userPage - 1))}
+                      disabled={userPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm">
+                      Page {userPage} of {usersData.totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setUserPage(Math.min(usersData.totalPages, userPage + 1))}
+                      disabled={userPage === usersData.totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
