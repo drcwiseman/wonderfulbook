@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { 
+  Button, 
+  Badge, 
+  SelectionDropdown, 
+  createOptionsFromObject, 
+  Input 
+} from '@/components/shared';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Eye, Ban, UserCheck, Search } from 'lucide-react';
+import { Users, Eye, Ban, UserCheck, Search, Shield, User, Crown } from 'lucide-react';
 
 interface User {
   id: string;
@@ -101,17 +104,20 @@ export function UserManagement() {
             className="pl-10"
           />
         </div>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="user">Users</SelectItem>
-            <SelectItem value="admin">Admins</SelectItem>
-            <SelectItem value="super_admin">Super Admins</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="w-[180px]">
+          <SelectionDropdown
+            options={[
+              { value: 'all', label: 'All Roles', icon: <Users className="h-4 w-4" /> },
+              { value: 'user', label: 'Users', icon: <User className="h-4 w-4" /> },
+              { value: 'admin', label: 'Admins', icon: <Shield className="h-4 w-4" /> },
+              { value: 'super_admin', label: 'Super Admins', icon: <Crown className="h-4 w-4" /> }
+            ]}
+            value={roleFilter}
+            onValueChange={setRoleFilter}
+            placeholder="Filter by role"
+            size="md"
+          />
+        </div>
       </div>
 
       {usersLoading ? (

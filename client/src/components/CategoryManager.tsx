@@ -4,12 +4,19 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { apiRequest } from '@/lib/queryClient';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { 
+  Button, 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle, 
+  Badge,
+  Input,
+  Label,
+  ConfirmDeleteDialog,
+  EditItemDialog
+} from '@/components/shared';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit3, Trash2, Folder, Tag } from 'lucide-react';
 
@@ -174,57 +181,38 @@ export function CategoryManager() {
         </CardContent>
       </Card>
 
-      {/* Edit Category */}
-      {editingCategory && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Edit3 className="h-4 w-4" />
-              Edit Category: {editingCategory.name}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="editName">Category Name</Label>
-                  <Input
-                    id="editName"
-                    {...editForm.register("name")}
-                    placeholder="Enter category name"
-                  />
-                  {editForm.formState.errors.name && (
-                    <p className="text-sm text-red-500">{editForm.formState.errors.name.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="editDescription">Description (Optional)</Label>
-                  <Input
-                    id="editDescription"
-                    {...editForm.register("description")}
-                    placeholder="Enter category description"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  type="submit" 
-                  disabled={updateCategoryMutation.isPending}
-                >
-                  {updateCategoryMutation.isPending ? "Updating..." : "Update Category"}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => setEditingCategory(null)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+      {/* Edit Category Dialog */}
+      <EditItemDialog
+        isOpen={!!editingCategory}
+        onClose={() => setEditingCategory(null)}
+        onSave={editForm.handleSubmit(onEditSubmit)}
+        title={`Edit Category: ${editingCategory?.name || ''}`}
+        description="Update category details and organization"
+        isSaving={updateCategoryMutation.isPending}
+        maxWidth="lg"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="editName">Category Name</Label>
+            <Input
+              id="editName"
+              {...editForm.register("name")}
+              placeholder="Enter category name"
+            />
+            {editForm.formState.errors.name && (
+              <p className="text-sm text-red-500">{editForm.formState.errors.name.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="editDescription">Description (Optional)</Label>
+            <Input
+              id="editDescription"
+              {...editForm.register("description")}
+              placeholder="Enter category description"
+            />
+          </div>
+        </div>
+      </EditItemDialog>
 
       {/* Categories List */}
       <Card>
@@ -285,27 +273,16 @@ export function CategoryManager() {
       </Card>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Category</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{categoryToDelete?.name}"? 
-              This action cannot be undone and will remove the category from all associated books.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => categoryToDelete && deleteCategoryMutation.mutate(categoryToDelete.id)}
-              disabled={deleteCategoryMutation.isPending}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {deleteCategoryMutation.isPending ? "Deleting..." : "Delete Category"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={() => categoryToDelete && deleteCategoryMutation.mutate(categoryToDelete.id)}
+        title="Delete Category"
+        description={`This will remove the category from all associated books and cannot be undone.`}
+        itemName={categoryToDelete?.name}
+        isDeleting={deleteCategoryMutation.isPending}
+        variant="destructive"
+      />
     </div>
   );
 }
