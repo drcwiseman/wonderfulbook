@@ -334,7 +334,7 @@ async function checkSMTP(isManual = false): Promise<HealthCheckResult> {
       };
     }
 
-    const transporter = nodemailer.createTransporter(config);
+    const transporter = nodemailer.createTransport(config);
     
     // Verify SMTP connection
     await transporter.verify();

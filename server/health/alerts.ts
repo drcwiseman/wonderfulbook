@@ -270,5 +270,5 @@ async function createMailTransporter() {
     throw new Error('SMTP configuration is incomplete');
   }
 
-  return nodemailer.createTransporter(config);
+  return nodemailer.createTransport(config);
 }
