@@ -80,10 +80,10 @@ export function useCopyProtection(bookId: string) {
 
   // Check if copy is allowed before attempting
   const canCopy = useCallback((textLength: number = 0) => {
-    if (!tracking || isBlocked) return false;
-    if (tracking.isLimitReached) return false;
+    if (!tracking) return true; // Allow if no tracking initialized yet
+    if (isBlocked || tracking.isLimitReached) return false;
     
-    const currentPercentage = parseFloat(tracking.copyPercentage);
+    const currentPercentage = parseFloat(tracking.copyPercentage || '0');
     const estimatedNewPercentage = ((tracking.totalCharactersCopied + textLength) / tracking.totalBookCharacters) * 100;
     
     return estimatedNewPercentage <= 40;
@@ -108,7 +108,8 @@ export function useCopyProtection(bookId: string) {
   // Get remaining copy percentage
   const getRemainingPercentage = useCallback(() => {
     if (!tracking) return 40;
-    return Math.max(0, 40 - parseFloat(tracking.copyPercentage));
+    const currentPercentage = parseFloat(tracking.copyPercentage || '0');
+    return Math.max(0, 40 - currentPercentage);
   }, [tracking]);
 
   // Check if limit is close (within 5%)
@@ -119,8 +120,9 @@ export function useCopyProtection(bookId: string) {
 
   // Update blocked state based on tracking
   useEffect(() => {
-    if (tracking?.isLimitReached) {
-      setIsBlocked(true);
+    if (tracking) {
+      const currentPercentage = parseFloat(tracking.copyPercentage || '0');
+      setIsBlocked(currentPercentage >= 40 || tracking.isLimitReached);
     } else {
       setIsBlocked(false);
     }
