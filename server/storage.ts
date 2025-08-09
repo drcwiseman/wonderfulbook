@@ -838,14 +838,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async toggleUserStatus(userId: string, isActive: boolean): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({ isActive, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
+
 
   async getSystemStats(): Promise<{
     totalUsers: number;
@@ -856,6 +849,13 @@ export class DatabaseStorage implements IStorage {
     recentSignups: number;
     totalBooks: number;
     totalChallenges: number;
+    popularBooks: Array<{
+      id: string;
+      title: string;
+      author: string;
+      views: number;
+      rating: number;
+    }>;
   }> {
     // Get user statistics
     const totalUsersResult = await db.select({ count: sql<number>`count(*)` }).from(users);
@@ -885,6 +885,19 @@ export class DatabaseStorage implements IStorage {
     // Get challenge count
     const totalChallengesResult = await db.select({ count: sql<number>`count(*)` }).from(readingChallenges);
     
+    // Get popular books (top 5 by rating - simplified since views column doesn't exist yet)
+    const popularBooksResult = await db
+      .select({
+        id: books.id,
+        title: books.title,
+        author: books.author,
+        views: sql<number>`0`, // Placeholder until views column is added
+        rating: sql<number>`COALESCE(CAST(${books.rating} as DECIMAL), 0)`,
+      })
+      .from(books)
+      .orderBy(desc(books.rating))
+      .limit(5);
+    
     const subscriptionBreakdownObj: { [key: string]: number } = {};
     subscriptionBreakdown.forEach(item => {
       subscriptionBreakdownObj[item.tier || 'unknown'] = item.count;
@@ -899,6 +912,7 @@ export class DatabaseStorage implements IStorage {
       recentSignups: recentSignupsResult[0]?.count || 0,
       totalBooks: totalBooksResult[0]?.count || 0,
       totalChallenges: totalChallengesResult[0]?.count || 0,
+      popularBooks: popularBooksResult,
     };
   }
 

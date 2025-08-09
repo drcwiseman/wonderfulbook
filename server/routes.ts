@@ -751,6 +751,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Regular admin analytics endpoint (simplified version of super admin stats)
+  app.get('/api/admin/analytics', requireAdmin, async (req: any, res) => {
+    try {
+      const stats = await storage.getSystemStats();
+      
+      // Return simplified analytics for regular admin
+      const adminAnalytics = {
+        totalUsers: stats.totalUsers,
+        activeSubscriptions: Object.values(stats.subscriptionBreakdown).reduce((sum, count) => sum + count, 0) - (stats.subscriptionBreakdown['free'] || 0),
+        monthlyRevenue: ((stats.subscriptionBreakdown['basic'] || 0) * 5.99) + ((stats.subscriptionBreakdown['premium'] || 0) * 9.99),
+        conversionRate: Math.round(((Object.values(stats.subscriptionBreakdown).reduce((sum, count) => sum + count, 0) - (stats.subscriptionBreakdown['free'] || 0)) / stats.totalUsers) * 100),
+        popularBooks: stats.popularBooks || [],
+        // Additional insights for admin dashboard
+        recentSignups: stats.recentSignups,
+        totalBooks: stats.totalBooks
+      };
+      
+      res.json(adminAnalytics);
+    } catch (error) {
+      console.error('Error fetching admin analytics:', error);
+      res.status(500).json({ message: 'Failed to fetch analytics' });
+    }
+  });
+
   // Super Admin Routes - User Management
   
   // Get all users with pagination and filters
