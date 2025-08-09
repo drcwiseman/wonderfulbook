@@ -249,7 +249,7 @@ export default function BookDetail() {
                               : "This book requires a premium subscription. Start your free trial to access our complete library."
                             }
                           </p>
-                          <Button asChild className="bg-orange-600 hover:bg-orange-700">
+                          <Button asChild className="btn-orange-accessible">
                             <Link href={hasActiveSubscription() ? "/book-selection" : "/subscribe"}>
                               <Zap className="w-4 h-4 mr-2" />
                               {hasActiveSubscription() ? "Add to Library" : "Start Free Trial"}

@@ -55,7 +55,7 @@ const SubscribeForm = ({ tier }: { tier: string }) => {
       <Button 
         type="submit" 
         disabled={!stripe}
-        className="w-full bg-netflix-red hover:bg-red-700"
+        className="w-full btn-orange-accessible"
         size="lg"
       >
         {!stripe ? "Loading..." : `Subscribe to ${tier.charAt(0).toUpperCase() + tier.slice(1)}`}
@@ -181,7 +181,7 @@ export default function Subscribe() {
           <p className="text-gray-400 mb-6">You need to be logged in to access subscription plans</p>
           <Button 
             onClick={() => window.location.href = "/auth/login"}
-            className="bg-netflix-red hover:bg-red-700"
+            className="btn-orange-accessible"
           >
             Login Now
           </Button>

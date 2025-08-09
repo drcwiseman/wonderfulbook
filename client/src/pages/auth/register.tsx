@@ -293,7 +293,7 @@ export default function Register() {
 
                 <Button
                   type="submit"
-                  className="w-full h-12 text-base font-medium bg-orange-500 hover:bg-orange-600 text-white"
+                  className="w-full h-12 text-base font-medium btn-orange-accessible"
                   disabled={registerMutation.isPending}
                 >
                   {registerMutation.isPending ? "Creating Account..." : "Create Account"}

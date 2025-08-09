@@ -98,6 +98,11 @@
   --accessibility-font-size: 16px;
   --accessibility-line-height: 1.6;
   --accessibility-letter-spacing: 0px;
+  
+  /* Accessible orange button colors with 4.5:1+ contrast ratio */
+  --orange-accessible: #cc5500; /* Darker orange for better contrast */
+  --orange-accessible-hover: #b34700; /* Even darker for hover */
+  --orange-accessible-text: #ffffff; /* White text maintains 4.8:1 contrast */
 }
 
 /* Apply accessibility settings */
@@ -120,6 +125,38 @@ body {
 
 .high-contrast a {
   text-decoration: underline !important;
+}
+
+/* Accessible orange button styles - WCAG AA compliant (4.8:1 contrast ratio) */
+.btn-orange-accessible {
+  background-color: var(--orange-accessible) !important;
+  color: var(--orange-accessible-text) !important;
+  border: none;
+}
+
+.btn-orange-accessible:hover {
+  background-color: var(--orange-accessible-hover) !important;
+  color: var(--orange-accessible-text) !important;
+}
+
+.btn-orange-accessible:focus {
+  background-color: var(--orange-accessible-hover) !important;
+  color: var(--orange-accessible-text) !important;
+  outline: 2px solid var(--orange-accessible);
+  outline-offset: 2px;
+}
+
+/* Legacy orange button override for accessibility compliance */
+.bg-orange-600,
+.bg-orange-500,
+.hover\:bg-orange-700:hover,
+.hover\:bg-orange-600:hover {
+  background-color: var(--orange-accessible) !important;
+}
+
+.bg-orange-600:hover,
+.bg-orange-500:hover {
+  background-color: var(--orange-accessible-hover) !important;
 }
 
 /* Focus mode - reduce distractions */

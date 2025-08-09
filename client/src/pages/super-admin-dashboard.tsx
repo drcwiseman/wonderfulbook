@@ -1018,7 +1018,7 @@ export default function SuperAdminDashboard() {
             <Button 
               onClick={handleSubscriptionUpdate}
               disabled={updateSubscriptionMutation.isPending || !subscriptionForm.tier || !subscriptionForm.status}
-              className="bg-orange-600 hover:bg-orange-700"
+              className="btn-orange-accessible"
             >
               {updateSubscriptionMutation.isPending ? 'Updating...' : 'Update Subscription'}
             </Button>

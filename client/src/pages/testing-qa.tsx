@@ -493,7 +493,7 @@ export default function TestingQA() {
               <Button 
                 onClick={() => runTests('performance')} 
                 disabled={isRunningTests}
-                className="bg-orange-600 hover:bg-orange-700"
+                className="btn-orange-accessible"
               >
                 {isRunningTests ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <PlayCircle className="w-4 h-4 mr-2" />}
                 Run Tests

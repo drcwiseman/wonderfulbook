@@ -340,7 +340,7 @@ export default function Home() {
                 </div>
                 <Button 
                   onClick={() => window.location.href = "/auth/login"}
-                  className="w-full bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white mt-6 font-semibold"
+                  className="w-full btn-orange-accessible mt-6 font-semibold"
                 >
                   Start Free Trial
                 </Button>
