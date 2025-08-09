@@ -70,7 +70,6 @@ export default function Header() {
       { href: "/library", label: "My Library", icon: Library },
       { href: "/challenges", label: "Challenges", icon: Trophy },
       { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
-      { href: "/profile", label: "Profile", icon: User },
       { href: "/subscribe", label: "Subscription", icon: Crown }
     ] : [])
   ];
@@ -207,11 +206,13 @@ export default function Header() {
                   </motion.a>
                 ) : null}
                 
-                {/* User Profile Display */}
-                <motion.div 
-                  className="flex items-center space-x-2"
+                {/* User Profile with Dropdown */}
+                <motion.a
+                  href="/profile"
+                  className="flex items-center space-x-2 hover:bg-white/10 rounded-lg p-2 transition-all duration-200"
                   whileHover={{ scale: 1.05 }}
                   transition={{ duration: 0.2 }}
+                  title="Profile Settings"
                 >
                   <img
                     src={(user as any)?.profileImageUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"}
@@ -220,8 +221,9 @@ export default function Header() {
                   />
                   <div className="hidden lg:block text-white">
                     <div className="text-sm font-medium">{(user as any)?.firstName}</div>
+                    <div className="text-xs text-gray-400">View Profile</div>
                   </div>
-                </motion.div>
+                </motion.a>
                 
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
@@ -355,6 +357,18 @@ export default function Header() {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Edit Profile Button for Mobile */}
+                  <motion.a
+                    href="/profile"
+                    className="flex items-center gap-2 px-3 py-2 bg-orange-500/20 text-orange-400 rounded-lg hover:bg-orange-500/30 transition-all duration-200 text-sm font-medium"
+                    onClick={toggleMobileMenu}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <User className="w-4 h-4" />
+                    Edit Profile
+                  </motion.a>
                 </motion.div>
               )}
               
@@ -413,26 +427,7 @@ export default function Header() {
                     </>
                   )}
                   
-                  {/* Profile Link in Mobile */}
-                  {isAuthenticated && (
-                    <div className="border-t border-gray-700/50 my-4 pt-4">
-                      <motion.a
-                        href="/profile"
-                        className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-200 font-medium ${
-                          isActive('/profile')
-                            ? 'bg-orange-500/20 text-orange-400 shadow-lg border border-orange-500/30'
-                            : 'text-white hover:text-orange-300 hover:bg-white/10'
-                        }`}
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.5, duration: 0.3 }}
-                        onClick={toggleMobileMenu}
-                      >
-                        <User className="w-5 h-5" />
-                        Profile Settings
-                      </motion.a>
-                    </div>
-                  )}
+
                 </nav>
                 
                 {/* Mobile Auth Actions */}
