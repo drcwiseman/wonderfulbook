@@ -57,7 +57,7 @@ export function RichTextEditor({ content, onChange, placeholder = "Enter text...
   // Update editor content when prop changes
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content, false);
+      editor.commands.setContent(content, { parseOptions: { preserveWhitespace: 'full' } });
     }
   }, [content, editor]);
 
