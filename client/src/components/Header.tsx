@@ -70,6 +70,7 @@ export default function Header() {
       { href: "/library", label: "My Library", icon: Library },
       { href: "/challenges", label: "Challenges", icon: Trophy },
       { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
+      { href: "/profile", label: "Profile", icon: User },
       { href: "/subscribe", label: "Subscription", icon: Crown }
     ] : [])
   ];
@@ -206,22 +207,6 @@ export default function Header() {
                   </motion.a>
                 ) : null}
                 
-                {/* Profile Link */}
-                <motion.a
-                  href="/profile"
-                  className={`nav-link flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
-                    isActive('/profile')
-                      ? 'bg-orange-500/20 text-orange-400 shadow-lg active'
-                      : 'text-white hover:text-orange-300 hover:bg-white/5'
-                  }`}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <User className="w-4 h-4" />
-                  <span className="hidden sm:inline">Profile</span>
-                </motion.a>
-
                 {/* User Profile Display */}
                 <motion.div 
                   className="flex items-center space-x-2"
