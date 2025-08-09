@@ -162,11 +162,25 @@ export function PremiumPDFReader({
         return; // Allow empty selections
       }
 
+      console.log('Copy attempt debug:', {
+        selectedLength: selectedText.length,
+        tracking,
+        isBlocked,
+        currentPercentage: tracking ? parseFloat(tracking.copyPercentage || '0') : 'no tracking'
+      });
+
       // Only block if we have tracking data AND the user is actually at the limit
       if (tracking) {
         const currentPercentage = parseFloat(tracking.copyPercentage || '0');
         const additionalPercentage = (selectedText.length / tracking.totalBookCharacters) * 100;
         const newPercentage = currentPercentage + additionalPercentage;
+
+        console.log('Copy calculation:', {
+          currentPercentage,
+          additionalPercentage,
+          newPercentage,
+          wouldBlock: newPercentage > 40
+        });
 
         if (newPercentage > 40) {
           e.preventDefault();
@@ -206,7 +220,7 @@ export function PremiumPDFReader({
       document.removeEventListener('copy', handleCopy);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isBlocked, canCopy, recordCopy, getRemainingPercentage, isCloseToLimit, toast]);
+  }, [isBlocked, canCopy, recordCopy, getRemainingPercentage, isCloseToLimit, toast, tracking]);
 
   useEffect(() => {
     resetControlsTimer();

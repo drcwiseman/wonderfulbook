@@ -117,6 +117,11 @@ export function useCopyProtection(bookId: string) {
   useEffect(() => {
     if (tracking) {
       const currentPercentage = parseFloat(tracking.copyPercentage || '0');
+      console.log('Copy tracking debug:', {
+        currentPercentage,
+        isLimitReached: tracking.isLimitReached,
+        shouldBeBlocked: currentPercentage >= 40 || tracking.isLimitReached
+      });
       setIsBlocked(currentPercentage >= 40 || tracking.isLimitReached);
     } else {
       setIsBlocked(false);
