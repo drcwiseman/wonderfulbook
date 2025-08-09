@@ -206,7 +206,23 @@ export default function Header() {
                   </motion.a>
                 ) : null}
                 
-                {/* User Profile */}
+                {/* Profile Link */}
+                <motion.a
+                  href="/profile"
+                  className={`nav-link flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 font-medium ${
+                    isActive('/profile')
+                      ? 'bg-orange-500/20 text-orange-400 shadow-lg active'
+                      : 'text-white hover:text-orange-300 hover:bg-white/5'
+                  }`}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline">Profile</span>
+                </motion.a>
+
+                {/* User Profile Display */}
                 <motion.div 
                   className="flex items-center space-x-2"
                   whileHover={{ scale: 1.05 }}
@@ -410,6 +426,27 @@ export default function Header() {
                         })}
                       </div>
                     </>
+                  )}
+                  
+                  {/* Profile Link in Mobile */}
+                  {isAuthenticated && (
+                    <div className="border-t border-gray-700/50 my-4 pt-4">
+                      <motion.a
+                        href="/profile"
+                        className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-200 font-medium ${
+                          isActive('/profile')
+                            ? 'bg-orange-500/20 text-orange-400 shadow-lg border border-orange-500/30'
+                            : 'text-white hover:text-orange-300 hover:bg-white/10'
+                        }`}
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5, duration: 0.3 }}
+                        onClick={toggleMobileMenu}
+                      >
+                        <User className="w-5 h-5" />
+                        Profile Settings
+                      </motion.a>
+                    </div>
                   )}
                 </nav>
                 

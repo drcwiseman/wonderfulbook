@@ -74,6 +74,8 @@ export interface IStorage {
   verifyEmail(token: string): Promise<boolean>;
   resetPassword(token: string, newPassword: string): Promise<boolean>;
   generatePasswordResetToken(email: string): Promise<string | null>;
+  updateUserProfile(userId: string, updates: { firstName: string; lastName: string; email: string }): Promise<boolean>;
+  changeUserPassword(userId: string, newPassword: string): Promise<boolean>;
   
   // Admin user management operations
   getAllUsers(options?: { page?: number; limit?: number; search?: string; role?: string }): Promise<{ users: User[]; total: number; page: number; totalPages: number }>;
@@ -365,6 +367,44 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, user.id));
 
     return true;
+  }
+
+  async updateUserProfile(userId: string, updates: { firstName: string; lastName: string; email: string }): Promise<boolean> {
+    try {
+      await db.update(users)
+        .set({
+          firstName: updates.firstName,
+          lastName: updates.lastName,
+          email: updates.email,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      return false;
+    }
+  }
+
+  async changeUserPassword(userId: string, newPassword: string): Promise<boolean> {
+    try {
+      // Hash new password
+      const saltRounds = 12;
+      const passwordHash = await bcrypt.hash(newPassword, saltRounds);
+
+      await db.update(users)
+        .set({
+          passwordHash,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error changing user password:', error);
+      return false;
+    }
   }
 
   async createManualUser(userData: any): Promise<User> {

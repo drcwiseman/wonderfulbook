@@ -412,6 +412,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile update route
+  app.put('/api/auth/profile', isAuthenticated, async (req, res) => {
+    try {
+      const { firstName, lastName, email } = req.body;
+      const userId = (req.session as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Validate input
+      if (!firstName || !lastName || !email) {
+        return res.status(400).json({ message: "First name, last name, and email are required" });
+      }
+      
+      // Check if email is already taken by another user
+      if (email !== (req.session as any).user?.email) {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ message: "Email address is already in use" });
+        }
+      }
+      
+      // Update user profile
+      const success = await storage.updateUserProfile(userId, { firstName, lastName, email });
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to update profile" });
+      }
+      
+      // Update session with new data
+      (req.session as any).user = {
+        ...(req.session as any).user,
+        firstName,
+        lastName,
+        email
+      };
+      
+      res.json({ message: "Profile updated successfully" });
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+      res.status(500).json({ message: error.message || "Profile update failed" });
+    }
+  });
+
+  // Change password route
+  app.put('/api/auth/change-password', isAuthenticated, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = (req.session as any).user?.id;
+      const userEmail = (req.session as any).user?.email;
+      
+      if (!userId || !userEmail) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Validate input
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+      
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: "New password must be at least 8 characters long" });
+      }
+      
+      // Verify current password
+      const user = await storage.authenticateUser(userEmail, currentPassword);
+      if (!user) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+      
+      // Update password
+      const success = await storage.changeUserPassword(userId, newPassword);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to change password" });
+      }
+      
+      res.json({ message: "Password changed successfully" });
+    } catch (error: any) {
+      console.error('Password change error:', error);
+      res.status(500).json({ message: error.message || "Password change failed" });
+    }
+  });
+
   // Book routes
   app.get('/api/books', async (req, res) => {
     try {
