@@ -1033,41 +1033,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getAuditLogs(options?: { page?: number; limit?: number }): Promise<{ logs: any[]; total: number; page: number; totalPages: number }> {
-    const page = options?.page || 1;
-    const limit = options?.limit || 50;
-    const offset = (page - 1) * limit;
-    
-    // For now, we'll return reading activity as audit logs
-    // In a full implementation, you'd have a dedicated audit_logs table
-    const logsQuery = db
-      .select({
-        id: readingProgress.id,
-        userId: readingProgress.userId,
-        action: sql<string>`'reading_progress'`,
-        resource: readingProgress.bookId,
-        timestamp: readingProgress.lastReadAt,
-        details: sql<string>`json_build_object('currentPage', ${readingProgress.currentPage}, 'progressPercentage', ${readingProgress.progressPercentage})`
-      })
-      .from(readingProgress)
-      .orderBy(desc(readingProgress.lastReadAt))
-      .limit(limit)
-      .offset(offset);
-    
-    const countQuery = db.select({ count: sql<number>`count(*)` }).from(readingProgress);
-    
-    const [logs, [{ count }]] = await Promise.all([
-      logsQuery,
-      countQuery
-    ]);
-    
-    return {
-      logs,
-      total: count,
-      page,
-      totalPages: Math.ceil(count / limit)
-    };
-  }
+
 
   async getUserAnalytics(): Promise<{
     totalUsers: number;

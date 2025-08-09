@@ -23,7 +23,17 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Check which environment variable actually contains the secret key
+const secretKey = process.env.STRIPE_SECRET_KEY?.startsWith('sk_') 
+  ? process.env.STRIPE_SECRET_KEY 
+  : process.env.VITE_STRIPE_PUBLIC_KEY;
+
+if (!secretKey?.startsWith('sk_')) {
+  throw new Error('No valid Stripe secret key found (must start with sk_)');
+}
+
+console.log('Using Stripe secret key starting with:', secretKey.substring(0, 3));
+const stripe = new Stripe(secretKey);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Production environment detection and configuration
@@ -1565,7 +1575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { isActive } = req.body;
       
-      const user = await storage.toggleUserStatus(id, isActive);
+      const user = await storage.updateUserStatus(id, isActive);
       res.json(user);
     } catch (error) {
       console.error("Error updating user status:", error);
