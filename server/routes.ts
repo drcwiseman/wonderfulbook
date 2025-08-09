@@ -23,13 +23,13 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 
-// Check which environment variable actually contains the secret key
+// Stripe keys are swapped in environment - fix this automatically
 const secretKey = process.env.STRIPE_SECRET_KEY?.startsWith('sk_') 
   ? process.env.STRIPE_SECRET_KEY 
   : process.env.VITE_STRIPE_PUBLIC_KEY;
 
 if (!secretKey?.startsWith('sk_')) {
-  throw new Error('No valid Stripe secret key found (must start with sk_)');
+  throw new Error('No valid Stripe secret key found. Please verify STRIPE_SECRET_KEY contains a secret key (sk_...)');
 }
 
 console.log('Using Stripe secret key starting with:', secretKey.substring(0, 3));

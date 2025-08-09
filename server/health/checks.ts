@@ -29,9 +29,11 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
-// Initialize Stripe client
-const actualSecretKey = process.env.VITE_STRIPE_PUBLIC_KEY;
-const stripe = actualSecretKey ? new Stripe(actualSecretKey) : null;
+// Initialize Stripe client - handle swapped keys automatically
+const actualSecretKey = process.env.STRIPE_SECRET_KEY?.startsWith('sk_') 
+  ? process.env.STRIPE_SECRET_KEY 
+  : process.env.VITE_STRIPE_PUBLIC_KEY;
+const stripe = actualSecretKey?.startsWith('sk_') ? new Stripe(actualSecretKey) : null;
 
 export async function runHealthChecks(options: { source?: string } = {}): Promise<{
   runId: string;
