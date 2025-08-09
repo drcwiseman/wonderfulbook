@@ -30,7 +30,7 @@ import ResetPassword from "@/pages/auth/reset-password";
 import NotFound from "@/pages/not-found";
 import ScrollToTop from "@/components/ScrollToTop";
 import AccessibilityButton from "@/components/AccessibilityButton";
-import AccessibilityMenu from "@/components/AccessibilityMenu";
+
 import FeedbackButton from "@/components/FeedbackButton";
 
 function Router() {
@@ -124,7 +124,6 @@ function App() {
           <Router />
           <ScrollToTop />
           <AccessibilityButton />
-          <AccessibilityMenu />
           <FeedbackButton />
         </TooltipProvider>
       </QueryClientProvider>

@@ -262,7 +262,7 @@ export default function AccessibilityMenu({ onSettingsChange }: AccessibilityMen
           <Button
             variant="outline"
             size="sm"
-            className="fixed top-4 right-20 z-50 bg-white/90 backdrop-blur-sm border-2 hover:bg-gray-50"
+            className="fixed bottom-6 right-6 z-30 bg-white/90 backdrop-blur-sm border-2 hover:bg-gray-50"
             aria-label="Accessibility Options"
           >
             <AccessibilityIcon className="h-4 w-4" />
