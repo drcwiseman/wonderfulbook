@@ -91,7 +91,7 @@ export default function Dashboard() {
 
   if (!isAuthenticated || isLoading) {
     return (
-      <div className="min-h-screen bg-netflix-black flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full" />
       </div>
     );
@@ -104,7 +104,7 @@ export default function Dashboard() {
   const tierConfig = {
     free: { name: 'Free Trial', limit: 3, color: 'bg-gray-500', icon: BookOpen },
     basic: { name: 'Basic Plan', limit: 10, color: 'bg-blue-500', icon: Star },
-    premium: { name: 'Premium Plan', limit: 'Unlimited', color: 'bg-yellow-500', icon: Crown }
+    premium: { name: 'Premium Plan', limit: 'Unlimited', color: 'bg-orange-600', icon: Crown }
   };
 
   const currentConfig = tierConfig[currentTier as keyof typeof tierConfig] || tierConfig.free;

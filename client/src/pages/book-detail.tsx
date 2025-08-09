@@ -132,15 +132,15 @@ export default function BookDetailOld() {
 
   if (bookLoading) {
     return (
-      <div className="min-h-screen bg-netflix-black flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   if (!book) {
     return (
-      <div className="min-h-screen bg-netflix-black flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md mx-4">
           <CardContent className="pt-6">
             <div className="text-center">
@@ -156,12 +156,12 @@ export default function BookDetailOld() {
 
   if (!canAccessBook()) {
     return (
-      <div className="min-h-screen bg-netflix-black text-white">
+      <div className="min-h-screen bg-gray-50 text-gray-900">
         <div className="container mx-auto px-4 py-8">
           <Button
             variant="ghost"
             onClick={() => window.history.back()}
-            className="mb-6 text-white hover:text-netflix-red"
+            className="mb-6 text-gray-700 hover:text-orange-600"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
@@ -202,14 +202,14 @@ export default function BookDetailOld() {
                   {book.description}
                 </p>
                 
-                <div className="bg-netflix-red/10 border-l-4 border-netflix-red p-6 rounded">
-                  <h3 className="text-xl font-semibold mb-2 text-netflix-red">Upgrade Required</h3>
+                <div className="bg-orange-50 border-l-4 border-orange-600 p-6 rounded">
+                  <h3 className="text-xl font-semibold mb-2 text-orange-600">Upgrade Required</h3>
                   <p className="text-gray-300 mb-4">
                     This book requires a {book.requiredTier} subscription to access.
                   </p>
                   <Button
                     onClick={() => window.location.href = "/subscribe"}
-                    className="bg-netflix-red hover:bg-red-700"
+                    className="bg-orange-600 hover:bg-orange-700"
                   >
                     Upgrade Now
                   </Button>
@@ -223,14 +223,14 @@ export default function BookDetailOld() {
   }
 
   return (
-    <div className="min-h-screen bg-netflix-black text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {book && <SEOHead {...getBookSEO(book)} />}
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <Button
             variant="ghost"
             onClick={() => window.history.back()}
-            className="text-white hover:text-netflix-red"
+            className="text-gray-700 hover:text-orange-600"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Library
@@ -253,7 +253,7 @@ export default function BookDetailOld() {
           <div className="grid lg:grid-cols-4 gap-8">
             {/* Book Info Sidebar */}
             <div className="lg:col-span-1">
-              <Card className="bg-netflix-gray border-gray-700">
+              <Card className="bg-white border-gray-200">
                 <CardContent className="p-6">
                   <img
                     src={book.coverImageUrl || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=400"}
@@ -261,8 +261,8 @@ export default function BookDetailOld() {
                     className="w-full rounded-lg mb-4"
                   />
                   
-                  <h2 className="text-xl font-bold mb-2 text-white">{book.title}</h2>
-                  <p className="text-gray-300 mb-4">by {book.author}</p>
+                  <h2 className="text-xl font-bold mb-2 text-gray-900">{book.title}</h2>
+                  <p className="text-gray-600 mb-4">by {book.author}</p>
                   
                   <div className="flex items-center mb-4">
                     {[...Array(5)].map((_, i) => (
@@ -275,7 +275,7 @@ export default function BookDetailOld() {
                         }`}
                       />
                     ))}
-                    <span className="ml-2 text-gray-300 text-sm">{book.rating}</span>
+                    <span className="ml-2 text-gray-600 text-sm">{book.rating}</span>
                   </div>
 
                   <Badge variant="secondary" className="mb-4">{book.category}</Badge>
@@ -292,13 +292,13 @@ export default function BookDetailOld() {
                     <>
                       <Separator className="my-4 bg-gray-600" />
                       <div>
-                        <h3 className="font-semibold mb-2 text-white">Reading Progress</h3>
-                        <p className="text-sm text-gray-300">
+                        <h3 className="font-semibold mb-2 text-gray-900">Reading Progress</h3>
+                        <p className="text-sm text-gray-600">
                           Page {progress.currentPage} of {progress.totalPages}
                         </p>
-                        <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                           <div
-                            className="bg-netflix-red h-2 rounded-full"
+                            className="bg-orange-600 h-2 rounded-full"
                             style={{ width: `${progress.progressPercentage}%` }}
                           />
                         </div>
@@ -314,7 +314,7 @@ export default function BookDetailOld() {
 
             {/* Book Preview */}
             <div className="lg:col-span-3">
-              <Card className="bg-netflix-gray border-gray-700">
+              <Card className="bg-white border-gray-200">
                 <CardContent className="p-6">
                   <div 
                     className="bg-gradient-to-br from-orange-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-lg border-2 border-dashed border-orange-200 dark:border-gray-600 cursor-pointer hover:border-orange-400 dark:hover:border-orange-500 transition-colors" 

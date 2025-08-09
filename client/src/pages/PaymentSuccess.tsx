@@ -18,15 +18,15 @@ export default function PaymentSuccess() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-netflix-black flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-netflix-black text-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-netflix-gray border-gray-700">
+    <div className="min-h-screen bg-gray-50 text-gray-900 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-white border-gray-200">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mb-4">
             <Check className="w-8 h-8 text-white" />
@@ -38,8 +38,8 @@ export default function PaymentSuccess() {
             Welcome to Wonderful Books! Your subscription is now active.
           </p>
           
-          <div className="bg-netflix-black/50 p-4 rounded-lg">
-            <h3 className="font-semibold text-netflix-red mb-2">What's Next?</h3>
+          <div className="bg-orange-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-orange-600 mb-2">What's Next?</h3>
             <ul className="text-sm text-gray-300 space-y-1">
               <li>• Browse our extensive book collection</li>
               <li>• Start reading with our premium PDF reader</li>
@@ -51,7 +51,7 @@ export default function PaymentSuccess() {
           <div className="space-y-3">
             <Button 
               onClick={() => window.location.href = "/"}
-              className="w-full bg-netflix-red hover:bg-red-700"
+              className="w-full bg-orange-600 hover:bg-orange-700"
             >
               <BookOpen className="w-4 h-4 mr-2" />
               Start Reading
