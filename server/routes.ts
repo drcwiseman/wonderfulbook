@@ -155,10 +155,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const userId = req.session.user.id;
-      const user = await storage.getUser(userId);
+      // Check if user session exists
+      if (!req.session || !req.session.user) {
+        return res.status(401).json({ 
+          message: "Unauthorized",
+          debug: process.env.NODE_ENV === 'production' ? undefined : {
+            hasSession: !!req.session,
+            sessionId: req.sessionID,
+            sessionData: req.session
+          }
+        });
+      }
+
+      // Get fresh user data to ensure they still have valid access
+      const user = await storage.getUser(req.session.user.id);
+      if (!user || !user.isActive) {
+        // Clear invalid session
+        req.session.destroy();
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
