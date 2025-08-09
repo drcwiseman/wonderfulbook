@@ -239,18 +239,33 @@ export default function Header() {
                 </motion.div>
               </div>
             ) : (
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Button
-                  onClick={() => window.location.href = "/auth/login"}
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-orange-500/25 transition-all duration-300"
+              <div className="flex items-center gap-3">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  Sign In
-                </Button>
-              </motion.div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => window.location.href = "/auth/register"}
+                    className="text-white hover:text-orange-400 hover:bg-white/10 transition-all duration-200 hidden sm:flex"
+                  >
+                    Register
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Button
+                    onClick={() => window.location.href = "/auth/login"}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-orange-500/25 transition-all duration-300"
+                  >
+                    Sign In
+                  </Button>
+                </motion.div>
+              </div>
             )}
             
             {/* Mobile Menu Button */}
