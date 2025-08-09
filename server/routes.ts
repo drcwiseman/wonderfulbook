@@ -15,6 +15,7 @@ import connectPg from "connect-pg-simple";
 
 import { antiAbuseService } from "./antiAbuseService";
 import { AuditService } from "./auditService";
+import { healthRouter } from "./health/routes.js";
 
 import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth';
 
@@ -2926,6 +2927,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Error generating structured data' });
     }
   });
+
+  // Health monitoring routes
+  app.use('/', healthRouter);
 
   const httpServer = createServer(app);
   return httpServer;

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Wonderful Books</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .status-ok { color: #22c55e; }
+        .status-warn { color: #f59e0b; }
+        .status-fail { color: #ef4444; }
+        .chart-container { width: 100%; height: 200px; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">System Health Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500">Welcome, <%= user?.firstName || 'Admin' %></span>
+                    <a href="/admin" class="text-sm text-blue-600 hover:text-blue-500">← Back to Admin</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Overall Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <% if (latest && latest.overallStatus === 'OK') { %>
+                                <span class="text-2xl">✅</span>
+                            <% } else if (latest && latest.overallStatus === 'WARN') { %>
+                                <span class="text-2xl">⚠️</span>
+                            <% } else { %>
+                                <span class="text-2xl">❌</span>
+                            <% } %>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Overall Status</dt>
+                                <dd class="text-lg font-medium text-gray-900">
+                                    <%= latest ? latest.overallStatus : 'UNKNOWN' %>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <span class="text-2xl">🕒</span>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Last Check</dt>
+                                <dd class="text-lg font-medium text-gray-900">
+                                    <%= latest ? new Date(latest.finishedAt || latest.startedAt).toLocaleString() : 'Never' %>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <span class="text-2xl">📊</span>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Success Rate (7d)</dt>
+                                <dd class="text-lg font-medium text-gray-900">
+                                    <%= stats.successRate.toFixed(1) %>%
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <span class="text-2xl">⚡</span>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Avg Response</dt>
+                                <dd class="text-lg font-medium text-gray-900">
+                                    <%= Math.round(stats.averageDuration) %>ms
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Actions</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Trigger manual health checks and view system status
+                        </p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button 
+                            id="runHealthCheck" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                            Run Health Check Now
+                        </button>
+                        <button 
+                            id="refreshPage" 
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Status -->
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Current Component Status</h3>
+                
+                <% if (latest && latest.items && latest.items.length > 0) { %>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Component</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <% latest.items.forEach(item => { %>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <%= item.name %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <% if (item.status === 'OK') { %>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            ✅ OK
+                                        </span>
+                                    <% } else if (item.status === 'WARN') { %>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            ⚠️ WARN
+                                        </span>
+                                    <% } else { %>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            ❌ FAIL
+                                        </span>
+                                    <% } %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <%= item.durationMs %>ms
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                    <%= item.message %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } else { %>
+                <div class="text-center py-8 text-gray-500">
+                    No health check data available. Click "Run Health Check Now" to perform the first check.
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Component Performance (7 days) -->
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Component Performance (Last 7 Days)</h3>
+                
+                <% if (stats.componentStats && stats.componentStats.length > 0) { %>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Component</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Success Rate</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Duration</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Checks</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <% stats.componentStats.forEach(stat => { %>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <%= stat.name %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <div class="flex items-center">
+                                        <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="bg-green-600 h-2 rounded-full" style="width: <%= stat.successRate %>%"></div>
+                                        </div>
+                                        <%= stat.successRate.toFixed(1) %>%
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <%= Math.round(stat.averageDuration) %>ms
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <%= stat.totalChecks %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } else { %>
+                <div class="text-center py-8 text-gray-500">
+                    No historical performance data available.
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Scheduler Status -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Health Check Scheduler</h3>
+                
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Status</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= schedulerStatus.isRunning ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %>">
+                                <%= schedulerStatus.isRunning ? '✅ Running' : '❌ Stopped' %>
+                            </span>
+                        </dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Schedule</dt>
+                        <dd class="mt-1 text-sm text-gray-900"><%= schedulerStatus.cronPattern %></dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Next Execution</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            <%= schedulerStatus.nextExecution ? new Date(schedulerStatus.nextExecution).toLocaleString() : 'N/A' %>
+                        </dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Check in Progress</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            <%= schedulerStatus.isHealthCheckRunning ? 'Yes' : 'No' %>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-refresh and AJAX functionality -->
+    <script>
+        // Auto-refresh every 60 seconds
+        let autoRefresh = setInterval(() => {
+            window.location.reload();
+        }, 60000);
+
+        // Manual refresh button
+        document.getElementById('refreshPage').addEventListener('click', () => {
+            window.location.reload();
+        });
+
+        // Run health check button
+        document.getElementById('runHealthCheck').addEventListener('click', async () => {
+            const button = document.getElementById('runHealthCheck');
+            const originalText = button.textContent;
+            
+            button.disabled = true;
+            button.textContent = 'Running...';
+            
+            try {
+                const response = await fetch('/api/health/run', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                if (response.ok) {
+                    // Wait 2 seconds for the check to complete, then refresh
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    throw new Error('Failed to run health check');
+                }
+            } catch (error) {
+                console.error('Error running health check:', error);
+                button.disabled = false;
+                button.textContent = originalText;
+                alert('Error running health check. Please try again.');
+            }
+        });
+        
+        // Stop auto-refresh when page is not visible
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                if (!autoRefresh) {
+                    autoRefresh = setInterval(() => {
+                        window.location.reload();
+                    }, 60000);
+                }
+            } else {
+                if (autoRefresh) {
+                    clearInterval(autoRefresh);
+                    autoRefresh = null;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

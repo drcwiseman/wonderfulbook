@@ -1,0 +1,194 @@
+You are a senior backend engineer. Add a production-ready System Health feature to my Node.js (Express) + PostgreSQL app.
+
+Scope
+Implement health checks for: server, database (Postgres), Stripe, SMTP, file storage, external API.
+
+Scheduler: run checks every 5 minutes (node-cron).
+
+JSON API for latest status + manual trigger.
+
+Admin dashboard page (server-rendered with EJS or Pug) showing ✅/⚠️/❌, details, and history.
+
+Email alerts on FAIL with cooldown + recovery notice.
+
+Public /healthz for load balancers (returns 200/503 only, no secrets).
+
+Protect admin routes (assume I already have session auth + req.user.isAdmin).
+
+Stack & Packages
+Node 18+, Express
+
+PostgreSQL via pg (pool)
+
+node-cron for scheduling
+
+stripe SDK
+
+nodemailer for SMTP
+
+axios for HTTP pings
+
+winston for logging (no secrets in logs)
+
+Views: EJS (or Pug) under views/health
+
+ENV (add to .env.example)
+makefile
+Copy
+Edit
+STRIPE_SECRET_KEY=
+SMTP_HOST=
+SMTP_PORT=465
+SMTP_USER=
+SMTP_PASS=
+SMTP_USE_TLS=false
+SMTP_USE_SSL=true
+HEALTH_TEST_EMAIL=   # optional: if set, send a test email on manual run only
+HEALTH_ALERT_EMAILS=admin@example.com,ops@example.com
+HEALTH_STORAGE_PATH=/var/app/storage
+HEALTH_PING_URL=https://api.ipify.org
+HEALTH_ALERT_COOLDOWN_MIN=30
+HEALTH_CRON=*/5 * * * *   # every 5 minutes
+Database (SQL migration)
+Create two tables to store runs + items:
+
+sql
+Copy
+Edit
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE IF NOT EXISTS health_check_runs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  finished_at TIMESTAMPTZ,
+  overall_status TEXT NOT NULL,               -- 'OK' | 'WARN' | 'FAIL'
+  summary_json JSONB NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX IF NOT EXISTS idx_health_runs_started ON health_check_runs(started_at DESC);
+
+CREATE TABLE IF NOT EXISTS health_check_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  run_id UUID NOT NULL REFERENCES health_check_runs(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,                          -- 'server'|'database'|'stripe'|'smtp'|'storage'|'external_api'
+  status TEXT NOT NULL,                        -- 'OK'|'WARN'|'FAIL'
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  message TEXT,
+  meta_json JSONB NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX IF NOT EXISTS idx_health_items_run ON health_check_items(run_id);
+Status rules
+OK: passed within SLA.
+
+WARN: slow (>1000ms) or degraded but usable.
+
+FAIL: exception, timeout, or non-200 response.
+
+overall_status = worst of item statuses.
+
+Implement checkers (each returns {status, durationMs, message, meta})
+Server
+
+Self-HTTP GET to /api/health/ping with 2s timeout.
+
+Include process.version, uptime seconds, and (if Linux) /proc/loadavg read (optional).
+
+Database (Postgres)
+
+SELECT 1 + a fast test transaction (BEGIN; SELECT now(); ROLLBACK;).
+
+Stripe
+
+stripe.balance.retrieve() with 3s timeout; treat non-200 as FAIL. Never log secrets.
+
+SMTP
+
+Create transporter with SSL/TLS per env; verify() or login(); if HEALTH_TEST_EMAIL is set and manual run, send a short test email.
+
+File storage
+
+Write small temp file in HEALTH_STORAGE_PATH, read it back, delete it.
+
+External API
+
+axios.get(HEALTH_PING_URL, { timeout: 3000 }); 200 = OK else FAIL.
+
+Scheduler
+Use node-cron with HEALTH_CRON (default “*/5 * * * *”).
+
+Job calls runHealthChecks({ source: 'scheduler' }).
+
+Store run + items in DB.
+
+Alerts (nodemailer)
+When overall_status === 'FAIL':
+
+Email HEALTH_ALERT_EMAILS:
+
+Subject: [ALERT] System Health: FAIL
+
+Body: failures + timestamps + last 5 runs summary.
+
+Cooldown: dedupe using HEALTH_ALERT_COOLDOWN_MIN; keep the last alert timestamp in memory and also in DB (e.g., a small health_alert_state table or derive from runs).
+
+Send a recovery email once overall returns to OK.
+
+Routes
+GET /api/health/ping → { status: 'ok' }
+
+GET /api/health → latest run JSON: overall, items, timestamps.
+
+POST /api/health/run (admin only) → triggers checks now; returns run JSON.
+
+GET /admin/health (admin only) → dashboard page.
+
+GET /admin/health/history (admin only, paginated) → list of past runs.
+
+GET /healthz (public) → 200 if latest overall is OK or WARN, 503 if FAIL (no details).
+
+Admin dashboard (EJS)
+Top tiles: Overall Status, Last Run, Uptime, DB latency, API success rate (compute from last N runs).
+
+Table: Component | Badge (✅/⚠️/❌) | Duration | Message | Last Checked.
+
+Button: Run Health Check Now (AJAX POST to /api/health/run then refresh).
+
+Small inline chart (vanilla JS/Canvas) plotting last 20 overall statuses.
+
+Auto-refresh every 60s.
+
+Code structure
+bash
+Copy
+Edit
+/src/health/
+  index.js          # wiring, exports runHealthChecks()
+  checks.js         # individual checker functions
+  store.js          # DB writes/reads for runs + items
+  alerts.js         # nodemailer email alerts + cooldown
+  routes.js         # express router for /api/health and /admin/health
+  views/            # EJS templates for dashboard + history
+Register health router in the main Express app under /api/health and /admin/health.
+
+Start the cron scheduler during app boot (skip in test mode).
+
+Security & Ops
+Guard admin routes: if (!req.user || !req.user.isAdmin) return res.sendStatus(403).
+
+Mask secrets in logs; never print tokens.
+
+Add basic unit tests with Jest/Mocha for each checker (mock Stripe/SMTP/HTTP).
+
+Gracefully handle timeouts and mark as FAIL with clear messages.
+
+Acceptance criteria
+Dashboard shows live statuses with ✅/⚠️/❌ and updates after manual run.
+
+/api/health returns structured JSON of the latest run.
+
+FAIL triggers one alert email, respects cooldown, and sends recovery email on OK.
+
+/healthz returns 200 (OK/WARN) or 503 (FAIL).
+
+Works on a single VPS (no external queue required).

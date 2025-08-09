@@ -1,10 +1,15 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Set up EJS for health dashboard templates
+app.set('view engine', 'ejs');
+app.set('views', path.join(process.cwd(), 'views'));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -45,6 +50,15 @@ app.use((req, res, next) => {
     await emailScheduler.initialize();
   } catch (error) {
     console.error('Failed to initialize email scheduler:', error);
+  }
+
+  // Initialize health monitoring scheduler
+  try {
+    const { startHealthScheduler } = await import('./health/scheduler.js');
+    startHealthScheduler();
+    console.log('🏥 Health monitoring scheduler started');
+  } catch (error) {
+    console.error('Failed to initialize health monitoring scheduler:', error);
   }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

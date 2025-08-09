@@ -723,3 +723,67 @@ export const insertAuditLogSchema = createInsertSchema(auditLogs, {
 
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+
+// ===== SYSTEM HEALTH MONITORING =====
+
+// Health check runs table
+export const healthCheckRuns = pgTable("health_check_runs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  startedAt: timestamp("started_at", { withTimezone: true }).defaultNow(),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
+  overallStatus: varchar("overall_status").notNull(), // 'OK' | 'WARN' | 'FAIL'
+  summaryJson: jsonb("summary_json").notNull().default({}),
+}, (table) => [
+  index("idx_health_runs_started").on(table.startedAt.desc())
+]);
+
+// Health check items table
+export const healthCheckItems = pgTable("health_check_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  runId: varchar("run_id").references(() => healthCheckRuns.id, { onDelete: "cascade" }).notNull(),
+  name: varchar("name").notNull(), // 'server'|'database'|'stripe'|'smtp'|'storage'|'external_api'
+  status: varchar("status").notNull(), // 'OK'|'WARN'|'FAIL'
+  durationMs: integer("duration_ms").notNull().default(0),
+  message: text("message"),
+  metaJson: jsonb("meta_json").notNull().default({}),
+}, (table) => [
+  index("idx_health_items_run").on(table.runId)
+]);
+
+// Health alert state table for cooldown tracking
+export const healthAlertState = pgTable("health_alert_state", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  alertType: varchar("alert_type").notNull(), // 'system_failure', 'recovery'
+  lastSentAt: timestamp("last_sent_at", { withTimezone: true }).notNull(),
+  status: varchar("status").notNull(), // 'FAIL' | 'OK'
+  cooldownMinutes: integer("cooldown_minutes").notNull().default(30),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Health check relationships
+export const healthCheckRunsRelations = relations(healthCheckRuns, ({ many }) => ({
+  items: many(healthCheckItems),
+}));
+
+export const healthCheckItemsRelations = relations(healthCheckItems, ({ one }) => ({
+  run: one(healthCheckRuns, {
+    fields: [healthCheckItems.runId],
+    references: [healthCheckRuns.id],
+  }),
+}));
+
+// Zod schemas for health checks
+export const insertHealthCheckRunSchema = createInsertSchema(healthCheckRuns).omit({
+  id: true,
+  startedAt: true,
+});
+
+export const insertHealthCheckItemSchema = createInsertSchema(healthCheckItems).omit({
+  id: true,
+});
+
+export type HealthCheckRun = typeof healthCheckRuns.$inferSelect;
+export type InsertHealthCheckRun = z.infer<typeof insertHealthCheckRunSchema>;
+export type HealthCheckItem = typeof healthCheckItems.$inferSelect;
+export type InsertHealthCheckItem = z.infer<typeof insertHealthCheckItemSchema>;
+export type HealthAlertState = typeof healthAlertState.$inferSelect;
