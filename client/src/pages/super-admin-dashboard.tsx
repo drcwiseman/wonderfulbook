@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { Users, BookOpen, Trophy, Settings, UserCog, Shield, Ban, RotateCcw, Eye, AlertCircle, Bug, TestTube } from 'lucide-react';
+import AuditLogs from '@/components/AuditLogs';
 
 interface SystemStats {
   totalUsers: number;
@@ -626,24 +627,7 @@ export default function SuperAdminDashboard() {
         </TabsContent>
 
         <TabsContent value="audit" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
-                Audit Logs
-              </CardTitle>
-              <CardDescription>
-                System activity and security logs
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Audit logging system will be implemented here</p>
-                <p className="text-sm">Track user actions, system changes, and security events</p>
-              </div>
-            </CardContent>
-          </Card>
+          <AuditLogs />
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-6">

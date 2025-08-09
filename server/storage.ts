@@ -14,6 +14,7 @@ import {
   challengeComments,
   bookReviews,
   reviewHelpfulVotes,
+  auditLogs,
   type User,
   type UpsertUser,
   type Book,
@@ -46,6 +47,8 @@ import {
   type InsertBookReview,
   type ReviewHelpfulVote,
   type InsertReviewHelpfulVote,
+  type AuditLog,
+  type InsertAuditLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, ilike, sql, count } from "drizzle-orm";
@@ -90,7 +93,9 @@ export interface IStorage {
     totalBooks: number;
     totalChallenges: number;
   }>;
-  getAuditLogs(options?: { page?: number; limit?: number }): Promise<{ logs: any[]; total: number; page: number; totalPages: number }>;
+  // Audit log operations
+  createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
+  getAuditLogs(options?: { page?: number; limit?: number; userId?: string; action?: string; severity?: string; startDate?: Date; endDate?: Date }): Promise<{ logs: AuditLog[]; total: number; page: number; totalPages: number }>;
   
   // Book operations
   getAllBooks(): Promise<Book[]>;
@@ -1571,6 +1576,96 @@ export class DatabaseStorage implements IStorage {
         eq(bookReviews.bookId, bookId)
       ));
     return review;
+  }
+
+  // ===== AUDIT LOG OPERATIONS =====
+
+  async createAuditLog(logData: InsertAuditLog): Promise<AuditLog> {
+    const [log] = await db
+      .insert(auditLogs)
+      .values(logData)
+      .returning();
+    return log;
+  }
+
+  async getAuditLogs(options?: { 
+    page?: number; 
+    limit?: number; 
+    userId?: string; 
+    action?: string; 
+    severity?: string; 
+    startDate?: Date; 
+    endDate?: Date; 
+  }): Promise<{ logs: AuditLog[]; total: number; page: number; totalPages: number }> {
+    const page = options?.page || 1;
+    const limit = options?.limit || 50;
+    const offset = (page - 1) * limit;
+    
+    let query = db.select({
+      id: auditLogs.id,
+      userId: auditLogs.userId,
+      action: auditLogs.action,
+      resource: auditLogs.resource,
+      resourceId: auditLogs.resourceId,
+      details: auditLogs.details,
+      ipAddress: auditLogs.ipAddress,
+      userAgent: auditLogs.userAgent,
+      severity: auditLogs.severity,
+      status: auditLogs.status,
+      sessionId: auditLogs.sessionId,
+      createdAt: auditLogs.createdAt,
+      // Join with user info
+      userEmail: users.email,
+      userFirstName: users.firstName,
+      userLastName: users.lastName,
+    }).from(auditLogs).leftJoin(users, eq(auditLogs.userId, users.id));
+    
+    const conditions: any[] = [];
+    
+    // Apply filters
+    if (options?.userId) {
+      conditions.push(eq(auditLogs.userId, options.userId));
+    }
+    
+    if (options?.action) {
+      conditions.push(eq(auditLogs.action, options.action));
+    }
+    
+    if (options?.severity) {
+      conditions.push(eq(auditLogs.severity, options.severity));
+    }
+    
+    if (options?.startDate) {
+      conditions.push(sql`${auditLogs.createdAt} >= ${options.startDate}`);
+    }
+    
+    if (options?.endDate) {
+      conditions.push(sql`${auditLogs.createdAt} <= ${options.endDate}`);
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    // Get total count for pagination
+    const countQuery = db.select({ count: sql<number>`count(*)` }).from(auditLogs);
+    if (conditions.length > 0) {
+      countQuery.where(and(...conditions));
+    }
+    const [{ count }] = await countQuery;
+    
+    // Get paginated results ordered by newest first
+    const logs = await query
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      logs: logs as AuditLog[],
+      total: count,
+      page,
+      totalPages: Math.ceil(count / limit)
+    };
   }
 }
 

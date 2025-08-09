@@ -14,6 +14,7 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 
 import { antiAbuseService } from "./antiAbuseService";
+import { AuditService } from "./auditService";
 
 import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth';
 
@@ -819,6 +820,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get system statistics
+  // Super Admin Audit Logs
+  app.get('/api/super-admin/audit-logs', requireSuperAdmin, async (req: any, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      const { userId, action, severity, startDate, endDate } = req.query;
+
+      const options: any = { page, limit };
+      if (userId) options.userId = userId;
+      if (action && action !== 'all') options.action = action;
+      if (severity && severity !== 'all') options.severity = severity;
+      if (startDate) options.startDate = new Date(startDate);
+      if (endDate) options.endDate = new Date(endDate);
+
+      const result = await storage.getAuditLogs(options);
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching audit logs:', error);
+      res.status(500).json({ error: 'Failed to fetch audit logs' });
+    }
+  });
+
   app.get('/api/super-admin/stats', requireSuperAdmin, async (req: any, res) => {
     try {
       const stats = await storage.getSystemStats();

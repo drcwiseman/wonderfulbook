@@ -679,3 +679,47 @@ export type ChallengeActivity = typeof challengeActivities.$inferSelect;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 export type ChallengeComment = typeof challengeComments.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
+
+// ===== AUDIT LOGS =====
+
+// Audit logs table for tracking system activities
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  action: varchar("action").notNull(), // e.g., 'login', 'book_access', 'admin_action', 'subscription_change'
+  resource: varchar("resource"), // e.g., 'user', 'book', 'subscription', 'system'
+  resourceId: varchar("resource_id"), // ID of the affected resource
+  details: jsonb("details"), // Additional details about the action
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  severity: varchar("severity").notNull().default('info'), // 'info', 'warning', 'error', 'critical'
+  status: varchar("status").notNull().default('success'), // 'success', 'failure', 'warning'
+  sessionId: varchar("session_id"), // Session identifier
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  userIndex: index("idx_audit_user").on(table.userId),
+  actionIndex: index("idx_audit_action").on(table.action),
+  resourceIndex: index("idx_audit_resource").on(table.resource, table.resourceId),
+  severityIndex: index("idx_audit_severity").on(table.severity),
+  dateIndex: index("idx_audit_date").on(table.createdAt),
+  ipIndex: index("idx_audit_ip").on(table.ipAddress),
+}));
+
+// Audit log relations
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [auditLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+// Audit log schemas
+export const insertAuditLogSchema = createInsertSchema(auditLogs, {
+  action: z.string().min(1, "Action is required"),
+  severity: z.enum(['info', 'warning', 'error', 'critical']).default('info'),
+  status: z.enum(['success', 'failure', 'warning']).default('success'),
+  details: z.object({}).passthrough().optional(),
+}).omit({ id: true, createdAt: true });
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
