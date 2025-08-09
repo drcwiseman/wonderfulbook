@@ -38,7 +38,7 @@ export async function sendHealthAlert(
     timestamp: Date;
   }
 ): Promise<void> {
-  const alertEmails = process.env.HEALTH_ALERT_EMAILS;
+  const alertEmails = process.env.HEALTH_ALERT_EMAILS || process.env.HEALTH_TEST_EMAIL;
   if (!alertEmails) {
     logger.warn('No alert emails configured');
     return;
