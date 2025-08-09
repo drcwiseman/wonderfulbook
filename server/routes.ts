@@ -157,21 +157,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
     try {
-      // Enhanced debug logging for session issues
-      console.log('Auth check - Session ID:', req.sessionID);
-      console.log('Auth check - Has session:', !!req.session);
-      console.log('Auth check - Session user:', req.session?.user?.id);
-      console.log('Auth check - Cookies:', req.headers.cookie);
-
       // Check if user session exists
       if (!req.session || !req.session.user) {
-        console.log('Auth failed: No session or user data');
         return res.status(401).json({ 
           message: "Unauthorized",
           debug: process.env.NODE_ENV === 'production' ? undefined : {
             hasSession: !!req.session,
-            sessionId: req.sessionID,
-            sessionData: req.session
+            sessionId: req.sessionID
           }
         });
       }
@@ -179,13 +171,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get fresh user data to ensure they still have valid access
       const user = await storage.getUser(req.session.user.id);
       if (!user || !user.isActive) {
-        console.log('Auth failed: Invalid or inactive user');
         // Clear invalid session
         req.session.destroy();
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      console.log('Auth successful for user:', user.email);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);

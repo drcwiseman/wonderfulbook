@@ -9,8 +9,8 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 export default function ReaderPage() {
   const { bookId } = useParams();
   const [, setLocation] = useLocation();
-  const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
+  const { isLoading: authLoading, isAuthenticated, user } = useAuth();
 
   // Fetch book details
   const { data: book, isLoading: bookLoading } = useQuery({
@@ -32,8 +32,7 @@ export default function ReaderPage() {
 
   // Redirect if not authenticated - but only after loading is done
   useEffect(() => {
-    const { isLoading } = useAuth();
-    if (!isLoading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       toast({
         title: "Unauthorized",
         description: "You need to be logged in to read books. Redirecting to login...",
@@ -44,7 +43,7 @@ export default function ReaderPage() {
       }, 1500);
       return;
     }
-  }, [isAuthenticated, setLocation, toast]);
+  }, [authLoading, isAuthenticated, setLocation, toast]);
 
   // Handle loading state
   if (!bookId) {
@@ -58,19 +57,6 @@ export default function ReaderPage() {
     );
   }
 
-  if (bookLoading || !book) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-400 mt-4">Loading book...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const { isLoading: authLoading } = useAuth();
-
   // Show loading while auth is being checked
   if (authLoading) {
     return (
@@ -78,6 +64,17 @@ export default function ReaderPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
           <p className="text-gray-600 dark:text-gray-400 mt-4">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (bookLoading || !book) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="text-gray-600 dark:text-gray-400 mt-4">Loading book...</p>
         </div>
       </div>
     );
