@@ -896,7 +896,7 @@ export default function SuperAdminDashboard() {
       </AlertDialog>
 
       <Dialog open={showSubscriptionDialog} onOpenChange={setShowSubscriptionDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5 text-orange-600" />
@@ -908,11 +908,11 @@ export default function SuperAdminDashboard() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label htmlFor="tier" className="text-sm font-medium">Subscription Tier</label>
+              <label htmlFor="tier" className="text-sm font-medium block mb-1">Subscription Tier</label>
               <Select value={subscriptionForm.tier} onValueChange={(value) => 
                 setSubscriptionForm(prev => ({ ...prev, tier: value }))
               }>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select tier" />
                 </SelectTrigger>
                 <SelectContent>
@@ -924,11 +924,11 @@ export default function SuperAdminDashboard() {
             </div>
 
             <div>
-              <label htmlFor="status" className="text-sm font-medium">Subscription Status</label>
+              <label htmlFor="status" className="text-sm font-medium block mb-1">Subscription Status</label>
               <Select value={subscriptionForm.status} onValueChange={(value) => 
                 setSubscriptionForm(prev => ({ ...prev, status: value }))
               }>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -942,53 +942,58 @@ export default function SuperAdminDashboard() {
             </div>
 
             <div>
-              <label htmlFor="stripeCustomerId" className="text-sm font-medium">Stripe Customer ID (Optional)</label>
+              <label htmlFor="stripeCustomerId" className="text-sm font-medium block mb-1">Stripe Customer ID (Optional)</label>
               <Input
                 id="stripeCustomerId"
                 value={subscriptionForm.stripeCustomerId}
                 onChange={(e) => setSubscriptionForm(prev => ({ ...prev, stripeCustomerId: e.target.value }))}
                 placeholder="cus_..."
+                className="w-full"
               />
             </div>
 
             <div>
-              <label htmlFor="stripeSubscriptionId" className="text-sm font-medium">Stripe Subscription ID (Optional)</label>
+              <label htmlFor="stripeSubscriptionId" className="text-sm font-medium block mb-1">Stripe Subscription ID (Optional)</label>
               <Input
                 id="stripeSubscriptionId"
                 value={subscriptionForm.stripeSubscriptionId}
                 onChange={(e) => setSubscriptionForm(prev => ({ ...prev, stripeSubscriptionId: e.target.value }))}
                 placeholder="sub_..."
+                className="w-full"
               />
             </div>
 
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <label htmlFor="trialEndsAt" className="text-sm font-medium">Trial End Date</label>
+                <label htmlFor="trialEndsAt" className="text-sm font-medium block mb-1">Trial End Date</label>
                 <Input
                   id="trialEndsAt"
-                  type="datetime-local"
+                  type="date"
                   value={subscriptionForm.trialEndsAt}
                   onChange={(e) => setSubscriptionForm(prev => ({ ...prev, trialEndsAt: e.target.value }))}
+                  className="w-full"
                 />
               </div>
 
               <div>
-                <label htmlFor="subscriptionEndsAt" className="text-sm font-medium">Subscription End Date</label>
+                <label htmlFor="subscriptionEndsAt" className="text-sm font-medium block mb-1">Subscription End Date</label>
                 <Input
                   id="subscriptionEndsAt"
-                  type="datetime-local"
+                  type="date"
                   value={subscriptionForm.subscriptionEndsAt}
                   onChange={(e) => setSubscriptionForm(prev => ({ ...prev, subscriptionEndsAt: e.target.value }))}
+                  className="w-full"
                 />
               </div>
 
               <div>
-                <label htmlFor="nextBillingDate" className="text-sm font-medium">Next Billing Date</label>
+                <label htmlFor="nextBillingDate" className="text-sm font-medium block mb-1">Next Billing Date</label>
                 <Input
                   id="nextBillingDate"
-                  type="datetime-local"
+                  type="date"
                   value={subscriptionForm.nextBillingDate}
                   onChange={(e) => setSubscriptionForm(prev => ({ ...prev, nextBillingDate: e.target.value }))}
+                  className="w-full"
                 />
               </div>
             </div>
