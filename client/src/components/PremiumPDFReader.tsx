@@ -144,7 +144,9 @@ export function PremiumPDFReader({
   // Disable text selection and copy if limit reached
   useEffect(() => {
     const handleContextMenu = (e: Event) => {
-      if (isBlocked) {
+      console.log('Context menu debug:', { isBlocked, tracking });
+      // Only block context menu if truly at limit
+      if (tracking && (parseFloat(tracking.copyPercentage || '0') >= 40 || tracking.isLimitReached)) {
         e.preventDefault();
         toast({
           title: "Copy Protection",

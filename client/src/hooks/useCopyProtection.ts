@@ -51,7 +51,12 @@ export function useCopyProtection(bookId: string) {
       return response as CopyAttemptResult;
     },
     onSuccess: (result: CopyAttemptResult) => {
+      console.log('Copy attempt result:', result);
+      console.log('Result success flag:', result.success);
+      console.log('Result tracking:', result.tracking);
+      
       if (!result.success) {
+        console.log('Copy blocked by server - showing error toast');
         toast({
           title: "Copy Limit Reached",
           description: result.message,
@@ -59,15 +64,13 @@ export function useCopyProtection(bookId: string) {
         });
         setIsBlocked(true);
       } else {
-        // Only show toast for successful copies, not when blocked
+        console.log('Copy was successful - showing success toast');
         const currentPercentage = parseFloat(result.tracking.copyPercentage || '0');
-        if (currentPercentage < 40 && !result.tracking.isLimitReached) {
-          toast({
-            title: "Copy Successful",
-            description: `${result.remainingPercentage.toFixed(1)}% copy allowance remaining`,
-            variant: currentPercentage > 35 ? "destructive" : "default",
-          });
-        }
+        toast({
+          title: "Copy Successful",
+          description: `${result.remainingPercentage.toFixed(1)}% copy allowance remaining (${currentPercentage.toFixed(2)}% used)`,
+          variant: currentPercentage > 35 ? "destructive" : "default",
+        });
       }
       refetch(); // Refresh tracking data
     },
