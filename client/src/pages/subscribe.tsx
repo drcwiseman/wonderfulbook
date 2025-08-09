@@ -411,9 +411,10 @@ export default function Subscribe() {
                 )}
               </Button>
             </CardContent>
-        </Card>
+          </Card>
+          </div>
+        </div>
       </div>
-    </div>
     </>
   );
 }
