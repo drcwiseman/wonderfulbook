@@ -155,29 +155,31 @@ export function PremiumPDFReader({
     };
 
     const handleCopy = (e: ClipboardEvent) => {
-      if (isBlocked) {
-        e.preventDefault();
-        toast({
-          title: "Copy Protection",
-          description: "You have reached the 40% copy limit for this book",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const selection = window.getSelection();
       const selectedText = selection?.toString() || '';
       
-      if (selectedText && !canCopy(selectedText.length)) {
-        e.preventDefault();
-        toast({
-          title: "Copy Limit Reached",
-          description: `Cannot copy ${selectedText.length} characters. Only ${getRemainingPercentage().toFixed(1)}% copy allowance remaining.`,
-          variant: "destructive",
-        });
-        return;
+      if (!selectedText || selectedText.length === 0) {
+        return; // Allow empty selections
       }
 
+      // Only block if we have tracking data AND the user is actually at the limit
+      if (tracking) {
+        const currentPercentage = parseFloat(tracking.copyPercentage || '0');
+        const additionalPercentage = (selectedText.length / tracking.totalBookCharacters) * 100;
+        const newPercentage = currentPercentage + additionalPercentage;
+
+        if (newPercentage > 40) {
+          e.preventDefault();
+          toast({
+            title: "Copy Limit Reached",
+            description: `Cannot copy ${selectedText.length} characters. Only ${getRemainingPercentage().toFixed(1)}% copy allowance remaining.`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      // Record the copy attempt for tracking
       if (selectedText && selectedText.length > 0) {
         recordCopy(selectedText);
       }
@@ -571,8 +573,8 @@ export function PremiumPDFReader({
               {tracking && (
                 <div className="flex items-center space-x-2">
                   <div className={`flex items-center px-2 py-1 rounded text-xs ${
-                    isBlocked ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                    isCloseToLimit() ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                    getRemainingPercentage() <= 0 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                    getRemainingPercentage() <= 5 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
                     'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                   }`}>
                     <Copy className="h-3 w-3 mr-1" />

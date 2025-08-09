@@ -43,11 +43,12 @@ export function useCopyProtection(bookId: string) {
 
   // Record copy attempt mutation
   const recordCopyMutation = useMutation({
-    mutationFn: async (charactersCopied: number) => {
-      return await apiRequest('POST', '/api/copy-attempt', {
+    mutationFn: async (charactersCopied: number): Promise<CopyAttemptResult> => {
+      const response = await apiRequest('POST', '/api/copy-attempt', {
         bookId,
         charactersCopied
       });
+      return response as CopyAttemptResult;
     },
     onSuccess: (result: CopyAttemptResult) => {
       if (!result.success) {
@@ -58,13 +59,14 @@ export function useCopyProtection(bookId: string) {
         });
         setIsBlocked(true);
       } else {
-        toast({
-          title: "Copy Successful",
-          description: `${result.remainingPercentage.toFixed(1)}% copy allowance remaining`,
-          variant: result.tracking.isLimitReached ? "destructive" : "default",
-        });
-        if (result.tracking.isLimitReached) {
-          setIsBlocked(true);
+        // Only show toast for successful copies, not when blocked
+        const currentPercentage = parseFloat(result.tracking.copyPercentage || '0');
+        if (currentPercentage < 40 && !result.tracking.isLimitReached) {
+          toast({
+            title: "Copy Successful",
+            description: `${result.remainingPercentage.toFixed(1)}% copy allowance remaining`,
+            variant: currentPercentage > 35 ? "destructive" : "default",
+          });
         }
       }
       refetch(); // Refresh tracking data
@@ -92,18 +94,11 @@ export function useCopyProtection(bookId: string) {
   // Record copy attempt
   const recordCopy = useCallback((text: string) => {
     if (!text || text.length === 0) return false;
-    if (!canCopy(text.length)) {
-      toast({
-        title: "Copy Not Allowed",
-        description: "You have reached the 40% copy limit for this book",
-        variant: "destructive",
-      });
-      return false;
-    }
     
+    // Just record the copy, don't block here (blocking is done in handleCopy)
     recordCopyMutation.mutate(text.length);
     return true;
-  }, [canCopy, recordCopyMutation, toast]);
+  }, [recordCopyMutation]);
 
   // Get remaining copy percentage
   const getRemainingPercentage = useCallback(() => {
