@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Users, BookOpen, Trophy, Settings, UserCog, Shield, Ban, RotateCcw, Eye, AlertCircle, Bug, TestTube } from 'lucide-react';
+import { Users, BookOpen, Trophy, Settings, UserCog, Shield, Ban, RotateCcw, Eye, AlertCircle, Bug, TestTube, CreditCard, Calendar, DollarSign } from 'lucide-react';
 import AuditLogs from '@/components/AuditLogs';
 
 interface SystemStats {
@@ -33,6 +33,12 @@ interface User {
   role: string;
   isActive: boolean;
   subscriptionTier: string;
+  subscriptionStatus: string;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  trialEndsAt?: string;
+  subscriptionEndsAt?: string;
+  nextBillingDate?: string;
   createdAt: string;
   lastLoginAt?: string;
 }
@@ -54,8 +60,18 @@ export default function SuperAdminDashboard() {
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   const [newRole, setNewRole] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [subscriptionForm, setSubscriptionForm] = useState({
+    tier: '',
+    status: '',
+    stripeCustomerId: '',
+    stripeSubscriptionId: '',
+    trialEndsAt: '',
+    subscriptionEndsAt: '',
+    nextBillingDate: ''
+  });
   const [editForm, setEditForm] = useState({
     firstName: '',
     lastName: '',
@@ -265,8 +281,74 @@ export default function SuperAdminDashboard() {
     }
   };
 
+  const updateSubscriptionMutation = useMutation({
+    mutationFn: async ({ userId, subscriptionData }: { 
+      userId: string; 
+      subscriptionData: {
+        tier: string;
+        status: string;
+        stripeCustomerId?: string;
+        stripeSubscriptionId?: string;
+        trialEndsAt?: string;
+        subscriptionEndsAt?: string;
+        nextBillingDate?: string;
+      }
+    }) => {
+      const response = await apiRequest("PATCH", `/api/super-admin/users/${userId}/subscription`, subscriptionData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/super-admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/super-admin/stats'] });
+      setShowSubscriptionDialog(false);
+      setSubscriptionForm({
+        tier: '',
+        status: '',
+        stripeCustomerId: '',
+        stripeSubscriptionId: '',
+        trialEndsAt: '',
+        subscriptionEndsAt: '',
+        nextBillingDate: ''
+      });
+      toast({
+        title: "Success",
+        description: "User subscription updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user subscription",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleStatusToggle = (user: User) => {
     updateStatusMutation.mutate({ userId: user.id, isActive: !user.isActive });
+  };
+
+  const openSubscriptionDialog = (user: User) => {
+    setSelectedUser(user);
+    setSubscriptionForm({
+      tier: user.subscriptionTier || '',
+      status: user.subscriptionStatus || '',
+      stripeCustomerId: '',
+      stripeSubscriptionId: '',
+      trialEndsAt: '',
+      subscriptionEndsAt: '',
+      nextBillingDate: ''
+    });
+    setShowSubscriptionDialog(true);
+  };
+
+  const handleSubscriptionUpdate = () => {
+    if (selectedUser && subscriptionForm.tier && subscriptionForm.status) {
+      updateSubscriptionMutation.mutate({ 
+        userId: selectedUser.id, 
+        subscriptionData: subscriptionForm
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -525,6 +607,15 @@ export default function SuperAdminDashboard() {
                               }}
                             >
                               Role
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openSubscriptionDialog(user)}
+                              className="text-orange-600 hover:text-orange-700"
+                            >
+                              <CreditCard className="h-4 w-4 mr-1" />
+                              Subscription
                             </Button>
                             <Button
                               variant="outline"
@@ -803,6 +894,132 @@ export default function SuperAdminDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showSubscriptionDialog} onOpenChange={setShowSubscriptionDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-orange-600" />
+              Manage Subscription
+            </DialogTitle>
+            <DialogDescription>
+              Update subscription details for {selectedUser?.firstName} {selectedUser?.lastName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="tier" className="text-sm font-medium">Subscription Tier</label>
+              <Select value={subscriptionForm.tier} onValueChange={(value) => 
+                setSubscriptionForm(prev => ({ ...prev, tier: value }))
+              }>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select tier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free Trial</SelectItem>
+                  <SelectItem value="basic">Basic Plan</SelectItem>
+                  <SelectItem value="premium">Premium Plan</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label htmlFor="status" className="text-sm font-medium">Subscription Status</label>
+              <Select value={subscriptionForm.status} onValueChange={(value) => 
+                setSubscriptionForm(prev => ({ ...prev, status: value }))
+              }>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="trial">Trial</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label htmlFor="stripeCustomerId" className="text-sm font-medium">Stripe Customer ID (Optional)</label>
+              <Input
+                id="stripeCustomerId"
+                value={subscriptionForm.stripeCustomerId}
+                onChange={(e) => setSubscriptionForm(prev => ({ ...prev, stripeCustomerId: e.target.value }))}
+                placeholder="cus_..."
+              />
+            </div>
+
+            <div>
+              <label htmlFor="stripeSubscriptionId" className="text-sm font-medium">Stripe Subscription ID (Optional)</label>
+              <Input
+                id="stripeSubscriptionId"
+                value={subscriptionForm.stripeSubscriptionId}
+                onChange={(e) => setSubscriptionForm(prev => ({ ...prev, stripeSubscriptionId: e.target.value }))}
+                placeholder="sub_..."
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label htmlFor="trialEndsAt" className="text-sm font-medium">Trial End Date</label>
+                <Input
+                  id="trialEndsAt"
+                  type="datetime-local"
+                  value={subscriptionForm.trialEndsAt}
+                  onChange={(e) => setSubscriptionForm(prev => ({ ...prev, trialEndsAt: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="subscriptionEndsAt" className="text-sm font-medium">Subscription End Date</label>
+                <Input
+                  id="subscriptionEndsAt"
+                  type="datetime-local"
+                  value={subscriptionForm.subscriptionEndsAt}
+                  onChange={(e) => setSubscriptionForm(prev => ({ ...prev, subscriptionEndsAt: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="nextBillingDate" className="text-sm font-medium">Next Billing Date</label>
+                <Input
+                  id="nextBillingDate"
+                  type="datetime-local"
+                  value={subscriptionForm.nextBillingDate}
+                  onChange={(e) => setSubscriptionForm(prev => ({ ...prev, nextBillingDate: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-orange-800">Current Subscription</p>
+                  <p className="text-orange-700">
+                    Tier: <span className="font-medium">{selectedUser?.subscriptionTier || 'N/A'}</span> | 
+                    Status: <span className="font-medium">{selectedUser?.subscriptionStatus || 'N/A'}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSubscriptionDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubscriptionUpdate}
+              disabled={updateSubscriptionMutation.isPending || !subscriptionForm.tier || !subscriptionForm.status}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {updateSubscriptionMutation.isPending ? 'Updating...' : 'Update Subscription'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

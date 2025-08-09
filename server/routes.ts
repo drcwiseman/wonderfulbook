@@ -1583,6 +1583,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Super admin subscription management
+  app.patch('/api/super-admin/users/:id/subscription', requireSuperAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { tier, status, stripeCustomerId, stripeSubscriptionId, trialEndsAt, subscriptionEndsAt, nextBillingDate } = req.body;
+      
+      const subscriptionData: any = { tier, status };
+      
+      if (stripeCustomerId) subscriptionData.stripeCustomerId = stripeCustomerId;
+      if (stripeSubscriptionId) subscriptionData.stripeSubscriptionId = stripeSubscriptionId;
+      if (trialEndsAt) subscriptionData.trialEndsAt = new Date(trialEndsAt);
+      if (subscriptionEndsAt) subscriptionData.subscriptionEndsAt = new Date(subscriptionEndsAt);
+      if (nextBillingDate) subscriptionData.nextBillingDate = new Date(nextBillingDate);
+      
+      const user = await storage.updateUserSubscription(id, subscriptionData);
+      
+      // Log the action
+      await storage.createAuditLog({
+        userId: (req.user as any)?.claims?.sub || 'system',
+        action: 'user_subscription_updated',
+        resource: 'user',
+        resourceId: id,
+        details: JSON.stringify({ 
+          oldTier: user.subscriptionTier, 
+          newTier: tier,
+          oldStatus: user.subscriptionStatus,
+          newStatus: status,
+          adminId: (req.user as any)?.claims?.sub 
+        }),
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        severity: 'medium',
+        status: 'success'
+      });
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user subscription:", error);
+      res.status(500).json({ message: "Failed to update user subscription" });
+    }
+  });
+
   app.get('/api/admin/user-analytics', requireAdmin, async (req, res) => {
     try {
       const analytics = await storage.getUserAnalytics();
