@@ -15,6 +15,7 @@ import {
   bookReviews,
   reviewHelpfulVotes,
   auditLogs,
+  userCopyTracking,
   type User,
   type UpsertUser,
   type Book,
@@ -49,6 +50,8 @@ import {
   type InsertReviewHelpfulVote,
   type AuditLog,
   type InsertAuditLog,
+  type UserCopyTracking,
+  type InsertUserCopyTracking,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, ilike, sql, count } from "drizzle-orm";
@@ -82,7 +85,6 @@ export interface IStorage {
   resetUserPassword(userId: string, newPassword?: string): Promise<{ success: boolean; tempPassword?: string }>;
   updateUserRole(userId: string, role: string): Promise<User>;
   updateUserStatus(userId: string, isActive: boolean): Promise<User>;
-  toggleUserStatus(userId: string, isActive: boolean): Promise<User>;
   getSystemStats(): Promise<{
     totalUsers: number;
     activeUsers: number;
@@ -92,6 +94,23 @@ export interface IStorage {
     recentSignups: number;
     totalBooks: number;
     totalChallenges: number;
+    popularBooks: Array<{
+      id: string;
+      title: string;
+      author: string;
+      views: number;
+      rating: number;
+    }>;
+  }>;
+  
+  // Copy protection operations
+  getCopyTracking(userId: string, bookId: string): Promise<UserCopyTracking | null>;
+  initializeCopyTracking(userId: string, bookId: string): Promise<UserCopyTracking>;
+  recordCopyAttempt(userId: string, bookId: string, charactersCopied: number): Promise<{
+    success: boolean;
+    tracking: UserCopyTracking;
+    remainingPercentage: number;
+    message: string;
   }>;
   // Audit log operations
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
@@ -913,6 +932,104 @@ export class DatabaseStorage implements IStorage {
       totalBooks: totalBooksResult[0]?.count || 0,
       totalChallenges: totalChallengesResult[0]?.count || 0,
       popularBooks: popularBooksResult,
+    };
+  }
+
+  // Copy protection methods
+  async getCopyTracking(userId: string, bookId: string): Promise<UserCopyTracking | null> {
+    const [tracking] = await db
+      .select()
+      .from(userCopyTracking)
+      .where(and(eq(userCopyTracking.userId, userId), eq(userCopyTracking.bookId, bookId)));
+    return tracking || null;
+  }
+
+  async initializeCopyTracking(userId: string, bookId: string): Promise<UserCopyTracking> {
+    // Get total book characters (rough estimate based on page count)
+    const [book] = await db.select({ pageCount: books.pageCount }).from(books).where(eq(books.id, bookId));
+    const totalBookCharacters = (book?.pageCount || 100) * 2500; // Estimate ~2500 chars per page
+
+    const [tracking] = await db
+      .insert(userCopyTracking)
+      .values({
+        userId,
+        bookId,
+        totalBookCharacters,
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    if (tracking) {
+      return tracking;
+    }
+
+    // If conflict, return existing record
+    return await this.getCopyTracking(userId, bookId) as UserCopyTracking;
+  }
+
+  async recordCopyAttempt(userId: string, bookId: string, charactersCopied: number): Promise<{
+    success: boolean;
+    tracking: UserCopyTracking;
+    remainingPercentage: number;
+    message: string;
+  }> {
+    // Initialize tracking if it doesn't exist
+    let tracking = await this.getCopyTracking(userId, bookId);
+    if (!tracking) {
+      tracking = await this.initializeCopyTracking(userId, bookId);
+    }
+
+    // Check if limit already reached
+    if (tracking.isLimitReached) {
+      return {
+        success: false,
+        tracking,
+        remainingPercentage: 0,
+        message: 'Copy limit already reached for this book'
+      };
+    }
+
+    const currentCopied = tracking.totalCharactersCopied || 0;
+    const currentPercentage = tracking.copyPercentage || '0.00';
+    const newTotalCopied = currentCopied + charactersCopied;
+    const newPercentage = (newTotalCopied / tracking.totalBookCharacters) * 100;
+
+    // Check if this copy would exceed 40%
+    if (newPercentage > 40) {
+      const remainingChars = Math.floor((tracking.totalBookCharacters * 0.4) - currentCopied);
+      const remainingPercentage = Math.max(0, 40 - parseFloat(currentPercentage));
+      
+      return {
+        success: false,
+        tracking,
+        remainingPercentage,
+        message: `Copy limit reached. You can only copy ${remainingChars} more characters (${remainingPercentage.toFixed(1)}% remaining).`
+      };
+    }
+
+    // Update tracking
+    const isLimitReached = newPercentage >= 40;
+    const [updatedTracking] = await db
+      .update(userCopyTracking)
+      .set({
+        totalCharactersCopied: newTotalCopied,
+        copyPercentage: newPercentage.toFixed(2),
+        lastCopyAt: new Date(),
+        isLimitReached,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(userCopyTracking.userId, userId), eq(userCopyTracking.bookId, bookId)))
+      .returning();
+
+    const remainingPercentage = Math.max(0, 40 - newPercentage);
+    
+    return {
+      success: true,
+      tracking: updatedTracking,
+      remainingPercentage,
+      message: isLimitReached 
+        ? 'Copy limit reached. You cannot copy any more content from this book.'
+        : `Copy successful. ${remainingPercentage.toFixed(1)}% copy allowance remaining.`
     };
   }
 

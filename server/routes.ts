@@ -86,6 +86,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     proxy: process.env.NODE_ENV === 'production', // Trust proxy in production
   }));
 
+  // Copy protection routes
+  app.get('/api/copy-tracking/:bookId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { bookId } = req.params;
+      const userId = req.user.id;
+      
+      const tracking = await storage.getCopyTracking(userId, bookId);
+      if (!tracking) {
+        // Initialize tracking for new book access
+        const newTracking = await storage.initializeCopyTracking(userId, bookId);
+        return res.json(newTracking);
+      }
+      
+      res.json(tracking);
+    } catch (error) {
+      console.error('Error fetching copy tracking:', error);
+      res.status(500).json({ message: 'Failed to fetch copy tracking' });
+    }
+  });
+
+  app.post('/api/copy-attempt', isAuthenticated, async (req: any, res) => {
+    try {
+      const { bookId, charactersCopied } = req.body;
+      const userId = req.user.id;
+      
+      if (!bookId || !charactersCopied || charactersCopied < 0) {
+        return res.status(400).json({ message: 'Invalid copy attempt data' });
+      }
+      
+      const result = await storage.recordCopyAttempt(userId, bookId, charactersCopied);
+      res.json(result);
+    } catch (error) {
+      console.error('Error recording copy attempt:', error);
+      res.status(500).json({ message: 'Failed to record copy attempt' });
+    }
+  });
+
   // Production health check and environment status
   app.get('/api/health', async (req, res) => {
     try {

@@ -133,6 +133,23 @@ export const userSubscriptionCycles = pgTable("user_subscription_cycles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Copy tracking table for 40% copy limit enforcement
+export const userCopyTracking = pgTable("user_copy_tracking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  totalCharactersCopied: integer("total_characters_copied").default(0),
+  totalBookCharacters: integer("total_book_characters").notNull(), // Total characters in the book
+  copyPercentage: decimal("copy_percentage", { precision: 5, scale: 2 }).default("0.00"),
+  maxCopyPercentage: decimal("max_copy_percentage", { precision: 5, scale: 2 }).default("40.00"),
+  lastCopyAt: timestamp("last_copy_at"),
+  isLimitReached: boolean("is_limit_reached").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  uniqueUserBook: unique("unique_user_book_copy").on(table.userId, table.bookId),
+}));
+
 // Anti-abuse tracking table for free trial prevention
 export const freeTrialAbusePrevention = pgTable("free_trial_abuse_prevention", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -438,6 +455,8 @@ export type BookCategory = typeof bookCategories.$inferSelect;
 export type EmailPreferences = typeof emailPreferences.$inferSelect;
 export type InsertEmailPreferences = z.infer<typeof insertEmailPreferencesSchema>;
 export type UpdateEmailPreferences = z.infer<typeof updateEmailPreferencesSchema>;
+export type UserCopyTracking = typeof userCopyTracking.$inferSelect;
+export type InsertUserCopyTracking = typeof userCopyTracking.$inferInsert;
 export type EmailLog = typeof emailLogs.$inferSelect;
 export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;
 export type BookReview = typeof bookReviews.$inferSelect;

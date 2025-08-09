@@ -2,13 +2,14 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Bookmark, BookmarkCheck, Menu, X, RotateCcw, Sun, Moon, Volume2, VolumeX, Pause, Play, Accessibility } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Bookmark, BookmarkCheck, Menu, X, RotateCcw, Sun, Moon, Volume2, VolumeX, Pause, Play, Accessibility, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAccessibility } from '@/hooks/useAccessibility';
+import { useCopyProtection } from '@/hooks/useCopyProtection';
 import AccessibilityPanel from '@/components/AccessibilityPanel';
 
 // Configure PDF.js with a reliable CDN - using unpkg.com which has better CORS support
@@ -44,6 +45,7 @@ export function PremiumPDFReader({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { settings, speakText, stopReading, isReading } = useAccessibility();
+  const { tracking, isBlocked, canCopy, recordCopy, getRemainingPercentage, isCloseToLimit } = useCopyProtection(bookId);
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
@@ -138,6 +140,71 @@ export function PremiumPDFReader({
       setShowControls(false);
     }, 3000);
   };
+
+  // Disable text selection and copy if limit reached
+  useEffect(() => {
+    const handleContextMenu = (e: Event) => {
+      if (isBlocked) {
+        e.preventDefault();
+        toast({
+          title: "Copy Protection",
+          description: "You have reached the 40% copy limit for this book",
+          variant: "destructive",
+        });
+      }
+    };
+
+    const handleCopy = (e: ClipboardEvent) => {
+      if (isBlocked) {
+        e.preventDefault();
+        toast({
+          title: "Copy Protection",
+          description: "You have reached the 40% copy limit for this book",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const selection = window.getSelection();
+      const selectedText = selection?.toString() || '';
+      
+      if (selectedText && !canCopy(selectedText.length)) {
+        e.preventDefault();
+        toast({
+          title: "Copy Limit Reached",
+          description: `Cannot copy ${selectedText.length} characters. Only ${getRemainingPercentage().toFixed(1)}% copy allowance remaining.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (selectedText && selectedText.length > 0) {
+        recordCopy(selectedText);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block Ctrl+A (select all) if close to limit
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && isCloseToLimit()) {
+        e.preventDefault();
+        toast({
+          title: "Copy Protection",
+          description: "Select all disabled - approaching copy limit",
+          variant: "destructive",
+        });
+      }
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isBlocked, canCopy, recordCopy, getRemainingPercentage, isCloseToLimit, toast]);
 
   useEffect(() => {
     resetControlsTimer();
@@ -499,6 +566,20 @@ export function PremiumPDFReader({
                   <ZoomIn className="h-4 w-4" />
                 </Button>
               </div>
+
+              {/* Copy Protection Status */}
+              {tracking && (
+                <div className="flex items-center space-x-2">
+                  <div className={`flex items-center px-2 py-1 rounded text-xs ${
+                    isBlocked ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                    isCloseToLimit() ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                  }`}>
+                    <Copy className="h-3 w-3 mr-1" />
+                    {getRemainingPercentage().toFixed(1)}% remaining
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <Button
