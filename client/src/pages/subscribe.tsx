@@ -36,7 +36,7 @@ const SubscribeForm = ({ tier }: { tier: string }) => {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: window.location.origin,
+        return_url: `${window.location.origin}/payment-success`,
       },
     });
 
@@ -45,11 +45,6 @@ const SubscribeForm = ({ tier }: { tier: string }) => {
         title: "Payment Failed",
         description: error.message,
         variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Payment Successful",
-        description: "You are subscribed!",
       });
     }
   };
@@ -61,8 +56,9 @@ const SubscribeForm = ({ tier }: { tier: string }) => {
         type="submit" 
         disabled={!stripe}
         className="w-full bg-netflix-red hover:bg-red-700"
+        size="lg"
       >
-        Subscribe to {tier.charAt(0).toUpperCase() + tier.slice(1)}
+        {!stripe ? "Loading..." : `Subscribe to ${tier.charAt(0).toUpperCase() + tier.slice(1)}`}
       </Button>
     </form>
   );

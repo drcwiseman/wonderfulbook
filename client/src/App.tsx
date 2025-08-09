@@ -14,6 +14,7 @@ import Library from "@/pages/library";
 import Dashboard from "@/pages/dashboard";
 import BookDetail from "@/pages/book-detail-enhanced";
 import Subscribe from "@/pages/subscribe";
+import PaymentSuccess from "@/pages/PaymentSuccess";
 import ReaderPage from "@/pages/reader";
 import AdminPanel from "@/pages/admin";
 import SuperAdminDashboard from "@/pages/super-admin-dashboard";
@@ -61,6 +62,9 @@ function Router() {
         </Route>
         <Route path="/subscribe">
           <PageWrapper><Subscribe /></PageWrapper>
+        </Route>
+        <Route path="/payment-success">
+          <PageWrapper><PaymentSuccess /></PageWrapper>
         </Route>
         <Route path="/reader/:bookId">
           <PageWrapper><ReaderPage /></PageWrapper>
