@@ -181,12 +181,30 @@ export default function Header() {
                   )}
                 </motion.div>
                 
-                {/* Admin Access - Compact for desktop */}
+                {/* Super Admin Link - Only for Super Admin users */}
+                {((user as any)?.role === 'super_admin' || (user as any)?.email === 'prophetclimate@yahoo.com') ? (
+                  <motion.a
+                    href="/super-admin"
+                    className={`nav-link flex items-center gap-1 px-2 py-2 rounded-lg transition-all duration-200 font-medium ${
+                      isActive('/super-admin')
+                        ? 'bg-red-500/20 text-red-400 shadow-lg active'
+                        : 'text-white hover:text-red-300 hover:bg-white/5'
+                    }`}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    title="Super Admin Dashboard"
+                  >
+                    <Shield className="w-4 h-4" />
+                  </motion.a>
+                ) : null}
+
+                {/* Admin Access - For admin and super admin users */}
                 {((user as any)?.role === 'admin' || (user as any)?.role === 'super_admin' || (user as any)?.email === 'prophetclimate@yahoo.com' || (user as any)?.email === 'admin@wonderfulbooks.com') ? (
                   <motion.a
                     href="/admin"
                     className={`nav-link flex items-center gap-1 px-2 py-2 rounded-lg transition-all duration-200 font-medium ${
-                      isActive('/admin') || isActive('/super-admin')
+                      isActive('/admin')
                         ? 'bg-orange-500/20 text-orange-400 shadow-lg active'
                         : 'text-white hover:text-orange-300 hover:bg-white/5'
                     }`}
