@@ -730,7 +730,7 @@ export function PremiumPDFReader({
                       renderTextLayer={true}
                       renderAnnotationLayer={false}
                       className="mx-auto block apple-books-page"
-                      canvasBackground={isDarkMode ? '#1f2937' : '#ffffff'}
+                      canvasBackground="transparent"
                       loading={
                         <div className={`flex items-center justify-center p-20 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
                           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mr-4"></div>

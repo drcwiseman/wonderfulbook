@@ -274,47 +274,41 @@ textarea:focus-visible {
   }
 }
 
-/* PDF.js styling customization - Professional Apple Books Style */
+/* PDF.js styling customization - Clean and Readable */
 .react-pdf__Page {
   margin: 0 auto;
   display: block;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   /* Remove default PDF.js styling */
   box-shadow: none !important;
   border: none !important;
-  background: #ffffff;
+  background: white;
 }
 
 .react-pdf__Page__canvas {
   margin: 0 auto;
   display: block;
-  border-radius: 12px;
-  /* Professional Apple Books shadows */
+  border-radius: 8px;
+  /* Clean professional shadows */
   box-shadow: 
-    0 6px 24px rgba(0, 0, 0, 0.1),
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  /* Enhanced rendering for better text readability */
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  image-rendering: pixelated;
-  /* Full contrast and sharp rendering */
-  filter: contrast(1.1) brightness(1.0);
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.15s ease-out;
+  /* Clean rendering - NO filters that mess up text */
+  image-rendering: auto;
   /* Enhanced for full screen */
   max-width: 100%;
   height: auto;
-  background: #ffffff !important;
+  background: white !important;
 }
 
 .react-pdf__Page__canvas:hover {
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.15),
-    0 4px 12px rgba(0, 0, 0, 0.12),
-    0 2px 6px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px) scale(1.01);
+    0 6px 24px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .react-pdf__Document {
@@ -324,93 +318,31 @@ textarea:focus-visible {
   width: 100%;
 }
 
-/* Enhanced Apple Books page styling */
-.apple-books-page {
-  position: relative;
-}
 
-.apple-books-page .react-pdf__Page__canvas {
-  /* Full screen enhancements */
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
 
-/* Text layer improvements for crisp text */
+/* Text layer - Clean and Simple */
 .react-pdf__Page__textContent {
-  /* Aggressive text rendering for maximum readability */
+  /* Simple, clean text rendering */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "liga", "kern";
-  /* Force high contrast */
-  filter: contrast(1.3) brightness(0.9);
-  /* Ensure text is fully opaque */
-  opacity: 1 !important;
-  color: #000000 !important;
+  /* NO filters that mess up readability */
 }
 
-/* Ensure text spans are visible */
-.react-pdf__Page__textContent span {
-  color: #000000 !important;
-  opacity: 1 !important;
-  font-weight: normal !important;
-}
-
-/* Canvas rendering improvements */
-.react-pdf__Page__canvas {
-  /* Force better contrast and sharpness */
-  filter: contrast(1.2) brightness(1.0) saturate(1.1) !important;
-  image-rendering: -webkit-optimize-contrast !important;
-}
-
-/* Dark mode text and canvas improvements */
+/* Dark mode - Clean adjustments */
 .dark .react-pdf__Page {
   background: #1f2937;
 }
 
 .dark .react-pdf__Page__canvas {
   background: #1f2937 !important;
-  filter: contrast(1.1) brightness(1.1) !important;
-}
-
-.dark .react-pdf__Page__textContent {
-  filter: contrast(1.4) brightness(1.2);
-  color: #ffffff !important;
-}
-
-.dark .react-pdf__Page__textContent span {
-  color: #ffffff !important;
-}
-
-/* Dark mode adjustments */
-.dark .react-pdf__Page__canvas {
   box-shadow: 
-    0 6px 24px rgba(0, 0, 0, 0.4),
-    0 2px 8px rgba(0, 0, 0, 0.3),
-    0 1px 3px rgba(0, 0, 0, 0.2);
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.dark .react-pdf__Page__canvas:hover {
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 4px 12px rgba(0, 0, 0, 0.4),
-    0 2px 6px rgba(0, 0, 0, 0.3);
-  transform: translateY(-2px) scale(1.01);
-}
 
-.dark .apple-books-page .react-pdf__Page__canvas {
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 4px 16px rgba(0, 0, 0, 0.4),
-    0 2px 8px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
 
 /* Fullscreen enhancements */
 @media (min-width: 1024px) {
