@@ -73,7 +73,7 @@ export function useOfflineReading(): OfflineReadingHook {
 
   // Register service worker
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
       navigator.serviceWorker.register('/sw.js')
         .then((registration) => {
           console.log('Service Worker registered successfully');
@@ -102,8 +102,10 @@ export function useOfflineReading(): OfflineReadingHook {
           });
         })
         .catch((error) => {
-          console.error('Service Worker registration failed:', error);
+          console.log('Service Worker registration failed (normal in development):', error);
         });
+    } else {
+      console.log('Service Workers require HTTPS or localhost (normal in development)');
     }
   }, [toast]);
 
