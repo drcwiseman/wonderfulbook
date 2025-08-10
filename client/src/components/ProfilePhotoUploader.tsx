@@ -56,9 +56,10 @@ export function ProfilePhotoUploader({ currentPhotoUrl, userId, onPhotoUpdate }:
   const handleGetUploadParameters = async () => {
     try {
       const response = await apiRequest("POST", "/api/objects/upload");
+      const data = await response.json();
       return {
         method: "PUT" as const,
-        url: response.uploadURL,
+        url: data.uploadURL,
       };
     } catch (error) {
       toast({
@@ -73,14 +74,13 @@ export function ProfilePhotoUploader({ currentPhotoUrl, userId, onPhotoUpdate }:
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
-      // Extract the object path from the upload URL
-      const uploadURL = uploadedFile.response?.uploadURL || uploadedFile.uploadURL;
+      // Get the upload URL that was used for the upload
+      const uploadURL = uploadedFile.uploadURL;
       
       if (uploadURL) {
-        // Convert the GCS URL to our object path format
-        const objectPath = uploadURL.replace('https://storage.googleapis.com/', '/objects/');
-        updatePhotoMutation.mutate({ profileImageUrl: objectPath });
-        onPhotoUpdate(objectPath);
+        // Update profile with the upload URL, backend will normalize it
+        updatePhotoMutation.mutate({ profileImageUrl: uploadURL });
+        onPhotoUpdate(uploadURL);
       }
     }
   };
