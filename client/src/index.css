@@ -179,53 +179,33 @@ body {
 
 /* Color themes */
 .theme-sepia {
-  background-color: #f7f4e8 !important;
+  filter: sepia(20%) saturate(120%);
+  background-color: #f4f1e8 !important;
 }
 
 .theme-sepia * {
-  background-color: #f7f4e8 !important;
-  color: #3d3d3d !important;
-}
-
-.theme-sepia .bg-white {
-  background-color: #f7f4e8 !important;
+  background-color: inherit;
 }
 
 .theme-dark {
-  background-color: #1a1a1a !important;
-}
-
-.theme-dark * {
-  background-color: #1a1a1a !important;
-  color: #e0e0e0 !important;
-}
-
-.theme-dark .bg-white {
-  background-color: #1a1a1a !important;
+  filter: invert(100%) hue-rotate(180deg);
 }
 
 .theme-blue {
-  background-color: #f0f4ff !important;
-}
-
-.theme-blue * {
-  background-color: #f0f4ff !important;
-  color: #2d3748 !important;
+  filter: sepia(100%) saturate(50%) hue-rotate(180deg);
 }
 
 /* Dyslexia-friendly adjustments */
 .dyslexia-friendly,
 .dyslexia-friendly * {
-  font-family: 'Trebuchet MS', 'Lucida Grande', 'Lucida Sans Unicode', 'Verdana', 'Arial', sans-serif !important;
+  font-family: 'Comic Sans MS', 'Trebuchet MS', 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', 'Arial', cursive !important;
 }
 
 .dyslexia-friendly p,
 .dyslexia-friendly div,
 .dyslexia-friendly span {
-  font-weight: 400;
-  word-spacing: 0.1em;
-  letter-spacing: 0.05em;
-  line-height: 1.8;
+  font-weight: 500;
+  word-spacing: 0.16em;
 }
 
 .dyslexia-friendly h1,
@@ -234,9 +214,8 @@ body {
 .dyslexia-friendly h4,
 .dyslexia-friendly h5,
 .dyslexia-friendly h6 {
-  font-weight: 600;
-  margin-bottom: 0.8em;
-  letter-spacing: 0.03em;
+  font-weight: 700;
+  margin-bottom: 1em;
 }
 
 /* Text-to-speech highlighting */
