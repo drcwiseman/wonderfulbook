@@ -72,8 +72,11 @@ class SystemSettingsManager {
     const mergedSettings = {
       ...envSettings,
       ...persistedSettings,
-      // Always keep email settings from environment to match actual config
-      email: envSettings.email
+      // For email, merge env defaults with any admin overrides
+      email: {
+        ...envSettings.email,
+        ...persistedSettings.email
+      }
     };
 
     this.cachedSettings = mergedSettings;
@@ -85,13 +88,8 @@ class SystemSettingsManager {
    */
   public saveSettings(settings: SystemSettings): void {
     try {
-      // Don't save email settings as they should always come from environment
-      const settingsToSave = {
-        ...settings,
-        email: undefined // Remove email from persisted settings
-      };
-      
-      fs.writeFileSync(this.settingsFile, JSON.stringify(settingsToSave, null, 2));
+      // Save all settings including email overrides
+      fs.writeFileSync(this.settingsFile, JSON.stringify(settings, null, 2));
       this.cachedSettings = settings;
       console.log('System settings saved successfully');
     } catch (error) {
