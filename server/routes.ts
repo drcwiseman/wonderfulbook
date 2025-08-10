@@ -768,9 +768,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard API endpoint
-  app.get('/api/user/dashboard', isAuthenticated, async (req: any, res) => {
+  app.get('/api/user/dashboard', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // Check if user session exists - use same auth pattern as /api/auth/user
+      if (!req.session || !req.session.user) {
+        return res.status(401).json({ 
+          message: "Unauthorized",
+          debug: process.env.NODE_ENV !== 'production' ? {
+            hasSession: !!req.session,
+            sessionId: req.sessionID,
+            sessionData: req.session
+          } : undefined
+        });
+      }
+      
+      const userId = req.session.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
