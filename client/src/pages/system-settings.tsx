@@ -61,6 +61,17 @@ interface SystemSettings {
     smtpHost: string;
     smtpPort: number;
     smtpSecure: boolean;
+    smtpUser: string;
+    smtpPassword: string;
+    replyToEmail: string;
+    enableAuth: boolean;
+    connectionTimeout: number;
+    greetingTimeout: number;
+    socketTimeout: number;
+    maxConnections: number;
+    maxMessages: number;
+    rateDelta: number;
+    rateLimit: number;
     welcomeEmailEnabled: boolean;
     reminderEmailsEnabled: boolean;
   };
@@ -630,12 +641,34 @@ export default function SystemSettings() {
                       placeholder="books@thekingdomclub.org"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="replyToEmail">Reply-To Email</Label>
+                    <Input
+                      id="replyToEmail"
+                      type="email"
+                      value={displaySettings.email.replyToEmail}
+                      onChange={(e) => handleUpdateSettings("email", { replyToEmail: e.target.value })}
+                      placeholder="books@thekingdomclub.org"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between pt-8">
+                    <div className="space-y-1">
+                      <Label>Enable Authentication</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Use SMTP authentication
+                      </p>
+                    </div>
+                    <Switch
+                      checked={displaySettings.email.enableAuth}
+                      onCheckedChange={(checked) => handleUpdateSettings("email", { enableAuth: checked })}
+                    />
+                  </div>
                 </div>
 
                 <Separator />
 
                 <div className="space-y-4">
-                  <h4 className="font-semibold">SMTP Configuration</h4>
+                  <h4 className="font-semibold">SMTP Server Configuration</h4>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="smtpHost">SMTP Host</Label>
@@ -661,6 +694,114 @@ export default function SystemSettings() {
                       <Switch
                         checked={displaySettings.email.smtpSecure}
                         onCheckedChange={(checked) => handleUpdateSettings("email", { smtpSecure: checked })}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="smtpUser">SMTP Username</Label>
+                      <Input
+                        id="smtpUser"
+                        value={displaySettings.email.smtpUser}
+                        onChange={(e) => handleUpdateSettings("email", { smtpUser: e.target.value })}
+                        placeholder="books@thekingdomclub.org"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="smtpPassword">SMTP Password</Label>
+                      <Input
+                        id="smtpPassword"
+                        type="password"
+                        value={displaySettings.email.smtpPassword}
+                        onChange={(e) => handleUpdateSettings("email", { smtpPassword: e.target.value })}
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Connection Settings</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="connectionTimeout">Connection Timeout (ms)</Label>
+                      <Input
+                        id="connectionTimeout"
+                        type="number"
+                        value={displaySettings.email.connectionTimeout}
+                        onChange={(e) => handleUpdateSettings("email", { connectionTimeout: parseInt(e.target.value) || 60000 })}
+                        placeholder="60000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="greetingTimeout">Greeting Timeout (ms)</Label>
+                      <Input
+                        id="greetingTimeout"
+                        type="number"
+                        value={displaySettings.email.greetingTimeout}
+                        onChange={(e) => handleUpdateSettings("email", { greetingTimeout: parseInt(e.target.value) || 30000 })}
+                        placeholder="30000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="socketTimeout">Socket Timeout (ms)</Label>
+                      <Input
+                        id="socketTimeout"
+                        type="number"
+                        value={displaySettings.email.socketTimeout}
+                        onChange={(e) => handleUpdateSettings("email", { socketTimeout: parseInt(e.target.value) || 60000 })}
+                        placeholder="60000"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Performance & Rate Limiting</h4>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="maxConnections">Max Connections</Label>
+                      <Input
+                        id="maxConnections"
+                        type="number"
+                        value={displaySettings.email.maxConnections}
+                        onChange={(e) => handleUpdateSettings("email", { maxConnections: parseInt(e.target.value) || 5 })}
+                        placeholder="5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="maxMessages">Max Messages</Label>
+                      <Input
+                        id="maxMessages"
+                        type="number"
+                        value={displaySettings.email.maxMessages}
+                        onChange={(e) => handleUpdateSettings("email", { maxMessages: parseInt(e.target.value) || 100 })}
+                        placeholder="100"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="rateDelta">Rate Delta (ms)</Label>
+                      <Input
+                        id="rateDelta"
+                        type="number"
+                        value={displaySettings.email.rateDelta}
+                        onChange={(e) => handleUpdateSettings("email", { rateDelta: parseInt(e.target.value) || 1000 })}
+                        placeholder="1000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="rateLimit">Rate Limit</Label>
+                      <Input
+                        id="rateLimit"
+                        type="number"
+                        value={displaySettings.email.rateLimit}
+                        onChange={(e) => handleUpdateSettings("email", { rateLimit: parseInt(e.target.value) || 5 })}
+                        placeholder="5"
                       />
                     </div>
                   </div>

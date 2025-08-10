@@ -31,6 +31,17 @@ interface SystemSettings {
     smtpHost: string;
     smtpPort: number;
     smtpSecure: boolean;
+    smtpUser: string;
+    smtpPassword: string;
+    replyToEmail: string;
+    enableAuth: boolean;
+    connectionTimeout: number;
+    greetingTimeout: number;
+    socketTimeout: number;
+    maxConnections: number;
+    maxMessages: number;
+    rateDelta: number;
+    rateLimit: number;
     welcomeEmailEnabled: boolean;
     reminderEmailsEnabled: boolean;
   };
@@ -132,6 +143,17 @@ class SystemSettingsManager {
         smtpHost: process.env.SMTP_HOST || "mail.thekingdomclub.org",
         smtpPort: parseInt(process.env.SMTP_PORT || "465"),
         smtpSecure: parseInt(process.env.SMTP_PORT || "465") === 465 || process.env.SMTP_SECURE === 'true',
+        smtpUser: process.env.SMTP_USER || "books@thekingdomclub.org",
+        smtpPassword: process.env.SMTP_PASS || "",
+        replyToEmail: process.env.SMTP_REPLY_TO || process.env.EMAIL_FROM || process.env.SMTP_USER || "books@thekingdomclub.org",
+        enableAuth: process.env.SMTP_ENABLE_AUTH !== 'false',
+        connectionTimeout: parseInt(process.env.SMTP_CONNECTION_TIMEOUT || "60000"), // 60 seconds
+        greetingTimeout: parseInt(process.env.SMTP_GREETING_TIMEOUT || "30000"), // 30 seconds
+        socketTimeout: parseInt(process.env.SMTP_SOCKET_TIMEOUT || "60000"), // 60 seconds
+        maxConnections: parseInt(process.env.SMTP_MAX_CONNECTIONS || "5"),
+        maxMessages: parseInt(process.env.SMTP_MAX_MESSAGES || "100"),
+        rateDelta: parseInt(process.env.SMTP_RATE_DELTA || "1000"), // 1 second
+        rateLimit: parseInt(process.env.SMTP_RATE_LIMIT || "5"), // 5 emails per rateDelta
         welcomeEmailEnabled: process.env.WELCOME_EMAIL_ENABLED !== 'false',
         reminderEmailsEnabled: process.env.REMINDER_EMAIL_ENABLED !== 'false'
       },
