@@ -28,7 +28,6 @@ import {
   requireSubscription, 
   requireRole,
   requirePremium,
-  securityHeaders,
   validateAPIRoute,
   deviceFingerprint
 } from "./middleware/routeProtection";
@@ -1723,16 +1722,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action: 'user_subscription_updated',
         resource: 'user',
         resourceId: id,
-        details: JSON.stringify({ 
+        details: { 
           oldTier: user.subscriptionTier, 
           newTier: tier,
           oldStatus: user.subscriptionStatus,
           newStatus: status,
           adminId: (req.user as any)?.claims?.sub 
-        }),
+        },
         ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
-        severity: 'medium',
+        severity: 'info',
         status: 'success'
       });
       
