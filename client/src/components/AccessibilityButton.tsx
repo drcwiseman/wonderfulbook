@@ -12,14 +12,16 @@ export default function AccessibilityButton() {
       {/* Floating Accessibility Button */}
       <motion.div
         className="fixed bottom-6 left-6 z-30"
-        initial={{ scale: 0, rotate: -180 }}
+        initial={{ scale: 0, rotate: -90 }}
         animate={{ scale: 1, rotate: 0 }}
-        transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
+        transition={{ delay: 1.5, duration: 0.3, ease: "easeOut" }}
+        style={{ willChange: 'transform' }}
       >
         <motion.div
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ duration: 0.2 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.15 }}
+          style={{ willChange: 'transform' }}
         >
           <Button
             onClick={() => setIsOpen(true)}

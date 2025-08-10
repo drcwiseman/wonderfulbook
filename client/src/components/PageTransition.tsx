@@ -9,25 +9,25 @@ interface PageTransitionProps {
 const pageVariants = {
   initial: {
     opacity: 0,
-    y: 20,
-    scale: 0.98
+    y: 10,
+    scale: 0.99
   },
   animate: {
     opacity: 1,
     y: 0,
     scale: 1,
     transition: {
-      duration: 0.4,
+      duration: 0.2,
       ease: "easeOut",
-      staggerChildren: 0.1
+      staggerChildren: 0.05
     }
   },
   exit: {
     opacity: 0,
-    y: -20,
-    scale: 1.02,
+    y: -5,
+    scale: 1.01,
     transition: {
-      duration: 0.3,
+      duration: 0.15,
       ease: "easeIn"
     }
   }
@@ -55,7 +55,8 @@ export default function PageTransition({ children, className = "" }: PageTransit
       initial="initial"
       animate="animate"
       exit="exit"
-      className={`min-h-screen ${className}`}
+      className={`min-h-screen will-change-transform ${className}`}
+      style={{ backfaceVisibility: 'hidden' }}
     >
       {children}
     </motion.div>

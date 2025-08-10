@@ -52,7 +52,7 @@ function Router() {
       <Switch>
         <Route path="/">
           <PageWrapper>
-            {isLoading || !isAuthenticated ? <Landing /> : <Home />}
+            {isLoading ? <Landing /> : (isAuthenticated ? <Home /> : <Landing />)}
           </PageWrapper>
         </Route>
         <Route path="/bookstore">

@@ -28,15 +28,15 @@ export default function MobileNavGestures({ children }: SwipeNavProps) {
       }
     }
 
-    // Reset animation
-    controls.start({ x: 0, transition: { duration: 0.3, ease: "easeOut" } });
+    // Reset animation with smoother transition
+    controls.start({ x: 0, transition: { duration: 0.2, ease: "easeOut" } });
     setIsSwipeActive(false);
   };
 
   const handlePan = (event: any, info: PanInfo) => {
     if (window.innerWidth > 768) return; // Only on mobile
 
-    const clampedX = Math.max(-50, Math.min(50, info.offset.x * 0.5));
+    const clampedX = Math.max(-30, Math.min(30, info.offset.x * 0.3));
     controls.start({ x: clampedX, transition: { duration: 0 } });
     setIsSwipeActive(Math.abs(info.offset.x) > 20);
   };
@@ -45,11 +45,12 @@ export default function MobileNavGestures({ children }: SwipeNavProps) {
     <motion.div
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.2}
+      dragElastic={0.1}
       onPan={handlePan}
       onPanEnd={handlePanEnd}
       animate={controls}
-      className="min-h-screen relative"
+      className="min-h-screen relative will-change-transform"
+      style={{ backfaceVisibility: 'hidden' }}
     >
       {children}
       
