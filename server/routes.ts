@@ -2159,6 +2159,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!userId) {
         console.log('PDF streaming - No user ID found');
+        console.log('Request user object:', req.user);
+        console.log('Request session:', req.session);
         return res.status(401).json({ message: "Authentication required" });
       }
 
