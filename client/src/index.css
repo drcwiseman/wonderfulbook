@@ -283,7 +283,7 @@ textarea:focus-visible {
   /* Remove default PDF.js styling */
   box-shadow: none !important;
   border: none !important;
-  background: transparent;
+  background: #ffffff;
 }
 
 .react-pdf__Page__canvas {
@@ -297,13 +297,16 @@ textarea:focus-visible {
     0 1px 3px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(0, 0, 0, 0.08);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  /* Ensure crisp rendering */
-  image-rendering: optimizeQuality;
+  /* Enhanced rendering for better text readability */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  /* Full contrast and sharp rendering */
+  filter: contrast(1.1) brightness(1.0);
   /* Enhanced for full screen */
   max-width: 100%;
   height: auto;
+  background: #ffffff !important;
 }
 
 .react-pdf__Page__canvas:hover {
@@ -338,11 +341,49 @@ textarea:focus-visible {
 
 /* Text layer improvements for crisp text */
 .react-pdf__Page__textContent {
-  /* Improve text rendering */
+  /* Aggressive text rendering for maximum readability */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: "liga", "kern";
+  /* Force high contrast */
+  filter: contrast(1.3) brightness(0.9);
+  /* Ensure text is fully opaque */
+  opacity: 1 !important;
+  color: #000000 !important;
+}
+
+/* Ensure text spans are visible */
+.react-pdf__Page__textContent span {
+  color: #000000 !important;
+  opacity: 1 !important;
+  font-weight: normal !important;
+}
+
+/* Canvas rendering improvements */
+.react-pdf__Page__canvas {
+  /* Force better contrast and sharpness */
+  filter: contrast(1.2) brightness(1.0) saturate(1.1) !important;
+  image-rendering: -webkit-optimize-contrast !important;
+}
+
+/* Dark mode text and canvas improvements */
+.dark .react-pdf__Page {
+  background: #1f2937;
+}
+
+.dark .react-pdf__Page__canvas {
+  background: #1f2937 !important;
+  filter: contrast(1.1) brightness(1.1) !important;
+}
+
+.dark .react-pdf__Page__textContent {
+  filter: contrast(1.4) brightness(1.2);
+  color: #ffffff !important;
+}
+
+.dark .react-pdf__Page__textContent span {
+  color: #ffffff !important;
 }
 
 /* Dark mode adjustments */

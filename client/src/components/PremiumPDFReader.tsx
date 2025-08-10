@@ -111,7 +111,10 @@ export function PremiumPDFReader({
     cMapPacked: true,
     standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/',
     disableAutoFetch: false,
-    disableStream: false
+    disableStream: false,
+    // Enhanced rendering for readability
+    renderInteractiveForms: false,
+    enableXfa: false,
   }), []);
 
   const pdfFile = useMemo(() => {
@@ -727,7 +730,7 @@ export function PremiumPDFReader({
                       renderTextLayer={true}
                       renderAnnotationLayer={false}
                       className="mx-auto block apple-books-page"
-                      canvasBackground={isDarkMode ? '#1f2937' : 'white'}
+                      canvasBackground={isDarkMode ? '#1f2937' : '#ffffff'}
                       loading={
                         <div className={`flex items-center justify-center p-20 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
                           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mr-4"></div>
