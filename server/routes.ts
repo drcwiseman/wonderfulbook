@@ -2152,7 +2152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Direct PDF streaming endpoint (for SimplePDFReader compatibility)
-  app.get("/api/stream-pdf/:bookId", isAuthenticated, async (req: any, res) => {
+  app.get("/api/stream-pdf/:bookId", async (req: any, res) => {
     try {
       const { bookId } = req.params;
       const userId = req.user?.claims?.sub || req.session?.user?.id;

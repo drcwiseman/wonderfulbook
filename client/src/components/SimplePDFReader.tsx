@@ -5,9 +5,8 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 
-// Set up PDF.js worker - disable worker for compatibility
-pdfjs.GlobalWorkerOptions.workerSrc = null;
-pdfjs.disableWorker = true;
+// Set up PDF.js worker with correct path
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface SimplePDFReaderProps {
   pdfUrl: string;
