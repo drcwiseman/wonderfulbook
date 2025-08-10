@@ -143,7 +143,7 @@ export default function LoansPage() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Loan Summary</span>
-              <Link href="/store">
+              <Link href="/bookstore">
                 <Button size="sm" disabled={!summary.canBorrow}>
                   <Download className="h-4 w-4 mr-2" />
                   Borrow More Books
@@ -215,7 +215,7 @@ export default function LoansPage() {
                   }
                 </p>
                 {statusFilter === 'active' && (
-                  <Link href="/store">
+                  <Link href="/bookstore">
                     <Button className="mt-4">
                       Browse Books
                     </Button>
