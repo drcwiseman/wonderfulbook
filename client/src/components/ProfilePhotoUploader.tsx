@@ -72,16 +72,32 @@ export function ProfilePhotoUploader({ currentPhotoUrl, userId, onPhotoUpdate }:
   };
 
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    console.log('Upload result:', result);
     if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
       // Get the upload URL that was used for the upload
       const uploadURL = uploadedFile.uploadURL;
       
+      console.log('Upload URL:', uploadURL);
       if (uploadURL) {
         // Update profile with the upload URL, backend will normalize it
         updatePhotoMutation.mutate({ profileImageUrl: uploadURL });
         onPhotoUpdate(uploadURL);
+      } else {
+        toast({
+          title: "Upload incomplete",
+          description: "File uploaded but no URL returned. Please try again.",
+          variant: "destructive",
+        });
       }
+    } else if (result.failed && result.failed.length > 0) {
+      const failedFile = result.failed[0];
+      console.error('Upload failed:', failedFile);
+      toast({
+        title: "Upload failed",
+        description: failedFile.error || "Failed to upload file. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
