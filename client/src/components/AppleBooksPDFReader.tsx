@@ -33,6 +33,7 @@ import { useCopyProtection } from '@/hooks/useCopyProtection';
 // Configure PDF.js worker with better error handling
 const configureWorker = () => {
   if (pdfjs.GlobalWorkerOptions.workerSrc) {
+    console.log('PDF.js worker already configured:', pdfjs.GlobalWorkerOptions.workerSrc);
     return; // Already configured
   }
   
@@ -50,11 +51,18 @@ const configureWorker = () => {
   } catch (error) {
     // Fallback 2: Alternative CDN
     console.warn('Primary worker setup failed, using unpkg fallback:', error);
-    pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    const unpkgWorker = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    pdfjs.GlobalWorkerOptions.workerSrc = unpkgWorker;
+    console.log('PDF.js worker configured with unpkg fallback:', unpkgWorker);
   }
 };
 
-// Configure worker on module load
+// Configure worker on module load - use immediate fallback
+if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+  pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  console.log('PDF.js worker configured immediately with unpkg CDN');
+}
+
 configureWorker();
 
 interface AppleBooksPDFReaderProps {
@@ -106,7 +114,12 @@ export function AppleBooksPDFReader({
         const { token } = await response.json();
         if (isCancelled) return;
         
-        setPdfUrl(`/api/stream-token/${token}/${bookId}`);
+        const pdfStreamUrl = `/api/stream-token/${token}/${bookId}`;
+        console.log('Setting PDF URL:', pdfStreamUrl);
+        setPdfUrl(pdfStreamUrl);
+        
+        // Keep loading state true until PDF document loads
+        console.log('PDF token received, PDF document will start loading');
       } catch (error: any) {
         if (isCancelled) return;
         
@@ -151,7 +164,11 @@ export function AppleBooksPDFReader({
   }), []);
 
   const pdfFile = useMemo(() => {
-    if (!pdfUrl) return null;
+    if (!pdfUrl) {
+      console.log('No PDF URL available yet');
+      return null;
+    }
+    console.log('Creating PDF file object with URL:', pdfUrl);
     return {
       url: pdfUrl,
       httpHeaders: {
