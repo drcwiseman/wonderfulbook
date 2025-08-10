@@ -394,7 +394,7 @@ function LibraryBookCard({ book, layout }: LibraryBookCardProps) {
       className="group cursor-pointer transition-all duration-300 hover:shadow-lg border-orange-100 hover:border-orange-300"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => window.location.href = `/book-detail/${book.id}`}
+      onClick={() => window.location.href = `/book/${book.id}`}
     >
       <CardContent className="p-4">
         <div className="relative mb-3">

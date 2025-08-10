@@ -84,6 +84,9 @@ function Router() {
         <Route path="/reader/:bookId">
           <PageWrapper><ReaderPage /></PageWrapper>
         </Route>
+        <Route path="/read/:bookId">
+          <PageWrapper><ReaderPage /></PageWrapper>
+        </Route>
         <Route path="/admin">
           <PageWrapper><AdminPanel /></PageWrapper>
         </Route>

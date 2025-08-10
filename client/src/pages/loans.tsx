@@ -314,7 +314,7 @@ export default function LoansPage() {
                         {/* Action Buttons */}
                         {loan.status === 'active' && (
                           <div className="mt-3 flex gap-2">
-                            <Link href={`/read/${loan.book.id}`}>
+                            <Link href={`/reader/${loan.book.id}`}>
                               <Button size="sm">
                                 Continue Reading
                               </Button>
