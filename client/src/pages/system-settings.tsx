@@ -85,11 +85,22 @@ export default function SystemSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("general");
+  const [localSettings, setLocalSettings] = useState<SystemSettings | null>(null);
 
   // Fetch current system settings
   const { data: settings, isLoading } = useQuery<SystemSettings>({
     queryKey: ["/api/super-admin/system-settings"],
   });
+
+  // Update local settings when server data changes
+  React.useEffect(() => {
+    if (settings && !localSettings) {
+      setLocalSettings(settings);
+    }
+  }, [settings, localSettings]);
+
+  // Use local settings for display, fall back to fetched settings
+  const displaySettings = localSettings || settings;
 
   // Update system settings mutation
   const updateSettingsMutation = useMutation({
@@ -107,7 +118,7 @@ export default function SystemSettings() {
     onError: (error: any) => {
       toast({
         title: "Update Failed",
-        description: error.message || "Failed to update system settings.",
+        description: error.message || "Failed to update system displaySettings.",
         variant: "destructive",
       });
     },
@@ -156,28 +167,54 @@ export default function SystemSettings() {
   });
 
   const handleUpdateSettings = (section: keyof SystemSettings, updates: any) => {
-    if (!settings) return;
+    if (!displaySettings) return;
     
+    // Update local state immediately for UI responsiveness
+    const currentSection = displaySettings[section] as any;
     const updatedSettings = {
-      ...settings,
-      [section]: { ...settings[section], ...updates }
+      ...displaySettings,
+      [section]: { ...currentSection, ...updates }
     };
+    setLocalSettings(updatedSettings as SystemSettings);
     
+    // Save to backend immediately for switches and important actions
     updateSettingsMutation.mutate(updatedSettings);
   };
 
+  const handleInputChange = (section: keyof SystemSettings, field: string, value: any) => {
+    if (!displaySettings) return;
+    
+    // Update local state immediately for UI responsiveness
+    const currentSection = displaySettings[section] as any;
+    const updatedSettings = {
+      ...displaySettings,
+      [section]: { ...currentSection, [field]: value }
+    };
+    setLocalSettings(updatedSettings as SystemSettings);
+    
+    // Debounce the backend update
+    clearTimeout((window as any).settingsTimeout);
+    (window as any).settingsTimeout = setTimeout(() => {
+      updateSettingsMutation.mutate(updatedSettings);
+    }, 500);
+  };
+
   const handleMaintenanceToggle = (enabled: boolean) => {
-    if (!settings) return;
+    if (!displaySettings) return;
     
     const updatedSettings = {
-      ...settings,
+      ...displaySettings,
       maintenanceMode: {
-        ...settings.maintenanceMode,
+        ...(displaySettings as SystemSettings).maintenanceMode,
         enabled,
         estimatedEnd: enabled ? new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString() : ""
       }
     };
     
+    // Update local state immediately
+    setLocalSettings(updatedSettings as SystemSettings);
+    
+    // Save to backend immediately for maintenance mode
     updateSettingsMutation.mutate(updatedSettings);
   };
 
@@ -195,7 +232,7 @@ export default function SystemSettings() {
     );
   }
 
-  if (!settings) {
+  if (!displaySettings) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Header />
@@ -227,7 +264,7 @@ export default function SystemSettings() {
         />
 
         {/* Maintenance Mode Alert */}
-        {settings.maintenanceMode.enabled && (
+        {displaySettings.maintenanceMode.enabled && (
           <Card className="mb-6 border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20">
             <CardContent className="pt-6">
               <div className="flex items-center space-x-2 text-orange-700 dark:text-orange-300">
@@ -235,7 +272,7 @@ export default function SystemSettings() {
                 <span className="font-semibold">Maintenance Mode Active</span>
               </div>
               <p className="mt-2 text-sm text-orange-600 dark:text-orange-400">
-                {settings.maintenanceMode.message}
+                {displaySettings.maintenanceMode.message}
               </p>
             </CardContent>
           </Card>
@@ -284,16 +321,16 @@ export default function SystemSettings() {
                     <Label htmlFor="siteName">Site Name</Label>
                     <Input
                       id="siteName"
-                      value={settings.platform.siteName}
-                      onChange={(e) => handleUpdateSettings("platform", { siteName: e.target.value })}
+                      value={displaySettings.platform.siteName}
+                      onChange={(e) => handleInputChange("platform", "siteName", e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="siteDescription">Site Description</Label>
                     <Input
                       id="siteDescription"
-                      value={settings.platform.siteDescription}
-                      onChange={(e) => handleUpdateSettings("platform", { siteDescription: e.target.value })}
+                      value={displaySettings.platform.siteDescription}
+                      onChange={(e) => handleInputChange("platform", "siteDescription", e.target.value)}
                     />
                   </div>
                 </div>
@@ -310,8 +347,8 @@ export default function SystemSettings() {
                       </p>
                     </div>
                     <Switch
-                      checked={settings.platform.allowRegistration}
-                      onCheckedChange={(checked) => handleUpdateSettings("platform", { allowRegistration: checked })}
+                      checked={displaySettings.platform.allowRegistration}
+                      onCheckedChange={(checked) => handleInputChange("platform", "allowRegistration", checked)}
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -322,7 +359,7 @@ export default function SystemSettings() {
                       </p>
                     </div>
                     <Switch
-                      checked={settings.platform.requireEmailVerification}
+                      checked={displaySettings.platform.requireEmailVerification}
                       onCheckedChange={(checked) => handleUpdateSettings("platform", { requireEmailVerification: checked })}
                     />
                   </div>
@@ -337,10 +374,10 @@ export default function SystemSettings() {
                       <Label>Free Plan</Label>
                       <Input
                         type="number"
-                        value={settings.platform.maxUsersPerPlan.free}
+                        value={displaySettings.platform.maxUsersPerPlan.free}
                         onChange={(e) => handleUpdateSettings("platform", { 
                           maxUsersPerPlan: { 
-                            ...settings.platform.maxUsersPerPlan, 
+                            ...displaySettings.platform.maxUsersPerPlan, 
                             free: parseInt(e.target.value) || 0 
                           }
                         })}
@@ -350,10 +387,10 @@ export default function SystemSettings() {
                       <Label>Basic Plan</Label>
                       <Input
                         type="number"
-                        value={settings.platform.maxUsersPerPlan.basic}
+                        value={displaySettings.platform.maxUsersPerPlan.basic}
                         onChange={(e) => handleUpdateSettings("platform", { 
                           maxUsersPerPlan: { 
-                            ...settings.platform.maxUsersPerPlan, 
+                            ...displaySettings.platform.maxUsersPerPlan, 
                             basic: parseInt(e.target.value) || 0 
                           }
                         })}
@@ -363,10 +400,10 @@ export default function SystemSettings() {
                       <Label>Premium Plan</Label>
                       <Input
                         type="number"
-                        value={settings.platform.maxUsersPerPlan.premium}
+                        value={displaySettings.platform.maxUsersPerPlan.premium}
                         onChange={(e) => handleUpdateSettings("platform", { 
                           maxUsersPerPlan: { 
-                            ...settings.platform.maxUsersPerPlan, 
+                            ...displaySettings.platform.maxUsersPerPlan, 
                             premium: parseInt(e.target.value) || 0 
                           }
                         })}
@@ -392,8 +429,8 @@ export default function SystemSettings() {
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
                       <Label className="text-lg">Maintenance Mode</Label>
-                      <Badge variant={settings.maintenanceMode.enabled ? "destructive" : "secondary"}>
-                        {settings.maintenanceMode.enabled ? "ACTIVE" : "INACTIVE"}
+                      <Badge variant={displaySettings.maintenanceMode.enabled ? "destructive" : "secondary"}>
+                        {displaySettings.maintenanceMode.enabled ? "ACTIVE" : "INACTIVE"}
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -401,18 +438,18 @@ export default function SystemSettings() {
                     </p>
                   </div>
                   <Switch
-                    checked={settings.maintenanceMode.enabled}
+                    checked={displaySettings.maintenanceMode.enabled}
                     onCheckedChange={handleMaintenanceToggle}
                   />
                 </div>
 
-                {settings.maintenanceMode.enabled && (
+                {displaySettings.maintenanceMode.enabled && (
                   <div className="space-y-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
                     <div className="space-y-2">
                       <Label htmlFor="maintenanceMessage">Maintenance Message</Label>
                       <Textarea
                         id="maintenanceMessage"
-                        value={settings.maintenanceMode.message}
+                        value={displaySettings.maintenanceMode.message}
                         onChange={(e) => handleUpdateSettings("maintenanceMode", { message: e.target.value })}
                         placeholder="We're currently performing maintenance. Please check back later."
                         rows={3}
@@ -423,7 +460,7 @@ export default function SystemSettings() {
                       <Input
                         id="estimatedEnd"
                         type="datetime-local"
-                        value={settings.maintenanceMode.estimatedEnd ? new Date(settings.maintenanceMode.estimatedEnd).toISOString().slice(0, -1) : ""}
+                        value={displaySettings.maintenanceMode.estimatedEnd ? new Date(displaySettings.maintenanceMode.estimatedEnd).toISOString().slice(0, -1) : ""}
                         onChange={(e) => handleUpdateSettings("maintenanceMode", { estimatedEnd: e.target.value ? new Date(e.target.value).toISOString() : "" })}
                       />
                     </div>
@@ -465,7 +502,7 @@ export default function SystemSettings() {
                     <Input
                       id="sessionTimeout"
                       type="number"
-                      value={settings.security.sessionTimeout}
+                      value={displaySettings.security.sessionTimeout}
                       onChange={(e) => handleUpdateSettings("security", { sessionTimeout: parseInt(e.target.value) || 30 })}
                     />
                   </div>
@@ -474,7 +511,7 @@ export default function SystemSettings() {
                     <Input
                       id="maxLoginAttempts"
                       type="number"
-                      value={settings.security.maxLoginAttempts}
+                      value={displaySettings.security.maxLoginAttempts}
                       onChange={(e) => handleUpdateSettings("security", { maxLoginAttempts: parseInt(e.target.value) || 5 })}
                     />
                   </div>
@@ -490,7 +527,7 @@ export default function SystemSettings() {
                       <Input
                         id="passwordMinLength"
                         type="number"
-                        value={settings.security.passwordMinLength}
+                        value={displaySettings.security.passwordMinLength}
                         onChange={(e) => handleUpdateSettings("security", { passwordMinLength: parseInt(e.target.value) || 8 })}
                       />
                     </div>
@@ -502,7 +539,7 @@ export default function SystemSettings() {
                         </p>
                       </div>
                       <Switch
-                        checked={settings.security.requireStrongPasswords}
+                        checked={displaySettings.security.requireStrongPasswords}
                         onCheckedChange={(checked) => handleUpdateSettings("security", { requireStrongPasswords: checked })}
                       />
                     </div>
@@ -515,7 +552,7 @@ export default function SystemSettings() {
                       </p>
                     </div>
                     <Switch
-                      checked={settings.security.enableTwoFactor}
+                      checked={displaySettings.security.enableTwoFactor}
                       onCheckedChange={(checked) => handleUpdateSettings("security", { enableTwoFactor: checked })}
                     />
                   </div>
@@ -539,7 +576,7 @@ export default function SystemSettings() {
                     <Label htmlFor="fromName">From Name</Label>
                     <Input
                       id="fromName"
-                      value={settings.email.fromName}
+                      value={displaySettings.email.fromName}
                       onChange={(e) => handleUpdateSettings("email", { fromName: e.target.value })}
                     />
                   </div>
@@ -548,7 +585,7 @@ export default function SystemSettings() {
                     <Input
                       id="fromEmail"
                       type="email"
-                      value={settings.email.fromEmail}
+                      value={displaySettings.email.fromEmail}
                       onChange={(e) => handleUpdateSettings("email", { fromEmail: e.target.value })}
                     />
                   </div>
@@ -563,7 +600,7 @@ export default function SystemSettings() {
                       <Label htmlFor="smtpHost">SMTP Host</Label>
                       <Input
                         id="smtpHost"
-                        value={settings.email.smtpHost}
+                        value={displaySettings.email.smtpHost}
                         onChange={(e) => handleUpdateSettings("email", { smtpHost: e.target.value })}
                       />
                     </div>
@@ -572,14 +609,14 @@ export default function SystemSettings() {
                       <Input
                         id="smtpPort"
                         type="number"
-                        value={settings.email.smtpPort}
+                        value={displaySettings.email.smtpPort}
                         onChange={(e) => handleUpdateSettings("email", { smtpPort: parseInt(e.target.value) || 587 })}
                       />
                     </div>
                     <div className="flex items-center justify-between pt-8">
                       <Label>Use SSL/TLS</Label>
                       <Switch
-                        checked={settings.email.smtpSecure}
+                        checked={displaySettings.email.smtpSecure}
                         onCheckedChange={(checked) => handleUpdateSettings("email", { smtpSecure: checked })}
                       />
                     </div>
@@ -599,7 +636,7 @@ export default function SystemSettings() {
                         </p>
                       </div>
                       <Switch
-                        checked={settings.email.welcomeEmailEnabled}
+                        checked={displaySettings.email.welcomeEmailEnabled}
                         onCheckedChange={(checked) => handleUpdateSettings("email", { welcomeEmailEnabled: checked })}
                       />
                     </div>
@@ -611,7 +648,7 @@ export default function SystemSettings() {
                         </p>
                       </div>
                       <Switch
-                        checked={settings.email.reminderEmailsEnabled}
+                        checked={displaySettings.email.reminderEmailsEnabled}
                         onCheckedChange={(checked) => handleUpdateSettings("email", { reminderEmailsEnabled: checked })}
                       />
                     </div>
@@ -649,7 +686,7 @@ export default function SystemSettings() {
                       </p>
                     </div>
                     <Switch
-                      checked={settings.features.enableAnalytics}
+                      checked={displaySettings.features.enableAnalytics}
                       onCheckedChange={(checked) => handleUpdateSettings("features", { enableAnalytics: checked })}
                     />
                   </div>
@@ -661,7 +698,7 @@ export default function SystemSettings() {
                       </p>
                     </div>
                     <Switch
-                      checked={settings.features.enableCopyProtection}
+                      checked={displaySettings.features.enableCopyProtection}
                       onCheckedChange={(checked) => handleUpdateSettings("features", { enableCopyProtection: checked })}
                     />
                   </div>
@@ -673,17 +710,17 @@ export default function SystemSettings() {
                       </p>
                     </div>
                     <Switch
-                      checked={settings.features.enableDeviceLimit}
+                      checked={displaySettings.features.enableDeviceLimit}
                       onCheckedChange={(checked) => handleUpdateSettings("features", { enableDeviceLimit: checked })}
                     />
                   </div>
-                  {settings.features.enableDeviceLimit && (
+                  {displaySettings.features.enableDeviceLimit && (
                     <div className="ml-6 space-y-2">
                       <Label htmlFor="maxDevicesPerUser">Max Devices per User</Label>
                       <Input
                         id="maxDevicesPerUser"
                         type="number"
-                        value={settings.features.maxDevicesPerUser}
+                        value={displaySettings.features.maxDevicesPerUser}
                         onChange={(e) => handleUpdateSettings("features", { maxDevicesPerUser: parseInt(e.target.value) || 3 })}
                         className="w-32"
                       />
@@ -697,7 +734,7 @@ export default function SystemSettings() {
                       </p>
                     </div>
                     <Switch
-                      checked={settings.features.enableOfflineMode}
+                      checked={displaySettings.features.enableOfflineMode}
                       onCheckedChange={(checked) => handleUpdateSettings("features", { enableOfflineMode: checked })}
                     />
                   </div>
@@ -722,7 +759,7 @@ export default function SystemSettings() {
                     <Input
                       id="cacheTimeout"
                       type="number"
-                      value={settings.performance.cacheTimeout}
+                      value={displaySettings.performance.cacheTimeout}
                       onChange={(e) => handleUpdateSettings("performance", { cacheTimeout: parseInt(e.target.value) || 300 })}
                     />
                   </div>
@@ -731,7 +768,7 @@ export default function SystemSettings() {
                     <Input
                       id="maxConcurrentReads"
                       type="number"
-                      value={settings.performance.maxConcurrentReads}
+                      value={displaySettings.performance.maxConcurrentReads}
                       onChange={(e) => handleUpdateSettings("performance", { maxConcurrentReads: parseInt(e.target.value) || 10 })}
                     />
                   </div>
@@ -748,18 +785,18 @@ export default function SystemSettings() {
                       </p>
                     </div>
                     <Switch
-                      checked={settings.performance.enableRateLimiting}
+                      checked={displaySettings.performance.enableRateLimiting}
                       onCheckedChange={(checked) => handleUpdateSettings("performance", { enableRateLimiting: checked })}
                     />
                   </div>
-                  {settings.performance.enableRateLimiting && (
+                  {displaySettings.performance.enableRateLimiting && (
                     <div className="ml-6 grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="rateLimitRequests">Requests per Window</Label>
                         <Input
                           id="rateLimitRequests"
                           type="number"
-                          value={settings.performance.rateLimitRequests}
+                          value={displaySettings.performance.rateLimitRequests}
                           onChange={(e) => handleUpdateSettings("performance", { rateLimitRequests: parseInt(e.target.value) || 100 })}
                         />
                       </div>
@@ -768,7 +805,7 @@ export default function SystemSettings() {
                         <Input
                           id="rateLimitWindow"
                           type="number"
-                          value={settings.performance.rateLimitWindow}
+                          value={displaySettings.performance.rateLimitWindow}
                           onChange={(e) => handleUpdateSettings("performance", { rateLimitWindow: parseInt(e.target.value) || 15 })}
                         />
                       </div>
