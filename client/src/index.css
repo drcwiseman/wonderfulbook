@@ -274,41 +274,58 @@ textarea:focus-visible {
   }
 }
 
-/* PDF.js styling customization - Clean and Readable */
+/* PDF.js styling customization - Apple Books Style */
 .react-pdf__Page {
-  margin: 0 auto;
+  margin: 0 auto 2rem auto;
   display: block;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   /* Remove default PDF.js styling */
   box-shadow: none !important;
   border: none !important;
   background: white;
+  /* Proper book sizing */
+  width: auto;
+  max-width: 800px;
 }
 
 .react-pdf__Page__canvas {
   margin: 0 auto;
   display: block;
-  border-radius: 8px;
-  /* Clean professional shadows */
+  border-radius: 12px;
+  /* Professional Apple Books shadows */
   box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
     0 4px 16px rgba(0, 0, 0, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  transition: all 0.15s ease-out;
-  /* Clean rendering - NO filters that mess up text */
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Clean, crisp rendering */
   image-rendering: auto;
-  /* Enhanced for full screen */
-  max-width: 100%;
-  height: auto;
+  /* Proper book-like sizing */
+  width: auto !important;
+  max-width: 800px !important;
+  min-width: 600px;
+  height: auto !important;
   background: white !important;
 }
 
 .react-pdf__Page__canvas:hover {
   box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.16),
     0 6px 24px rgba(0, 0, 0, 0.12),
-    0 2px 6px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Enhanced Apple Books page styling */
+.apple-books-page .react-pdf__Page__canvas {
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.15),
+    0 6px 24px rgba(0, 0, 0, 0.1),
+    0 3px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .react-pdf__Document {
@@ -329,7 +346,7 @@ textarea:focus-visible {
   /* NO filters that mess up readability */
 }
 
-/* Dark mode - Clean adjustments */
+/* Dark mode - Professional adjustments */
 .dark .react-pdf__Page {
   background: #1f2937;
 }
@@ -337,9 +354,52 @@ textarea:focus-visible {
 .dark .react-pdf__Page__canvas {
   background: #1f2937 !important;
   box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.3),
-    0 1px 3px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+    0 12px 48px rgba(0, 0, 0, 0.4),
+    0 6px 24px rgba(0, 0, 0, 0.3),
+    0 3px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .react-pdf__Page__canvas:hover {
+  box-shadow: 
+    0 16px 64px rgba(0, 0, 0, 0.5),
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Responsive sizing for different screen sizes */
+@media (max-width: 768px) {
+  .react-pdf__Page {
+    max-width: 95vw;
+  }
+  
+  .react-pdf__Page__canvas {
+    max-width: 95vw !important;
+    min-width: 320px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .react-pdf__Page {
+    max-width: 700px;
+  }
+  
+  .react-pdf__Page__canvas {
+    max-width: 700px !important;
+    min-width: 500px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .react-pdf__Page {
+    max-width: 850px;
+  }
+  
+  .react-pdf__Page__canvas {
+    max-width: 850px !important;
+    min-width: 650px;
+  }
 }
 
 

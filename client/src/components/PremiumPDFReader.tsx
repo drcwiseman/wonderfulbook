@@ -721,8 +721,9 @@ export function PremiumPDFReader({
                 <div className="p-6 md:p-8 lg:p-10">
                   <div className={`
                     relative mx-auto flex items-center justify-center
-                    ${isDarkMode ? 'bg-gray-800/30' : 'bg-gray-50/30'}
-                    rounded-xl p-4 md:p-6
+                    ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}
+                    rounded-xl p-6 md:p-8 lg:p-12
+                    min-h-[800px]
                   `}>
                     <Page
                       pageNumber={pageNumber}
@@ -730,7 +731,8 @@ export function PremiumPDFReader({
                       renderTextLayer={true}
                       renderAnnotationLayer={false}
                       className="mx-auto block apple-books-page"
-                      canvasBackground="transparent"
+                      canvasBackground="white"
+                      width={Math.min(800, window.innerWidth * 0.8)}
                       loading={
                         <div className={`flex items-center justify-center p-20 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
                           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mr-4"></div>
