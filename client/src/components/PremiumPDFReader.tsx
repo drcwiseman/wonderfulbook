@@ -12,8 +12,8 @@ import { useAccessibility } from '@/hooks/useAccessibility';
 import { useCopyProtection } from '@/hooks/useCopyProtection';
 import AccessibilityPanel from '@/components/AccessibilityPanel';
 
-// Configure PDF.js worker to use local file for reliability
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+// Configure PDF.js worker using a working CDN with version match
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 interface PremiumPDFReaderProps {
   bookId: string;
