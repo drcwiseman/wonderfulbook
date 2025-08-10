@@ -31,6 +31,7 @@ import Register from "@/pages/auth/register";
 import ForgotPassword from "@/pages/auth/forgot-password";
 import ResetPassword from "@/pages/auth/reset-password";
 import Profile from "@/pages/profile";
+import Billing from "@/pages/billing";
 import DevicesPage from "@/pages/devices";
 import LoansPage from "@/pages/loans";
 import NotFound from "@/pages/not-found";
@@ -75,6 +76,13 @@ function Router() {
           <PageWrapper>
             <ProtectedRoute requireAuth={true}>
               <Profile />
+            </ProtectedRoute>
+          </PageWrapper>
+        </Route>
+        <Route path="/billing">
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true}>
+              <Billing />
             </ProtectedRoute>
           </PageWrapper>
         </Route>

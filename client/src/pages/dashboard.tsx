@@ -352,11 +352,19 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setLocation("/billing")}
+                >
                   <CreditCard className="w-4 h-4 mr-2" />
                   Manage Billing
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setLocation("/profile")}
+                >
                   <Settings className="w-4 h-4 mr-2" />
                   Account Settings
                 </Button>
