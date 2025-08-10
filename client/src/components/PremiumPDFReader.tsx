@@ -688,8 +688,9 @@ export function PremiumPDFReader({
                 renderAnnotationLayer={false}
                 className={`shadow-2xl transition-all duration-500 ease-out ${
                   isDarkMode ? 'shadow-black/50' : 'shadow-gray-400/30'
-                } hover:shadow-3xl transform hover:scale-[1.02]`}
-                canvasBackground={isDarkMode ? '#1f2937' : 'white'}
+                } hover:shadow-3xl transform hover:scale-[1.02] ${
+                  isDarkMode ? 'pdf-dark-mode' : ''
+                }`}
                 loading={
                   <div className={`flex items-center justify-center p-8 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mr-3"></div>

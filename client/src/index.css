@@ -677,3 +677,19 @@ textarea:focus-visible {
 .hover\:border-netflix-red:hover {
   border-color: var(--netflix-red);
 }
+
+/* PDF Dark Mode Styles */
+.pdf-dark-mode canvas {
+  filter: invert(1) hue-rotate(180deg);
+  border-radius: 8px;
+  background: #1f2937 !important;
+}
+
+.pdf-dark-mode .react-pdf__Page__textContent {
+  filter: invert(1) hue-rotate(180deg);
+  mix-blend-mode: difference;
+}
+
+.pdf-dark-mode .react-pdf__Page__annotations {
+  filter: invert(1) hue-rotate(180deg);
+}
