@@ -298,15 +298,8 @@ function BookCard({ book, layout }: BookCardProps) {
   const canDownloadBook = () => {
     if (!user) return false;
     
-    // Debug logging
-    console.log('User tier:', (user as any).subscriptionTier);
-    console.log('User status:', (user as any).subscriptionStatus);
-    console.log('Book required tier:', book.requiredTier);
-    console.log('User role:', (user as any).role);
-    
     // Admin always has access
     if ((user as any).role === 'admin' || (user as any).role === 'super_admin') {
-      console.log('Admin access granted');
       return true;
     }
     
