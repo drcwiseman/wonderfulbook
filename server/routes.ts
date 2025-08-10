@@ -2,8 +2,8 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
-import { storage } from "./storage";
-import { db } from "./db";
+import { storage } from "./storage.js";
+import { db } from "./db.js";
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, feedback, feedbackComments, insertFeedbackSchema, insertFeedbackCommentSchema, users, licenses, loans, bookChunks } from "@shared/schema";
 import { insertBookSchema, insertCategorySchema } from "@shared/schema";
 import { z } from "zod";
@@ -14,14 +14,14 @@ import fs from "fs";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 
-import { antiAbuseService } from "./antiAbuseService";
-import { AuditService } from "./auditService";
+import { antiAbuseService } from "./antiAbuseService.js";
+import { AuditService } from "./auditService.js";
 import { healthRouter } from "./health/routes.js";
 import { healthzRouter } from "./routes/healthz.js";
 import { securityHeaders, additionalSecurityHeaders } from "./middleware/securityHeaders.js";
 import { reportsAuth } from "./middleware/reportsAuth.js";
 
-import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth';
+import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth.js';
 import { 
   rateLimit, 
   requireAuth, 
@@ -30,7 +30,7 @@ import {
   requirePremium,
   validateAPIRoute,
   deviceFingerprint
-} from "./middleware/routeProtection";
+} from "./middleware/routeProtection.js";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');

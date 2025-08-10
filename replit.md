@@ -6,6 +6,12 @@ Wonderful Books is a subscription-based digital reading platform, similar to Net
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Development Issues (August 10, 2025)
+- **TypeScript Compilation Issue**: The development server (`npm run dev`) is failing due to missing `tsx` binary and TypeScript ES module resolution issues
+- **Root Cause**: Missing binary symlinks in node_modules/.bin/ for tsx, vite, and esbuild packages
+- **Temporary Fix Attempted**: Created manual tsx wrapper using ts-node/esm loader, but still encountering module resolution errors
+- **Current Status**: App fails to start in development mode with [Object: null prototype] error, likely due to unhandled promise rejection in route registration
+
 ## System Architecture
 
 ### Frontend Architecture

@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { registerRoutes } from "./routes.js";
+import { setupVite, serveStatic, log } from "./vite.js";
 import path from "path";
 
 const app = express();
@@ -42,15 +42,18 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize crypto system first
   try {
-    const { initializeCrypto } = await import('./crypto.js');
-    await initializeCrypto();
-  } catch (error) {
-    console.error('Failed to initialize crypto system:', error);
-  }
+    // Initialize crypto system first
+    try {
+      const { initializeCrypto } = await import('./crypto.js');
+      await initializeCrypto();
+    } catch (error) {
+      console.error('Failed to initialize crypto system:', error);
+    }
 
-  const server = await registerRoutes(app);
+    console.log('Starting route registration...');
+    const server = await registerRoutes(app);
+    console.log('Route registration complete');
   
   // Initialize email scheduler for automated campaigns
   try {
@@ -98,4 +101,8 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
+  } catch (error) {
+    console.error('Server initialization failed:', error);
+    process.exit(1);
+  }
 })();
