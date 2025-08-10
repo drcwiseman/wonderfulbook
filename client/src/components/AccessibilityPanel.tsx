@@ -105,7 +105,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPan
     
     // Apply dyslexia-friendly font
     if (newSettings.dyslexiaFont) {
-      root.style.setProperty('--font-family', '"OpenDyslexic", "Arial", sans-serif');
+      root.style.setProperty('--font-family', '"Trebuchet MS", "Verdana", "Arial", sans-serif');
       document.body.classList.add('dyslexia-friendly');
     } else {
       root.style.removeProperty('--font-family');
