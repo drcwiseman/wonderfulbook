@@ -90,13 +90,13 @@ export default function Library() {
   // Check if we're still loading any essential data
   const isLoadingEssentialData = isLoading || booksLoading;
 
+  // Define user tier outside memoized block so it's available in component scope
+  const userTier = (user as any)?.subscriptionTier || 'free';
+  const tierHierarchy: Record<string, number> = { free: 0, basic: 1, premium: 2 };
+
   // Memoize library books to prevent unnecessary recalculations
   const libraryBooks: LibraryBook[] = useMemo(() => {
     if (isLoadingEssentialData || !allBooks.length) return [];
-
-    // Filter books based on user's subscription tier
-    const userTier = (user as any)?.subscriptionTier || 'free';
-    const tierHierarchy: Record<string, number> = { free: 0, basic: 1, premium: 2 };
 
     return (allBooks as Book[])
       .filter((book: Book) => {
