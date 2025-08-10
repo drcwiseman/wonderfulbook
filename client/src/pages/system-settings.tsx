@@ -109,7 +109,7 @@ export default function SystemSettings() {
     if (settings && !localSettings) {
       setLocalSettings(settings);
     }
-  }, [settings, localSettings]);
+  }, [settings]);
 
   // Use local settings for display, fall back to fetched settings
   const displaySettings = localSettings || settings;
