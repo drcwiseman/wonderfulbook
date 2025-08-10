@@ -332,14 +332,39 @@ export function AppleBooksPDFReader({
   }
 
   function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen?.();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen?.();
-      setIsFullscreen(false);
-    }
+    const element = containerRef.current;
+    if (!element) return;
+    
+    // Use requestAnimationFrame to prevent flickering
+    requestAnimationFrame(() => {
+      if (!document.fullscreenElement) {
+        element.requestFullscreen?.().then(() => {
+          setIsFullscreen(true);
+        }).catch((err) => {
+          console.warn('Fullscreen request failed:', err);
+          setIsFullscreen(false);
+        });
+      } else {
+        document.exitFullscreen?.().then(() => {
+          setIsFullscreen(false);
+        }).catch((err) => {
+          console.warn('Exit fullscreen failed:', err);
+          setIsFullscreen(true);
+        });
+      }
+    });
   }
+
+  // Listen for fullscreen changes to keep state in sync
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isCurrentlyFullscreen);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   // Keyboard navigation
   useEffect(() => {

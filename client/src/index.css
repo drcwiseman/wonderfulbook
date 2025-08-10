@@ -826,3 +826,34 @@ textarea:focus-visible {
 .hover\:border-netflix-red:hover {
   border-color: var(--netflix-red);
 }
+
+/* Fullscreen anti-flickering */
+.apple-books-reader {
+  will-change: transform;
+  contain: layout;
+}
+
+.apple-books-reader:fullscreen {
+  will-change: transform;
+  contain: layout;
+}
+
+/* Smooth fullscreen transitions */
+.apple-books-reader,
+.apple-books-reader * {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* PDF.js canvas anti-flicker */
+canvas {
+  will-change: contents;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Prevent repaints during transitions */
+.pdf-controls-transition {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
