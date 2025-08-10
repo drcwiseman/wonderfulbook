@@ -45,7 +45,7 @@ export function PremiumPDFReader({
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { settings, speakText, stopReading, isReading } = useAccessibility();
+  const { settings, isReading } = useAccessibility();
   const { tracking, isBlocked, canCopy, recordCopy, getRemainingPercentage, isCloseToLimit } = useCopyProtection(bookId);
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -365,31 +365,32 @@ export function PremiumPDFReader({
           .trim();
         
         if (cleanText) {
-          speakText(`Page ${pageNumber}. ${cleanText}`);
+          // Text-to-speech functionality would go here
+          console.log(`Page ${pageNumber}. ${cleanText}`);
         } else {
-          speakText(`Page ${pageNumber} appears to be an image or has no readable text.`);
+          console.log(`Page ${pageNumber} appears to be an image or has no readable text.`);
         }
       } else {
-        speakText(`Reading page ${pageNumber} of ${bookTitle}.`);
+        console.log(`Reading page ${pageNumber} of ${bookTitle}.`);
       }
     } catch (error) {
       console.error('Error reading page:', error);
-      speakText(`Unable to read page ${pageNumber}.`);
+      console.log(`Unable to read page ${pageNumber}.`);
     }
   }
 
   function readPageInfo() {
     if (settings.textToSpeech) {
-      speakText(`Currently on page ${pageNumber} of ${numPages} in ${bookTitle}.`);
+      console.log(`Currently on page ${pageNumber} of ${numPages} in ${bookTitle}.`);
     }
   }
 
   // Auto-read when page changes if enabled
   useEffect(() => {
-    if (settings.autoRead && settings.textToSpeech && !isLoading) {
+    if (settings.textToSpeech && !isLoading) {
       setTimeout(readCurrentPage, 500); // Small delay for page render
     }
-  }, [pageNumber, settings.autoRead, settings.textToSpeech, isLoading]);
+  }, [pageNumber, settings.textToSpeech, isLoading]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -680,36 +681,56 @@ export function PremiumPDFReader({
           options={pdfOptions}
         >
           {numPages && (
-            <div className="flex items-center justify-center min-h-[calc(100vh-160px)] p-4">
-              {/* Clean Apple Books Style Container */}
+            <div className="flex items-center justify-center min-h-[calc(100vh-160px)] p-6 md:p-8">
+              {/* Apple Books Style Page Container */}
               <div className={`
-                relative mx-auto
+                relative mx-auto max-w-5xl
                 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}
-                rounded-xl shadow-xl
-                ${isDarkMode ? 'shadow-black/20' : 'shadow-gray-300/40'}
-                border ${isDarkMode ? 'border-gray-800' : 'border-gray-100'}
+                rounded-2xl
+                ${isDarkMode 
+                  ? 'shadow-[0_8px_30px_rgba(0,0,0,0.6),0_2px_6px_rgba(0,0,0,0.4)]' 
+                  : 'shadow-[0_8px_30px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.08)]'
+                }
+                border ${isDarkMode ? 'border-gray-800/50' : 'border-gray-200/50'}
                 overflow-hidden
-                transition-all duration-300 ease-out
+                transition-all duration-200 ease-out
+                hover:${isDarkMode 
+                  ? 'shadow-[0_12px_40px_rgba(0,0,0,0.7),0_4px_8px_rgba(0,0,0,0.5)]' 
+                  : 'shadow-[0_12px_40px_rgba(0,0,0,0.15),0_4px_8px_rgba(0,0,0,0.1)]'
+                }
+                backdrop-blur-sm
               `}>
-                <Page
-                  pageNumber={pageNumber}
-                  scale={scale}
-                  renderTextLayer={true}
-                  renderAnnotationLayer={false}
-                  className="block"
-                  canvasBackground={isDarkMode ? '#1f2937' : 'white'}
-                  loading={
-                    <div className={`flex items-center justify-center p-16 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mr-3"></div>
-                      Loading page...
-                    </div>
+                {/* Subtle Inner Border */}
+                <div className={`
+                  absolute inset-0 rounded-2xl pointer-events-none
+                  ${isDarkMode 
+                    ? 'ring-1 ring-inset ring-white/5' 
+                    : 'ring-1 ring-inset ring-black/5'
                   }
-                  error={
-                    <div className={`flex items-center justify-center p-16 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
-                      Failed to load page
-                    </div>
-                  }
-                />
+                `}></div>
+                
+                {/* Page Content with Proper Padding */}
+                <div className="p-4 md:p-6">
+                  <Page
+                    pageNumber={pageNumber}
+                    scale={scale}
+                    renderTextLayer={true}
+                    renderAnnotationLayer={false}
+                    className="mx-auto block"
+                    canvasBackground={isDarkMode ? '#1f2937' : 'white'}
+                    loading={
+                      <div className={`flex items-center justify-center p-16 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mr-3"></div>
+                        Loading page...
+                      </div>
+                    }
+                    error={
+                      <div className={`flex items-center justify-center p-16 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+                        Failed to load page
+                      </div>
+                    }
+                  />
+                </div>
               </div>
             </div>
           )}

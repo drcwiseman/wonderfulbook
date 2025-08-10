@@ -274,29 +274,38 @@ textarea:focus-visible {
   }
 }
 
-/* PDF.js styling customization - Clean Apple Books Style */
+/* PDF.js styling customization - Apple Books Style */
 .react-pdf__Page {
   margin: 0 auto;
   display: block;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
+  /* Remove default PDF.js styling */
+  box-shadow: none !important;
+  border: none !important;
 }
 
 .react-pdf__Page__canvas {
   margin: 0 auto;
   display: block;
-  border-radius: 12px;
+  border-radius: 8px;
+  /* Crisp, clean shadows matching Apple Books */
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 4px 16px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.15s ease-out;
+  /* Ensure crisp rendering */
+  image-rendering: optimizeQuality;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .react-pdf__Page__canvas:hover {
   box-shadow: 
-    0 12px 48px rgba(0, 0, 0, 0.15),
-    0 6px 24px rgba(0, 0, 0, 0.10);
+    0 6px 24px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .react-pdf__Document {
@@ -305,18 +314,27 @@ textarea:focus-visible {
   align-items: center;
 }
 
+/* Text layer improvements for crisp text */
+.react-pdf__Page__textContent {
+  /* Improve text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
 /* Dark mode adjustments */
 .dark .react-pdf__Page__canvas {
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 4px 16px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .dark .react-pdf__Page__canvas:hover {
   box-shadow: 
-    0 12px 48px rgba(0, 0, 0, 0.5),
-    0 6px 24px rgba(0, 0, 0, 0.3);
+    0 6px 24px rgba(0, 0, 0, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.5);
+  transform: translateY(-1px);
 }
 
 /* Reduced motion support */
