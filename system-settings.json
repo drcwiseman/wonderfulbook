@@ -1,0 +1,59 @@
+{
+  "maintenanceMode": {
+    "enabled": false,
+    "message": "We're currently performing maintenance. Please check back later.",
+    "estimatedEnd": ""
+  },
+  "platform": {
+    "siteName": "Wonderful Books",
+    "siteDescription": "Your Number One Premium Digital Reading Platform",
+    "allowRegistration": true,
+    "requireEmailVerification": true,
+    "maxUsersPerPlan": {
+      "free": 1000,
+      "basic": 5000,
+      "premium": 10000
+    }
+  },
+  "security": {
+    "sessionTimeout": 1440,
+    "maxLoginAttempts": 5,
+    "passwordMinLength": 8,
+    "requireStrongPasswords": true,
+    "enableTwoFactor": false
+  },
+  "email": {
+    "fromName": "Wonderful Books",
+    "fromEmail": "books@thekingdomclub.org",
+    "smtpHost": "mail.thekingdomclub.org",
+    "smtpPort": 465,
+    "smtpSecure": true,
+    "smtpUser": "books@thekingdomclub.org",
+    "smtpPassword": "@@Brave@@2017",
+    "replyToEmail": "books@thekingdomclub.org",
+    "enableAuth": true,
+    "connectionTimeout": 60000,
+    "greetingTimeout": 30000,
+    "socketTimeout": 60000,
+    "maxConnections": 5,
+    "maxMessages": 100,
+    "rateDelta": 1000,
+    "rateLimit": 5,
+    "welcomeEmailEnabled": true,
+    "reminderEmailsEnabled": true
+  },
+  "features": {
+    "enableAnalytics": true,
+    "enableCopyProtection": true,
+    "enableDeviceLimit": true,
+    "maxDevicesPerUser": 5,
+    "enableOfflineMode": true
+  },
+  "performance": {
+    "cacheTimeout": 300,
+    "maxConcurrentReads": 10,
+    "enableRateLimiting": true,
+    "rateLimitRequests": 200,
+    "rateLimitWindow": 15
+  }
+}
