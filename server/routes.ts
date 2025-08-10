@@ -117,8 +117,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static('./uploads'));
   
   // Apply rate limiting to API routes
-  app.use('/api/', rateLimit(200, 15 * 60 * 1000)); // 200 requests per 15 minutes
-  app.use('/api/auth/', rateLimit(50, 15 * 60 * 1000)); // 50 auth requests per 15 minutes
+  app.use('/api/', rateLimit(500, 15 * 60 * 1000)); // 500 requests per 15 minutes
+  app.use('/api/auth/', rateLimit(200, 15 * 60 * 1000)); // 200 auth requests per 15 minutes
 
   // DRM and Device Management Routes
   const deviceRoutes = await import('./routes/devices.js');

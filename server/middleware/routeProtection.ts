@@ -13,6 +13,9 @@ declare global {
 // Rate limiting store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
+// Clear rate limit for immediate fix
+rateLimitStore.clear();
+
 export function rateLimit(maxRequests: number = 100, windowMs: number = 15 * 60 * 1000) {
   return (req: Request, res: Response, next: NextFunction) => {
     const key = req.ip || 'unknown';
