@@ -109,4 +109,3 @@ app.use((req, res, next) => {
   console.error('Unhandled async error in server initialization:', error);
   process.exit(1);
 });
-})();
