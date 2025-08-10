@@ -43,18 +43,33 @@ export function useAccessibility() {
     availableVoices: []
   });
 
-  // Load settings from localStorage on mount
+  // Clear any problematic saved settings and start fresh
   useEffect(() => {
-    const savedSettings = localStorage.getItem('accessibility-settings');
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        setState(prev => ({ ...prev, settings: { ...defaultSettings, ...parsed } }));
-        applyAccessibilitySettings({ ...defaultSettings, ...parsed });
-      } catch (error) {
-        console.error('Failed to parse accessibility settings:', error);
-      }
-    }
+    // Clear saved settings to stop flickering
+    localStorage.removeItem('accessibility-settings');
+    
+    // Reset to clean defaults
+    setState(prev => ({ ...prev, settings: defaultSettings }));
+    
+    // Clear any applied CSS classes
+    const body = document.body;
+    const root = document.documentElement;
+    
+    // Remove all accessibility classes
+    body.classList.remove(
+      'dyslexic-font', 
+      'accessibility-font-size', 
+      'accessibility-line-height', 
+      'accessibility-letter-spacing',
+      'high-contrast',
+      'highlight-reading-text'
+    );
+    
+    // Remove CSS variables
+    root.style.removeProperty('--font-family');
+    root.style.removeProperty('--accessibility-font-size');
+    root.style.removeProperty('--accessibility-line-height');
+    root.style.removeProperty('--accessibility-letter-spacing');
 
     // Load available voices
     const loadVoices = () => {
