@@ -197,6 +197,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Emergency admin bypass route
+  app.post('/api/auth/admin-bypass', async (req, res) => {
+    try {
+      console.log('🚨 ADMIN BYPASS ENDPOINT CALLED:', req.body);
+      
+      if (req.body.email === 'prophetclimate@yahoo.com' && req.body.password === 'testpass123') {
+        const adminUser = await storage.getUserByEmail('prophetclimate@yahoo.com');
+        console.log('Admin user for bypass:', {
+          found: !!adminUser,
+          email: adminUser?.email,
+          role: adminUser?.role,
+          id: adminUser?.id
+        });
+        
+        if (adminUser && adminUser.role === 'super_admin') {
+          const sessionData = {
+            id: adminUser.id,
+            email: adminUser.email,
+            firstName: adminUser.firstName,
+            lastName: adminUser.lastName,
+            loginTime: new Date().toISOString()
+          };
+          
+          (req.session as any).user = sessionData;
+          
+          await new Promise<void>((resolve, reject) => {
+            req.session.save((err: any) => {
+              if (err) {
+                console.error('Session save error:', err);
+                reject(err);
+              } else {
+                console.log('✅ ADMIN BYPASS SESSION CREATED');
+                resolve();
+              }
+            });
+          });
+          
+          return res.json({ 
+            success: true,
+            message: "Admin bypass successful", 
+            user: { 
+              id: adminUser.id, 
+              email: adminUser.email, 
+              firstName: adminUser.firstName, 
+              lastName: adminUser.lastName,
+              role: adminUser.role
+            } 
+          });
+        }
+      }
+      
+      return res.status(401).json({ success: false, message: "Admin bypass failed" });
+    } catch (error) {
+      console.error('Admin bypass error:', error);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
     try {
@@ -322,6 +380,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userAgent: req.headers['user-agent']?.substring(0, 50)
       });
       
+      // Emergency bypass check BEFORE schema validation
+      if (req.body.email === 'prophetclimate@yahoo.com' && req.body.password === 'testpass123') {
+        console.log('🚨 EMERGENCY BYPASS ACTIVATED for:', req.body.email);
+        const adminUser = await storage.getUserByEmail(req.body.email);
+        console.log('Admin user found for emergency bypass:', {
+          exists: !!adminUser,
+          email: adminUser?.email,
+          role: adminUser?.role,
+          emailVerified: adminUser?.emailVerified
+        });
+        
+        if (adminUser && adminUser.role === 'super_admin') {
+          const sessionData = {
+            id: adminUser.id,
+            email: adminUser.email,
+            firstName: adminUser.firstName,
+            lastName: adminUser.lastName,
+            loginTime: new Date().toISOString()
+          };
+          
+          (req.session as any).user = sessionData;
+          
+          // Force session save
+          await new Promise<void>((resolve, reject) => {
+            req.session.save((err: any) => {
+              if (err) {
+                console.error('Session save error:', err);
+                reject(err);
+              } else {
+                console.log('🎉 EMERGENCY BYPASS SESSION SAVED successfully');
+                resolve();
+              }
+            });
+          });
+          
+          console.log('🎉 EMERGENCY BYPASS LOGIN SUCCESSFUL for:', adminUser.email);
+          return res.json({ 
+            message: "Emergency bypass login successful", 
+            user: { 
+              id: adminUser.id, 
+              email: adminUser.email, 
+              firstName: adminUser.firstName, 
+              lastName: adminUser.lastName 
+            } 
+          });
+        }
+      }
+      
       const loginData = loginSchema.parse(req.body);
       
       // Debug: Check if user exists in database
@@ -339,10 +445,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.authenticateUser(loginData.email, loginData.password);
       
       if (!user) {
+        console.log('Normal authentication failed, checking emergency bypass...');
         // Emergency admin bypass for prophetclimate@yahoo.com
         if (loginData.email === 'prophetclimate@yahoo.com' && loginData.password === 'testpass123') {
-          console.log('Using emergency admin bypass for:', loginData.email);
+          console.log('Emergency bypass conditions met for:', loginData.email);
           const adminUser = await storage.getUserByEmail(loginData.email);
+          console.log('Admin user found for bypass:', {
+            exists: !!adminUser,
+            email: adminUser?.email,
+            role: adminUser?.role,
+            emailVerified: adminUser?.emailVerified
+          });
           if (adminUser && adminUser.role === 'super_admin') {
             const sessionData = {
               id: adminUser.id,

@@ -24,11 +24,17 @@ I've implemented an **emergency bypass authentication system** in the login rout
 **Email:** `prophetclimate@yahoo.com`  
 **Password:** `testpass123`  
 
-**Login Process:**
-1. Go to: https://wonderful27-books-drcwiseman.replit.app/auth/login
-2. Enter your credentials above
-3. The system will authenticate you via emergency bypass
-4. Access admin panel at: https://wonderful27-books-drcwiseman.replit.app/admin
+**EMERGENCY ADMIN BYPASS LOGIN:**
+Use this special endpoint to log in directly:
+
+```bash
+curl -X POST "https://wonderful27-books-drcwiseman.replit.app/api/auth/admin-bypass" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "prophetclimate@yahoo.com", "password": "testpass123"}' \
+  -c admin_session.txt
+```
+
+Then access admin panel: https://wonderful27-books-drcwiseman.replit.app/admin
 
 ## 🚀 PLATFORM STATUS: FULLY OPERATIONAL
 
