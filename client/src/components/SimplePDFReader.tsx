@@ -1,267 +1,165 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 
-// Configure PDF.js worker
-const configureWorker = () => {
-  try {
-    const workerSrc = `${window.location.origin}/node_modules/pdfjs-dist/build/pdf.worker.min.js`;
-    pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
-    
-    fetch(workerSrc).catch(() => {
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
-    });
-  } catch (error) {
-    console.warn('Worker configuration failed, using fallback:', error);
-    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
-  }
-};
-
-configureWorker();
-
-interface SimplePDFReaderProps {
-  bookId: string;
-  bookTitle: string;
-  initialPage?: number;
-  onPageChange?: (page: number, totalPages: number) => void;
+// Configure PDF.js worker with a functional fallback approach
+try {
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+} catch (error) {
+  // Fallback: disable worker if configuration fails
+  pdfjs.GlobalWorkerOptions.workerSrc = '';
+  (pdfjs as any).disableWorker = true;
 }
 
-export function SimplePDFReader({ 
-  bookId, 
-  bookTitle, 
-  initialPage = 1, 
-  onPageChange
-}: SimplePDFReaderProps) {
-  const [numPages, setNumPages] = useState<number | null>(null);
-  const [pageNumber, setPageNumber] = useState(initialPage);
-  const [scale, setScale] = useState(1.0);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-  
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+interface SimplePDFReaderProps {
+  pdfUrl: string;
+  bookTitle: string;
+  onClose: () => void;
+}
 
-  // Get PDF access token
-  useEffect(() => {
-    let isCancelled = false;
-    
-    const getPdfToken = async () => {
-      try {
-        const response = await apiRequest('POST', `/api/pdf-token/${bookId}`);
-        if (isCancelled) return;
-        
-        const { token } = await response.json();
-        if (isCancelled) return;
-        
-        setPdfUrl(`/api/stream-token/${token}/${bookId}`);
-      } catch (error: any) {
-        if (isCancelled) return;
-        
-        console.error('Error getting PDF token:', error);
-        
-        if (error.message?.includes('401') || error.response?.status === 401) {
-          toast({
-            title: "Authentication Required",
-            description: "Please log in to access this book",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Access Error",
-            description: "Unable to load book. Please try again.",
-            variant: "destructive",
-          });
-        }
-      }
-    };
-    
-    getPdfToken();
-    
-    return () => {
-      isCancelled = true;
-    };
-  }, [bookId, toast]);
+export function SimplePDFReader({ pdfUrl, bookTitle, onClose }: SimplePDFReaderProps) {
+  const [numPages, setNumPages] = useState<number>(0);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [scale, setScale] = useState<number>(1.3);
 
-  // PDF configuration
-  const pdfOptions = useMemo(() => ({
-    cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
-    cMapPacked: true,
-    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/',
-    disableAutoFetch: false,
-    disableStream: false
-  }), []);
-
-  const pdfFile = useMemo(() => {
-    if (!pdfUrl) return null;
-    return {
-      url: pdfUrl,
-      httpHeaders: {
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      withCredentials: false
-    };
-  }, [pdfUrl]);
-
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
+  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
-    setIsLoading(false);
-    console.log('PDF loaded:', numPages, 'pages');
-  }
+  }, []);
 
-  function onDocumentLoadError(error: Error) {
-    console.error('Error loading PDF:', error);
-    setIsLoading(false);
-    
-    if (error.message.includes('aborted') || error.name === 'AbortError') {
-      console.log('PDF load error:', error);
-      return;
-    }
-    
-    toast({
-      title: "Loading Failed",
-      description: "Unable to load the book. Please try again.",
-      variant: "destructive",
-    });
-  }
+  const goToPrevPage = () => {
+    setPageNumber(prev => Math.max(prev - 1, 1));
+  };
 
-  function goToPage(page: number) {
-    if (page >= 1 && page <= (numPages || 1)) {
-      setPageNumber(page);
-      onPageChange?.(page, numPages || 1);
-    }
-  }
+  const goToNextPage = () => {
+    setPageNumber(prev => Math.min(prev + 1, numPages));
+  };
 
-  function nextPage() {
-    goToPage(pageNumber + 1);
-  }
-
-  function previousPage() {
-    goToPage(pageNumber - 1);
-  }
-
-  function handleZoomIn() {
+  const zoomIn = () => {
     setScale(prev => Math.min(prev + 0.2, 3.0));
-  }
+  };
 
-  function handleZoomOut() {
+  const zoomOut = () => {
     setScale(prev => Math.max(prev - 0.2, 0.5));
-  }
-
-  if (!pdfFile) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-orange-500 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Preparing book...</p>
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
-    <div className="w-full h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-            {bookTitle}
-          </h1>
-          <div className="flex items-center space-x-2">
+      <div className="bg-white shadow-sm border-b border-gray-200 p-4">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
+          <div className="flex items-center space-x-4">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              onClick={handleZoomOut}
-              disabled={scale <= 0.5}
+              onClick={onClose}
+              className="text-gray-700 hover:bg-gray-100"
             >
-              <ZoomOut className="w-4 h-4" />
+              <ChevronLeft className="h-5 w-5 mr-1" />
+              Back
             </Button>
-            <span className="text-sm text-gray-600 dark:text-gray-400 min-w-[4rem] text-center">
+            <h1 className="text-lg font-semibold text-gray-900 truncate max-w-md">
+              {bookTitle}
+            </h1>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm" onClick={zoomOut}>
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-gray-600 min-w-[60px] text-center">
               {Math.round(scale * 100)}%
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleZoomIn}
-              disabled={scale >= 3.0}
-            >
-              <ZoomIn className="w-4 h-4" />
+            <Button variant="ghost" size="sm" onClick={zoomIn}>
+              <ZoomIn className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </div>
 
       {/* PDF Content */}
-      <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
-        {isLoading ? (
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-2 border-orange-500 border-t-transparent mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading book...</p>
-          </div>
-        ) : (
+      <div className="flex-1 overflow-auto p-8">
+        <div className="max-w-4xl mx-auto">
           <Document
-            file={pdfFile}
+            file={{
+              url: pdfUrl,
+              httpHeaders: {
+                'Cache-Control': 'no-cache'
+              }
+            }}
             onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={onDocumentLoadError}
-            loading={
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-orange-500 border-t-transparent mx-auto mb-2"></div>
-                <p>Loading PDF...</p>
-              </div>
-            }
+            onLoadError={(error) => {
+              console.error('PDF load error:', error);
+            }}
+            className="flex justify-center"
             error={
-              <div className="text-center text-red-500">
-                <p>Failed to load PDF</p>
-                <p className="text-sm">Please check your connection and try again</p>
+              <div className="flex items-center justify-center p-20 text-red-600">
+                <span className="text-lg">Failed to load PDF - Check console for details</span>
               </div>
             }
-            options={pdfOptions}
+            loading={
+              <div className="flex items-center justify-center p-20 text-gray-700">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mr-4"></div>
+                <span className="text-lg">Loading PDF...</span>
+              </div>
+            }
           >
             <Page
               pageNumber={pageNumber}
               scale={scale}
+              renderTextLayer={true}
+              renderAnnotationLayer={false}
+              className="shadow-xl rounded-lg overflow-hidden bg-white"
+              canvasBackground="white"
               loading={
-                <div className="flex items-center justify-center h-96">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-orange-500 border-t-transparent"></div>
+                <div className="flex items-center justify-center p-20 text-gray-700">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                 </div>
               }
               error={
-                <div className="flex items-center justify-center h-96 text-red-500">
-                  Failed to load page
+                <div className="flex items-center justify-center p-20 text-red-600">
+                  <span>Failed to load page</span>
                 </div>
               }
-              className="shadow-lg rounded-lg overflow-hidden"
             />
           </Document>
-        )}
+        </div>
       </div>
 
-      {/* Footer Navigation */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
-        <div className="flex items-center justify-center space-x-4">
+      {/* Footer Controls */}
+      <div className="bg-white shadow-sm border-t border-gray-200 p-4">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
           <Button
-            variant="outline"
-            onClick={previousPage}
+            variant="ghost"
+            size="sm"
+            onClick={goToPrevPage}
             disabled={pageNumber <= 1}
+            className="text-gray-700 hover:bg-gray-100"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="h-4 w-4 mr-1" />
             Previous
           </Button>
-          
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            Page {pageNumber} of {numPages || 0}
-          </span>
-          
+
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-600">
+              Page {pageNumber} of {numPages}
+            </span>
+            <span className="text-sm text-gray-500">
+              {numPages ? `${Math.round((pageNumber / numPages) * 100)}%` : '0%'}
+            </span>
+          </div>
+
           <Button
-            variant="outline"
-            onClick={nextPage}
-            disabled={pageNumber >= (numPages || 1)}
+            variant="ghost"
+            size="sm"
+            onClick={goToNextPage}
+            disabled={pageNumber >= numPages}
+            className="text-gray-700 hover:bg-gray-100"
           >
             Next
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
       </div>

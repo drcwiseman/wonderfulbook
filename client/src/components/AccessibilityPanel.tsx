@@ -100,16 +100,13 @@ export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPan
   }, [settings]);
 
   const applyAccessibilitySettings = (newSettings: AccessibilitySettings) => {
-    console.log('Applying accessibility settings:', newSettings);
     const root = document.documentElement;
     
     // Apply dyslexia-friendly font
     if (newSettings.dyslexiaFont) {
-      root.style.setProperty('--font-family', '"Trebuchet MS", "Verdana", "Arial", sans-serif');
-      document.body.classList.add('dyslexia-friendly');
+      root.style.setProperty('--font-family', '"OpenDyslexic", "Arial", sans-serif');
     } else {
       root.style.removeProperty('--font-family');
-      document.body.classList.remove('dyslexia-friendly');
     }
     
     // Apply font size
@@ -128,8 +125,8 @@ export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPan
       document.body.classList.remove('high-contrast');
     }
     
-    // Apply color theme - remove all theme classes first
-    document.body.classList.remove('theme-sepia', 'theme-dark', 'theme-blue');
+    // Apply color theme
+    document.body.className = document.body.className.replace(/theme-\w+/g, '');
     if (newSettings.colorTheme !== 'default') {
       document.body.classList.add(`theme-${newSettings.colorTheme}`);
     }
@@ -213,7 +210,6 @@ export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPan
     key: K, 
     value: AccessibilitySettings[K]
   ) => {
-    console.log(`Accessibility setting changed: ${key}`, value);
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
