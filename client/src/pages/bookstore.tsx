@@ -295,16 +295,29 @@ function BookCard({ book, layout }: BookCardProps) {
     return (user as any).subscriptionTier !== "free" && (user as any).subscriptionStatus === "active";
   };
 
-  const canBorrowBook = () => {
+  const canDownloadBook = () => {
     if (!user) return false;
+    
+    // Debug logging
+    console.log('User tier:', (user as any).subscriptionTier);
+    console.log('User status:', (user as any).subscriptionStatus);
+    console.log('Book required tier:', book.requiredTier);
+    console.log('User role:', (user as any).role);
+    
+    // Admin always has access
+    if ((user as any).role === 'admin' || (user as any).role === 'super_admin') {
+      console.log('Admin access granted');
+      return true;
+    }
+    
     if (book.requiredTier === "free") return true;
     if ((user as any).subscriptionTier === "premium") return true;
     if ((user as any).subscriptionTier === "basic" && book.requiredTier !== "premium") return true;
     return false;
   };
 
-  // Create loan (borrow book) mutation
-  const borrowBookMutation = useMutation({
+  // Create loan (download book) mutation
+  const downloadBookMutation = useMutation({
     mutationFn: async (bookId: string) => {
       const response = await fetch('/api/loans', {
         method: 'POST',
@@ -317,22 +330,22 @@ function BookCard({ book, layout }: BookCardProps) {
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to borrow book');
+        throw new Error(error.message || 'Failed to download book');
       }
       
       return response.json();
     },
     onSuccess: () => {
       toast({
-        title: 'Book borrowed successfully!',
-        description: 'You can now start reading this book.',
+        title: 'Book downloaded successfully!',
+        description: 'You can now start reading this book offline.',
       });
       // Redirect to reader
       window.location.href = `/reader/${book.id}`;
     },
     onError: (error: any) => {
       toast({
-        title: 'Failed to borrow book',
+        title: 'Failed to download book',
         description: error.message || 'Please try again',
         variant: 'destructive',
       });
@@ -348,9 +361,9 @@ function BookCard({ book, layout }: BookCardProps) {
     window.location.href = `/book/${book.id}`;
   };
 
-  const handleBorrowClick = (e: React.MouseEvent) => {
+  const handleDownloadClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    borrowBookMutation.mutate(book.id);
+    downloadBookMutation.mutate(book.id);
   };
 
   const bookTier = book.requiredTier || 'free';
@@ -413,15 +426,15 @@ function BookCard({ book, layout }: BookCardProps) {
               
               {/* Action Buttons */}
               <div className="flex gap-2">
-                {canBorrowBook() ? (
+                {canDownloadBook() ? (
                   <Button 
                     size="sm"
                     className="bg-orange-600 hover:bg-orange-700 text-white flex-1"
-                    onClick={handleBorrowClick}
-                    disabled={borrowBookMutation.isPending}
+                    onClick={handleDownloadClick}
+                    disabled={downloadBookMutation.isPending}
                   >
                     <Download className="w-4 h-4 mr-1" />
-                    {borrowBookMutation.isPending ? 'Borrowing...' : 'Borrow'}
+                    {downloadBookMutation.isPending ? 'Downloading...' : 'Download'}
                   </Button>
                 ) : (
                   <Button 
@@ -509,15 +522,15 @@ function BookCard({ book, layout }: BookCardProps) {
           
           {/* Grid Action Buttons */}
           <div className="space-y-1">
-            {canBorrowBook() ? (
+            {canDownloadBook() ? (
               <Button 
                 size="sm"
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs h-7"
-                onClick={handleBorrowClick}
-                disabled={borrowBookMutation.isPending}
+                onClick={handleDownloadClick}
+                disabled={downloadBookMutation.isPending}
               >
                 <Download className="w-3 h-3 mr-1" />
-                {borrowBookMutation.isPending ? 'Borrowing...' : 'Borrow'}
+                {downloadBookMutation.isPending ? 'Downloading...' : 'Download'}
               </Button>
             ) : (
               <Button 
