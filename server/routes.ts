@@ -20,6 +20,7 @@ import { healthRouter } from "./health/routes.js";
 import { healthzRouter } from "./routes/healthz.js";
 import { securityHeaders, additionalSecurityHeaders } from "./middleware/securityHeaders.js";
 import { reportsAuth } from "./middleware/reportsAuth.js";
+import { systemSettingsManager } from "./systemSettingsManager.js";
 
 import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth.js';
 import { 
@@ -1150,59 +1151,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // System Settings API Endpoints
   app.get('/api/super-admin/system-settings', requireSuperAdmin, async (req: any, res) => {
     try {
-      // Default system settings structure
-      const defaultSettings = {
-        maintenanceMode: {
-          enabled: false,
-          message: "We're currently performing maintenance. Please check back later.",
-          estimatedEnd: ""
-        },
-        platform: {
-          siteName: "Wonderful Books",
-          siteDescription: "Your premium digital reading platform",
-          allowRegistration: true,
-          requireEmailVerification: true,
-          maxUsersPerPlan: {
-            free: 1000,
-            basic: 5000,
-            premium: 10000
-          }
-        },
-        security: {
-          sessionTimeout: 1440, // 24 hours in minutes
-          maxLoginAttempts: 5,
-          passwordMinLength: 8,
-          requireStrongPasswords: true,
-          enableTwoFactor: false
-        },
-        email: {
-          fromName: process.env.SMTP_FROM_NAME || process.env.EMAIL_FROM_NAME || "Wonderful Books",
-          fromEmail: process.env.SMTP_FROM_EMAIL || process.env.EMAIL_FROM || process.env.SMTP_USER || "noreply@wonderfulbooks.com",
-          smtpHost: process.env.SMTP_HOST || "smtp.gmail.com",
-          smtpPort: parseInt(process.env.SMTP_PORT || "587"),
-          smtpSecure: parseInt(process.env.SMTP_PORT || "587") === 465 || process.env.SMTP_SECURE === 'true',
-          welcomeEmailEnabled: true,
-          reminderEmailsEnabled: true
-        },
-        features: {
-          enableAnalytics: true,
-          enableCopyProtection: true,
-          enableDeviceLimit: true,
-          maxDevicesPerUser: 3,
-          enableOfflineMode: false
-        },
-        performance: {
-          cacheTimeout: 300, // 5 minutes
-          maxConcurrentReads: 10,
-          enableRateLimiting: true,
-          rateLimitRequests: 200,
-          rateLimitWindow: 15 // minutes
-        }
-      };
-
-      // In a real implementation, you would fetch these from database
-      // For now, return the default settings
-      res.json(defaultSettings);
+      const settings = systemSettingsManager.getSettings();
+      res.json(settings);
     } catch (error) {
       console.error('Error fetching system settings:', error);
       res.status(500).json({ message: 'Failed to fetch system settings' });
@@ -1213,8 +1163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const settings = req.body;
       
-      // In a real implementation, you would save these to database
-      // For now, just return success
+      systemSettingsManager.saveSettings(settings);
       console.log('System settings updated:', settings);
       
       res.json({ 

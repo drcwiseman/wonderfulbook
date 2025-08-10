@@ -604,6 +604,10 @@ export default function SystemSettings() {
                   <Mail className="h-5 w-5" />
                   <span>Email Configuration</span>
                 </CardTitle>
+                <div className="flex items-center space-x-2 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                  <Shield className="h-4 w-4" />
+                  <span>These settings reflect your actual environment configuration and cannot be modified here.</span>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-2 gap-6">
@@ -612,7 +616,8 @@ export default function SystemSettings() {
                     <Input
                       id="fromName"
                       value={displaySettings.email.fromName}
-                      onChange={(e) => handleUpdateSettings("email", { fromName: e.target.value })}
+                      disabled
+                      className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                     />
                   </div>
                   <div className="space-y-2">
@@ -621,7 +626,8 @@ export default function SystemSettings() {
                       id="fromEmail"
                       type="email"
                       value={displaySettings.email.fromEmail}
-                      onChange={(e) => handleUpdateSettings("email", { fromEmail: e.target.value })}
+                      disabled
+                      className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                     />
                   </div>
                 </div>
@@ -636,7 +642,8 @@ export default function SystemSettings() {
                       <Input
                         id="smtpHost"
                         value={displaySettings.email.smtpHost}
-                        onChange={(e) => handleUpdateSettings("email", { smtpHost: e.target.value })}
+                        disabled
+                        className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                       />
                     </div>
                     <div className="space-y-2">
@@ -645,14 +652,15 @@ export default function SystemSettings() {
                         id="smtpPort"
                         type="number"
                         value={displaySettings.email.smtpPort}
-                        onChange={(e) => handleUpdateSettings("email", { smtpPort: parseInt(e.target.value) || 587 })}
+                        disabled
+                        className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                       />
                     </div>
                     <div className="flex items-center justify-between pt-8">
                       <Label>Use SSL/TLS</Label>
                       <Switch
                         checked={displaySettings.email.smtpSecure}
-                        onCheckedChange={(checked) => handleUpdateSettings("email", { smtpSecure: checked })}
+                        disabled
                       />
                     </div>
                   </div>
