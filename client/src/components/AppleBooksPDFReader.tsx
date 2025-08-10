@@ -30,40 +30,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAccessibility } from '@/hooks/useAccessibility';
 import { useCopyProtection } from '@/hooks/useCopyProtection';
 
-// Configure PDF.js worker with better error handling
-const configureWorker = () => {
-  if (pdfjs.GlobalWorkerOptions.workerSrc) {
-    console.log('PDF.js worker already configured:', pdfjs.GlobalWorkerOptions.workerSrc);
-    return; // Already configured
-  }
-  
-  try {
-    // Try to import the worker URL from Vite
-    import('pdfjs-dist/build/pdf.worker.min.js?url').then(({ default: workerUrl }) => {
-      pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-      console.log('PDF.js worker configured with Vite URL:', workerUrl);
-    }).catch(() => {
-      // Fallback 1: Try CDN
-      const cdnWorker = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      pdfjs.GlobalWorkerOptions.workerSrc = cdnWorker;
-      console.log('PDF.js worker configured with CDN:', cdnWorker);
-    });
-  } catch (error) {
-    // Fallback 2: Alternative CDN
-    console.warn('Primary worker setup failed, using unpkg fallback:', error);
-    const unpkgWorker = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-    pdfjs.GlobalWorkerOptions.workerSrc = unpkgWorker;
-    console.log('PDF.js worker configured with unpkg fallback:', unpkgWorker);
-  }
-};
-
-// Configure worker on module load - use immediate fallback
-if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-  pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-  console.log('PDF.js worker configured immediately with unpkg CDN');
-}
-
-configureWorker();
+// Configure PDF.js worker using the bundled version from node_modules
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
+pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 interface AppleBooksPDFReaderProps {
   bookId: string;

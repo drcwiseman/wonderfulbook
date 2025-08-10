@@ -109,20 +109,13 @@ export default function ReaderPage() {
 
   return (
     <main id="main-content" className="pdf-viewer book-content" role="main" aria-label="Book Reader">
-      <div className="p-4">
-        <h2 className="text-xl font-semibold mb-4">PDF Loading Test</h2>
-        <TestPDFReader bookId={bookId} />
-        <div className="mt-8 pt-8 border-t">
-          <h2 className="text-xl font-semibold mb-4">Full PDF Reader</h2>
-          <AppleBooksPDFReader
-            bookId={bookId}
-            bookTitle={(book as any)?.title || 'Unknown Book'}
-            initialPage={initialPage}
-            onPageChange={handlePageChange}
-            bookmarks={Array.isArray(bookmarks) ? bookmarks : []}
-          />
-        </div>
-      </div>
+      <AppleBooksPDFReader
+        bookId={bookId}
+        bookTitle={(book as any)?.title || 'Unknown Book'}
+        initialPage={initialPage}
+        onPageChange={handlePageChange}
+        bookmarks={Array.isArray(bookmarks) ? bookmarks : []}
+      />
     </main>
   );
 }
