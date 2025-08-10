@@ -56,9 +56,7 @@ export const users = pgTable("users", {
   freeTrialEndedAt: timestamp("free_trial_ended_at"),
   registrationIp: varchar("registration_ip"), // Track IP for duplicate prevention
   deviceFingerprint: varchar("device_fingerprint"), // Browser/device fingerprint
-  // DRM and device management
-  maxDevices: integer("max_devices").default(5),
-  loanCap: integer("loan_cap").default(20),
+
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -102,13 +100,7 @@ export const books = pgTable("books", {
   isFeatured: boolean("is_featured").default(false),
   requiredTier: varchar("required_tier").default("free"),
   previewPageCount: integer("preview_page_count").default(5), // Pages available for preview
-  // DRM and encryption fields
-  storagePath: text("storage_path"), // Path to encrypted chunks
-  sha256: text("sha256"), // Content hash for integrity
-  chunkSize: integer("chunk_size").default(1048576), // 1MB chunks
-  chunkCount: integer("chunk_count").default(0),
-  encryptionKey: text("encryption_key"), // Base64 encoded content key
-  isDrmProtected: boolean("is_drm_protected").default(false),
+
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
