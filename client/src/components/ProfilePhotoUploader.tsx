@@ -73,12 +73,14 @@ export function ProfilePhotoUploader({ currentPhotoUrl, userId, onPhotoUpdate }:
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
-      // Get the object path from the upload response
-      const uploadURL = (uploadedFile as any).uploadURL;
+      // Extract the object path from the upload URL
+      const uploadURL = uploadedFile.response?.uploadURL || uploadedFile.uploadURL;
       
       if (uploadURL) {
-        updatePhotoMutation.mutate({ profileImageUrl: uploadURL });
-        onPhotoUpdate(uploadURL);
+        // Convert the GCS URL to our object path format
+        const objectPath = uploadURL.replace('https://storage.googleapis.com/', '/objects/');
+        updatePhotoMutation.mutate({ profileImageUrl: objectPath });
+        onPhotoUpdate(objectPath);
       }
     }
   };
