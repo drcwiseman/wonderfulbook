@@ -19,6 +19,7 @@ import PaymentSuccess from "@/pages/PaymentSuccess";
 import ReaderPage from "@/pages/reader";
 import AdminPanel from "@/pages/admin";
 import SuperAdminDashboard from "@/pages/super-admin-dashboard";
+import SystemSettings from "@/pages/system-settings";
 import AdminEmailManagement from "@/pages/AdminEmailManagement";
 import ChallengesPage from "@/pages/challenges";
 import ChallengeDetailPage from "@/pages/challenge-detail";
@@ -128,6 +129,13 @@ function Router() {
           <PageWrapper>
             <ProtectedRoute requireAuth={true} allowedRoles={["super_admin"]}>
               <SuperAdminDashboard />
+            </ProtectedRoute>
+          </PageWrapper>
+        </Route>
+        <Route path="/system-settings">
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true} allowedRoles={["super_admin"]}>
+              <SystemSettings />
             </ProtectedRoute>
           </PageWrapper>
         </Route>

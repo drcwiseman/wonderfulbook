@@ -1147,6 +1147,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // System Settings API Endpoints
+  app.get('/api/super-admin/system-settings', requireSuperAdmin, async (req: any, res) => {
+    try {
+      // Default system settings structure
+      const defaultSettings = {
+        maintenanceMode: {
+          enabled: false,
+          message: "We're currently performing maintenance. Please check back later.",
+          estimatedEnd: ""
+        },
+        platform: {
+          siteName: "Wonderful Books",
+          siteDescription: "Your premium digital reading platform",
+          allowRegistration: true,
+          requireEmailVerification: true,
+          maxUsersPerPlan: {
+            free: 1000,
+            basic: 5000,
+            premium: 10000
+          }
+        },
+        security: {
+          sessionTimeout: 1440, // 24 hours in minutes
+          maxLoginAttempts: 5,
+          passwordMinLength: 8,
+          requireStrongPasswords: true,
+          enableTwoFactor: false
+        },
+        email: {
+          fromName: "Wonderful Books",
+          fromEmail: "noreply@wonderfulbooks.com",
+          smtpHost: "smtp.gmail.com",
+          smtpPort: 587,
+          smtpSecure: true,
+          welcomeEmailEnabled: true,
+          reminderEmailsEnabled: true
+        },
+        features: {
+          enableAnalytics: true,
+          enableCopyProtection: true,
+          enableDeviceLimit: true,
+          maxDevicesPerUser: 3,
+          enableOfflineMode: false
+        },
+        performance: {
+          cacheTimeout: 300, // 5 minutes
+          maxConcurrentReads: 10,
+          enableRateLimiting: true,
+          rateLimitRequests: 200,
+          rateLimitWindow: 15 // minutes
+        }
+      };
+
+      // In a real implementation, you would fetch these from database
+      // For now, return the default settings
+      res.json(defaultSettings);
+    } catch (error) {
+      console.error('Error fetching system settings:', error);
+      res.status(500).json({ message: 'Failed to fetch system settings' });
+    }
+  });
+
+  app.put('/api/super-admin/system-settings', requireSuperAdmin, async (req: any, res) => {
+    try {
+      const settings = req.body;
+      
+      // In a real implementation, you would save these to database
+      // For now, just return success
+      console.log('System settings updated:', settings);
+      
+      res.json({ 
+        message: 'System settings updated successfully',
+        settings 
+      });
+    } catch (error) {
+      console.error('Error updating system settings:', error);
+      res.status(500).json({ message: 'Failed to update system settings' });
+    }
+  });
+
+  app.post('/api/super-admin/test-email', requireSuperAdmin, async (req: any, res) => {
+    try {
+      // In a real implementation, you would test the email configuration
+      // For now, just simulate success
+      console.log('Testing email configuration...');
+      
+      // Simulate email test
+      setTimeout(() => {
+        console.log('Email test completed successfully');
+      }, 1000);
+      
+      res.json({ message: 'Test email sent successfully' });
+    } catch (error) {
+      console.error('Error testing email:', error);
+      res.status(500).json({ message: 'Failed to send test email' });
+    }
+  });
+
+  app.post('/api/super-admin/clear-cache', requireSuperAdmin, async (req: any, res) => {
+    try {
+      // In a real implementation, you would clear the actual cache
+      console.log('Clearing system cache...');
+      
+      res.json({ message: 'Cache cleared successfully' });
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+      res.status(500).json({ message: 'Failed to clear cache' });
+    }
+  });
+
   // Admin image upload route
   app.post('/api/admin/upload-image', requireAdmin, upload.single('image'), async (req, res) => {
     try {

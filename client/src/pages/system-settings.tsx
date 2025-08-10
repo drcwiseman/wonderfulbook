@@ -1,0 +1,785 @@
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Settings, 
+  Server, 
+  Database, 
+  Mail, 
+  Shield, 
+  Clock, 
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Wrench,
+  Globe,
+  Key,
+  Bell
+} from "lucide-react";
+import Header from "@/components/Header";
+import PageHeader from "@/components/PageHeader";
+
+interface SystemSettings {
+  maintenanceMode: {
+    enabled: boolean;
+    message: string;
+    estimatedEnd: string;
+  };
+  platform: {
+    siteName: string;
+    siteDescription: string;
+    allowRegistration: boolean;
+    requireEmailVerification: boolean;
+    maxUsersPerPlan: {
+      free: number;
+      basic: number;
+      premium: number;
+    };
+  };
+  security: {
+    sessionTimeout: number;
+    maxLoginAttempts: number;
+    passwordMinLength: number;
+    requireStrongPasswords: boolean;
+    enableTwoFactor: boolean;
+  };
+  email: {
+    fromName: string;
+    fromEmail: string;
+    smtpHost: string;
+    smtpPort: number;
+    smtpSecure: boolean;
+    welcomeEmailEnabled: boolean;
+    reminderEmailsEnabled: boolean;
+  };
+  features: {
+    enableAnalytics: boolean;
+    enableCopyProtection: boolean;
+    enableDeviceLimit: boolean;
+    maxDevicesPerUser: number;
+    enableOfflineMode: boolean;
+  };
+  performance: {
+    cacheTimeout: number;
+    maxConcurrentReads: number;
+    enableRateLimiting: boolean;
+    rateLimitRequests: number;
+    rateLimitWindow: number;
+  };
+}
+
+export default function SystemSettings() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("general");
+
+  // Fetch current system settings
+  const { data: settings, isLoading } = useQuery<SystemSettings>({
+    queryKey: ["/api/super-admin/system-settings"],
+  });
+
+  // Update system settings mutation
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (updatedSettings: Partial<SystemSettings>) => {
+      const response = await apiRequest("PUT", "/api/super-admin/system-settings", updatedSettings);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Settings Updated",
+        description: "System settings have been successfully updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/super-admin/system-settings"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update system settings.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Test email configuration mutation
+  const testEmailMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/super-admin/test-email");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Email Test Successful",
+        description: "Test email sent successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Email Test Failed",
+        description: error.message || "Failed to send test email.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Clear cache mutation
+  const clearCacheMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/super-admin/clear-cache");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Cache Cleared",
+        description: "System cache has been cleared successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Cache Clear Failed",
+        description: error.message || "Failed to clear cache.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleUpdateSettings = (section: keyof SystemSettings, updates: any) => {
+    if (!settings) return;
+    
+    const updatedSettings = {
+      ...settings,
+      [section]: { ...settings[section], ...updates }
+    };
+    
+    updateSettingsMutation.mutate(updatedSettings);
+  };
+
+  const handleMaintenanceToggle = (enabled: boolean) => {
+    if (!settings) return;
+    
+    const updatedSettings = {
+      ...settings,
+      maintenanceMode: {
+        ...settings.maintenanceMode,
+        enabled,
+        estimatedEnd: enabled ? new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString() : ""
+      }
+    };
+    
+    updateSettingsMutation.mutate(updatedSettings);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!settings) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <Card className="border-red-200 dark:border-red-800">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+                <XCircle className="h-5 w-5" />
+                <span>Failed to load system settings</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Header />
+      
+      <div className="container mx-auto px-4 py-8">
+        <PageHeader
+          title="System Settings"
+          breadcrumbs={[
+            { label: "Super Admin", href: "/super-admin" },
+            { label: "System Settings", href: "/system-settings" }
+          ]}
+        />
+
+        {/* Maintenance Mode Alert */}
+        {settings.maintenanceMode.enabled && (
+          <Card className="mb-6 border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2 text-orange-700 dark:text-orange-300">
+                <AlertTriangle className="h-5 w-5" />
+                <span className="font-semibold">Maintenance Mode Active</span>
+              </div>
+              <p className="mt-2 text-sm text-orange-600 dark:text-orange-400">
+                {settings.maintenanceMode.message}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="general" className="flex items-center space-x-2">
+              <Globe className="h-4 w-4" />
+              <span>General</span>
+            </TabsTrigger>
+            <TabsTrigger value="maintenance" className="flex items-center space-x-2">
+              <Wrench className="h-4 w-4" />
+              <span>Maintenance</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center space-x-2">
+              <Shield className="h-4 w-4" />
+              <span>Security</span>
+            </TabsTrigger>
+            <TabsTrigger value="email" className="flex items-center space-x-2">
+              <Mail className="h-4 w-4" />
+              <span>Email</span>
+            </TabsTrigger>
+            <TabsTrigger value="features" className="flex items-center space-x-2">
+              <Server className="h-4 w-4" />
+              <span>Features</span>
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="flex items-center space-x-2">
+              <Database className="h-4 w-4" />
+              <span>Performance</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* General Settings */}
+          <TabsContent value="general">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Globe className="h-5 w-5" />
+                  <span>Platform Configuration</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="siteName">Site Name</Label>
+                    <Input
+                      id="siteName"
+                      value={settings.platform.siteName}
+                      onChange={(e) => handleUpdateSettings("platform", { siteName: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="siteDescription">Site Description</Label>
+                    <Input
+                      id="siteDescription"
+                      value={settings.platform.siteDescription}
+                      onChange={(e) => handleUpdateSettings("platform", { siteDescription: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Registration Settings</h4>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Allow New Registration</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Allow new users to register accounts
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.platform.allowRegistration}
+                      onCheckedChange={(checked) => handleUpdateSettings("platform", { allowRegistration: checked })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Require Email Verification</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Users must verify their email before accessing the platform
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.platform.requireEmailVerification}
+                      onCheckedChange={(checked) => handleUpdateSettings("platform", { requireEmailVerification: checked })}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold">User Limits per Plan</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Free Plan</Label>
+                      <Input
+                        type="number"
+                        value={settings.platform.maxUsersPerPlan.free}
+                        onChange={(e) => handleUpdateSettings("platform", { 
+                          maxUsersPerPlan: { 
+                            ...settings.platform.maxUsersPerPlan, 
+                            free: parseInt(e.target.value) || 0 
+                          }
+                        })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Basic Plan</Label>
+                      <Input
+                        type="number"
+                        value={settings.platform.maxUsersPerPlan.basic}
+                        onChange={(e) => handleUpdateSettings("platform", { 
+                          maxUsersPerPlan: { 
+                            ...settings.platform.maxUsersPerPlan, 
+                            basic: parseInt(e.target.value) || 0 
+                          }
+                        })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Premium Plan</Label>
+                      <Input
+                        type="number"
+                        value={settings.platform.maxUsersPerPlan.premium}
+                        onChange={(e) => handleUpdateSettings("platform", { 
+                          maxUsersPerPlan: { 
+                            ...settings.platform.maxUsersPerPlan, 
+                            premium: parseInt(e.target.value) || 0 
+                          }
+                        })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Maintenance Mode */}
+          <TabsContent value="maintenance">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Wrench className="h-5 w-5" />
+                  <span>Maintenance Mode</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Label className="text-lg">Maintenance Mode</Label>
+                      <Badge variant={settings.maintenanceMode.enabled ? "destructive" : "secondary"}>
+                        {settings.maintenanceMode.enabled ? "ACTIVE" : "INACTIVE"}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      When enabled, only administrators can access the platform
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.maintenanceMode.enabled}
+                    onCheckedChange={handleMaintenanceToggle}
+                  />
+                </div>
+
+                {settings.maintenanceMode.enabled && (
+                  <div className="space-y-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                    <div className="space-y-2">
+                      <Label htmlFor="maintenanceMessage">Maintenance Message</Label>
+                      <Textarea
+                        id="maintenanceMessage"
+                        value={settings.maintenanceMode.message}
+                        onChange={(e) => handleUpdateSettings("maintenanceMode", { message: e.target.value })}
+                        placeholder="We're currently performing maintenance. Please check back later."
+                        rows={3}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="estimatedEnd">Estimated End Time</Label>
+                      <Input
+                        id="estimatedEnd"
+                        type="datetime-local"
+                        value={settings.maintenanceMode.estimatedEnd ? new Date(settings.maintenanceMode.estimatedEnd).toISOString().slice(0, -1) : ""}
+                        onChange={(e) => handleUpdateSettings("maintenanceMode", { estimatedEnd: e.target.value ? new Date(e.target.value).toISOString() : "" })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold">System Actions</h4>
+                  <div className="flex space-x-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => clearCacheMutation.mutate()}
+                      disabled={clearCacheMutation.isPending}
+                    >
+                      <Database className="h-4 w-4 mr-2" />
+                      Clear Cache
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Security Settings */}
+          <TabsContent value="security">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5" />
+                  <span>Security Configuration</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="sessionTimeout">Session Timeout (minutes)</Label>
+                    <Input
+                      id="sessionTimeout"
+                      type="number"
+                      value={settings.security.sessionTimeout}
+                      onChange={(e) => handleUpdateSettings("security", { sessionTimeout: parseInt(e.target.value) || 30 })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="maxLoginAttempts">Max Login Attempts</Label>
+                    <Input
+                      id="maxLoginAttempts"
+                      type="number"
+                      value={settings.security.maxLoginAttempts}
+                      onChange={(e) => handleUpdateSettings("security", { maxLoginAttempts: parseInt(e.target.value) || 5 })}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Password Policy</h4>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="passwordMinLength">Minimum Password Length</Label>
+                      <Input
+                        id="passwordMinLength"
+                        type="number"
+                        value={settings.security.passwordMinLength}
+                        onChange={(e) => handleUpdateSettings("security", { passwordMinLength: parseInt(e.target.value) || 8 })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label>Require Strong Passwords</Label>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Enforce uppercase, lowercase, numbers, and symbols
+                        </p>
+                      </div>
+                      <Switch
+                        checked={settings.security.requireStrongPasswords}
+                        onCheckedChange={(checked) => handleUpdateSettings("security", { requireStrongPasswords: checked })}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Enable Two-Factor Authentication</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Allow users to enable 2FA for their accounts
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.security.enableTwoFactor}
+                      onCheckedChange={(checked) => handleUpdateSettings("security", { enableTwoFactor: checked })}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Email Settings */}
+          <TabsContent value="email">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Mail className="h-5 w-5" />
+                  <span>Email Configuration</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="fromName">From Name</Label>
+                    <Input
+                      id="fromName"
+                      value={settings.email.fromName}
+                      onChange={(e) => handleUpdateSettings("email", { fromName: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fromEmail">From Email</Label>
+                    <Input
+                      id="fromEmail"
+                      type="email"
+                      value={settings.email.fromEmail}
+                      onChange={(e) => handleUpdateSettings("email", { fromEmail: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold">SMTP Configuration</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="smtpHost">SMTP Host</Label>
+                      <Input
+                        id="smtpHost"
+                        value={settings.email.smtpHost}
+                        onChange={(e) => handleUpdateSettings("email", { smtpHost: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="smtpPort">SMTP Port</Label>
+                      <Input
+                        id="smtpPort"
+                        type="number"
+                        value={settings.email.smtpPort}
+                        onChange={(e) => handleUpdateSettings("email", { smtpPort: parseInt(e.target.value) || 587 })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between pt-8">
+                      <Label>Use SSL/TLS</Label>
+                      <Switch
+                        checked={settings.email.smtpSecure}
+                        onCheckedChange={(checked) => handleUpdateSettings("email", { smtpSecure: checked })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Email Features</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label>Welcome Emails</Label>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Send welcome emails to new users
+                        </p>
+                      </div>
+                      <Switch
+                        checked={settings.email.welcomeEmailEnabled}
+                        onCheckedChange={(checked) => handleUpdateSettings("email", { welcomeEmailEnabled: checked })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label>Reminder Emails</Label>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Send trial and subscription reminder emails
+                        </p>
+                      </div>
+                      <Switch
+                        checked={settings.email.reminderEmailsEnabled}
+                        onCheckedChange={(checked) => handleUpdateSettings("email", { reminderEmailsEnabled: checked })}
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => testEmailMutation.mutate()}
+                    disabled={testEmailMutation.isPending}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Test Email Configuration
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Features Settings */}
+          <TabsContent value="features">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Server className="h-5 w-5" />
+                  <span>Feature Configuration</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Analytics Tracking</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Enable user analytics and usage tracking
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.features.enableAnalytics}
+                      onCheckedChange={(checked) => handleUpdateSettings("features", { enableAnalytics: checked })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Copy Protection</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Limit text copying from books
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.features.enableCopyProtection}
+                      onCheckedChange={(checked) => handleUpdateSettings("features", { enableCopyProtection: checked })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Device Limit</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Limit number of devices per user
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.features.enableDeviceLimit}
+                      onCheckedChange={(checked) => handleUpdateSettings("features", { enableDeviceLimit: checked })}
+                    />
+                  </div>
+                  {settings.features.enableDeviceLimit && (
+                    <div className="ml-6 space-y-2">
+                      <Label htmlFor="maxDevicesPerUser">Max Devices per User</Label>
+                      <Input
+                        id="maxDevicesPerUser"
+                        type="number"
+                        value={settings.features.maxDevicesPerUser}
+                        onChange={(e) => handleUpdateSettings("features", { maxDevicesPerUser: parseInt(e.target.value) || 3 })}
+                        className="w-32"
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Offline Reading Mode</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Allow users to download books for offline reading
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.features.enableOfflineMode}
+                      onCheckedChange={(checked) => handleUpdateSettings("features", { enableOfflineMode: checked })}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Performance Settings */}
+          <TabsContent value="performance">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Database className="h-5 w-5" />
+                  <span>Performance Settings</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="cacheTimeout">Cache Timeout (seconds)</Label>
+                    <Input
+                      id="cacheTimeout"
+                      type="number"
+                      value={settings.performance.cacheTimeout}
+                      onChange={(e) => handleUpdateSettings("performance", { cacheTimeout: parseInt(e.target.value) || 300 })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="maxConcurrentReads">Max Concurrent Reads</Label>
+                    <Input
+                      id="maxConcurrentReads"
+                      type="number"
+                      value={settings.performance.maxConcurrentReads}
+                      onChange={(e) => handleUpdateSettings("performance", { maxConcurrentReads: parseInt(e.target.value) || 10 })}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Rate Limiting</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Enable API rate limiting protection
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.performance.enableRateLimiting}
+                      onCheckedChange={(checked) => handleUpdateSettings("performance", { enableRateLimiting: checked })}
+                    />
+                  </div>
+                  {settings.performance.enableRateLimiting && (
+                    <div className="ml-6 grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="rateLimitRequests">Requests per Window</Label>
+                        <Input
+                          id="rateLimitRequests"
+                          type="number"
+                          value={settings.performance.rateLimitRequests}
+                          onChange={(e) => handleUpdateSettings("performance", { rateLimitRequests: parseInt(e.target.value) || 100 })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="rateLimitWindow">Window Size (minutes)</Label>
+                        <Input
+                          id="rateLimitWindow"
+                          type="number"
+                          value={settings.performance.rateLimitWindow}
+                          onChange={(e) => handleUpdateSettings("performance", { rateLimitWindow: parseInt(e.target.value) || 15 })}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}

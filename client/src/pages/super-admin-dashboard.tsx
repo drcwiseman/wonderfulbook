@@ -739,10 +739,17 @@ export default function SuperAdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>System settings panel will be implemented here</p>
-                <p className="text-sm">Configure platform settings, maintenance mode, and system parameters</p>
+              <div className="text-center py-8">
+                <Settings className="h-12 w-12 mx-auto mb-4 text-primary" />
+                <h3 className="text-lg font-semibold mb-2">System Configuration</h3>
+                <p className="text-muted-foreground mb-6">Configure platform settings, maintenance mode, and system parameters</p>
+                <Button 
+                  onClick={() => window.location.href = '/system-settings'}
+                  className="w-full max-w-sm"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Open System Settings
+                </Button>
               </div>
             </CardContent>
           </Card>
