@@ -40,3 +40,13 @@ Neon Database provides PostgreSQL hosting, utilizing WebSocket-based connections
 
 ### Development and Hosting
 The project is developed and hosted on the Replit platform.
+
+## Pre-deployment Check Suite (Added August 10, 2025)
+Comprehensive production readiness validation system including:
+- **Link Validation**: Public and authenticated page link checking with Playwright and Linkinator
+- **Performance Testing**: Lighthouse CI with configurable thresholds for performance, accessibility, SEO, and PWA scores
+- **Security Validation**: HTTP security headers verification (CSP, HSTS, X-Frame-Options, etc.)
+- **Accessibility Testing**: WCAG 2.1 AA compliance checking with pa11y and axe-core
+- **Health Monitoring**: Database connectivity and system health endpoint validation
+- **Reports Dashboard**: Automated report generation with visual status dashboard and basic auth protection
+- **Integration Ready**: Works on both Replit deployments and generic Linux VPS environments

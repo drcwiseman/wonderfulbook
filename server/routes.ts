@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
@@ -16,6 +17,9 @@ import connectPg from "connect-pg-simple";
 import { antiAbuseService } from "./antiAbuseService";
 import { AuditService } from "./auditService";
 import { healthRouter } from "./health/routes.js";
+import { healthzRouter } from "./routes/healthz.js";
+import { securityHeaders, additionalSecurityHeaders } from "./middleware/securityHeaders.js";
+import { reportsAuth } from "./middleware/reportsAuth.js";
 
 import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth';
 import { 
@@ -104,6 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Apply global security middleware
   app.use(securityHeaders);
+  app.use(additionalSecurityHeaders);
   app.use(validateAPIRoute);
   app.use(deviceFingerprint);
   
@@ -3199,6 +3204,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Health monitoring routes
   app.use('/', healthRouter);
+  app.use('/', healthzRouter);
+  
+  // Reports route with basic auth protection
+  app.use('/reports', reportsAuth, express.static('reports'));
 
   // Book chunks route for encrypted content delivery
   app.get('/api/books/:bookId/chunks/:chunkIndex', isAuthenticated, async (req: any, res) => {

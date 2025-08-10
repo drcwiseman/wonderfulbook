@@ -1,0 +1,22 @@
+{
+  "standard": "WCAG2AA",
+  "reporter": "json",
+  "timeout": 30000,
+  "wait": 2000,
+  "chromeLaunchConfig": {
+    "args": [
+      "--no-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu"
+    ]
+  },
+  "ignore": [
+    "color-contrast"
+  ],
+  "hideElements": ".skip-pa11y",
+  "urls": [
+    "http://localhost:5000/",
+    "http://localhost:5000/auth/login",
+    "http://localhost:5000/bookstore"
+  ]
+}

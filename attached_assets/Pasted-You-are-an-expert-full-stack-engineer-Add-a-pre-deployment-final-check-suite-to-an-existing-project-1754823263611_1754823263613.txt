@@ -1,0 +1,226 @@
+You are an expert full-stack engineer. Add a pre-deployment final check suite to an existing project (Node.js + Express backend, PostgreSQL, React/Vite PWA). The suite must run on Replit Deployments and on a generic Linux VPS.
+
+Build the following
+1) Checks to implement
+Broken links (public): linkinator crawl on / and optionally /sitemap.xml, recursive, skip mailto:|tel:|#|javascript:.
+
+Broken links (behind login): Playwright login using env creds, visit ['/','/dashboard','/library','/account'], collect anchors, request each URL, assert status < 400.
+
+Lighthouse CI: @lhci/cli on ["/","/library"], 2 runs each. Thresholds via env.
+
+Accessibility: pa11y for public pages + @axe-core/playwright for an authenticated page (/dashboard).
+
+Security headers: helmet with CSP (Stripe optional), and a Node script to assert presence of content-security-policy, strict-transport-security, x-frame-options, x-content-type-options, referrer-policy.
+
+Health endpoint: GET /healthz returns { ok:true, db:'up', time, version, commit } after a SELECT 1. Cache-Control: no-store.
+
+Report aggregation/dashboard: Write JSON artifacts and a static reports/index.html summary with green/red badges and links to raw outputs. Mount /reports as basic-auth protected static route (password via env).
+
+2) Project changes (create where missing)
+bash
+Copy
+Edit
+/server
+  src/middleware/securityHeaders.ts
+  src/routes/healthz.ts
+  src/env.ts
+  src/reportsAuth.ts
+tools/
+  check-headers.mjs
+  aggregate-reports.mjs
+tests/
+  links.auth.spec.ts
+  a11y.auth.spec.ts
+reports/                # generated at runtime (gitignored)
+lhci.config.json
+pa11y.config.json
+README_preflight.md
+package.json (scripts added)
+3) Environment variables
+Validate with envalid and fail fast on missing vars.
+
+ini
+Copy
+Edit
+# Target under test (Replit staging URL or VPS URL)
+PREVIEW_URL=https://<your-staging-domain>
+
+# Test login
+TEST_EMAIL=test@example.com
+TEST_PASSWORD=pass1234
+
+# Thresholds
+LH_MIN_PERF=90
+LH_MIN_BP=90
+LH_MIN_SEO=90
+LH_MIN_PWA=100
+
+# Reports basic auth
+REPORTS_USER=checks
+REPORTS_PASS=change_me_strong
+
+# Build/commit metadata (optional)
+APP_VERSION=1.0.0
+GIT_COMMIT=<shortsha>
+4) Express additions
+Helmet with CSP:
+
+script-src: 'self' + https://js.stripe.com (if used)
+
+img-src: 'self' data: blob:
+
+connect-src: 'self' https://api.stripe.com (adjust as needed)
+
+crossOriginEmbedderPolicy:false (PDF.js/wasm)
+
+/healthz route that pings Postgres and returns JSON.
+
+/reports static route protected with basic auth using REPORTS_USER/REPORTS_PASS.
+
+5) NPM scripts
+Add:
+
+json
+Copy
+Edit
+{
+  "scripts": {
+    "preflight:prepare": "mkdir -p reports && node -e \"console.log('reports dir ready')\"",
+    "preflight:links:public": "linkinator $PREVIEW_URL/ --recurse --skip 'tel:|mailto:|#|javascript:' --timeout 15000 --json > reports/linkinator.public.json",
+    "preflight:links:sitemap": "linkinator $PREVIEW_URL/sitemap.xml --silent --json > reports/linkinator.sitemap.json || true",
+    "preflight:links:auth": "playwright test tests/links.auth.spec.ts --reporter=json > reports/links.auth.json",
+    "preflight:lighthouse": "lhci autorun --config=lhci.config.json --upload.target=filesystem --upload.outputDir=reports/lhci",
+    "preflight:accessibility": "pa11y -c pa11y.config.json || true && playwright test tests/a11y.auth.spec.ts --reporter=json > reports/axe.auth.json || true",
+    "preflight:headers": "node tools/check-headers.mjs > reports/headers.json",
+    "preflight:healthz": "node -e \"const fs=require('fs');const https=require('https');const u=process.env.PREVIEW_URL+'/healthz';https.get(u,(r)=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>fs.writeFileSync('reports/healthz.json',d||'{}'))}).on('error',e=>fs.writeFileSync('reports/healthz.json',JSON.stringify({error:String(e)})));\"",
+    "preflight:aggregate": "node tools/aggregate-reports.mjs",
+    "preflight:all": "npm run preflight:prepare && npm run preflight:links:public && npm run preflight:links:sitemap && npm run preflight:links:auth && npm run preflight:lighthouse && npm run preflight:accessibility && npm run preflight:headers && npm run preflight:healthz && npm run preflight:aggregate"
+  },
+  "devDependencies": {
+    "@lhci/cli": "^0.13.0",
+    "@playwright/test": "^1.45.0",
+    "@axe-core/playwright": "^4.9.0",
+    "helmet": "^7.1.0",
+    "linkinator": "^4.0.0",
+    "pa11y": "^6.2.3",
+    "envalid": "^8.0.0"
+  }
+}
+6) Playwright tests (auth)
+tests/links.auth.spec.ts:
+
+Log in with TEST_EMAIL/TEST_PASSWORD.
+
+Visit pages, collect a[href] (strip hashes, skip mailto/tel/js).
+
+request.fetch each URL and expect(status).toBeLessThan(400).
+
+tests/a11y.auth.spec.ts:
+
+After login, run axe on /dashboard.
+
+Write results JSON to reports/axe.auth.json.
+
+7) Lighthouse config
+lhci.config.json:
+
+Collect 2 runs each for $PREVIEW_URL/ and $PREVIEW_URL/library.
+
+After run, script checks scores vs env thresholds; if below, exit with non-zero.
+
+8) Reports aggregator
+tools/aggregate-reports.mjs:
+
+Read all JSON artifacts.
+
+Produce reports/summary.json and reports/index.html (plain HTML/CSS) with:
+
+Link totals & failures by URL
+
+Lighthouse scores vs thresholds
+
+Accessibility issue counts by rule
+
+Header presence booleans
+
+/healthz status
+
+Render green/red badges and link to raw files.
+
+9) Replit specifics
+Add a Replit “Deployments” pre-deploy script in README_preflight.md:
+
+bash
+Copy
+Edit
+# In Replit Shell before promoting to production:
+PREVIEW_URL="https://<your-repl-preview-url>" \
+TEST_EMAIL="test@example.com" \
+TEST_PASSWORD="pass1234" \
+LH_MIN_PERF=90 LH_MIN_BP=90 LH_MIN_SEO=90 LH_MIN_PWA=100 \
+npm run preflight:all
+Ensure Playwright browsers are installed in the container:
+
+bash
+Copy
+Edit
+npx playwright install --with-deps
+Expose reports at https://<your-repl-domain>/reports (basic-auth protected).
+
+10) VPS specifics
+Provide a one-shot preflight script scripts/run-preflight.sh:
+
+bash
+Copy
+Edit
+#!/usr/bin/env bash
+set -euo pipefail
+export PREVIEW_URL=${PREVIEW_URL:-"https://your-vps-domain"}
+export TEST_EMAIL=${TEST_EMAIL:-"test@example.com"}
+export TEST_PASSWORD=${TEST_PASSWORD:-"pass1234"}
+export LH_MIN_PERF=${LH_MIN_PERF:-90}
+export LH_MIN_BP=${LH_MIN_BP:-90}
+export LH_MIN_SEO=${LH_MIN_SEO:-90}
+export LH_MIN_PWA=${LH_MIN_PWA:-100}
+npx playwright install --with-deps
+npm run preflight:all
+echo "Done. See reports/index.html (also served at /reports)."
+Optional systemd service preflight.service (document in README) to run on demand, writing results to the reports/ dir served by Express.
+
+If using Nginx as reverse proxy, ensure /reports is proxied to app and not cached.
+
+11) README_preflight.md
+How to run on Replit and VPS.
+
+How to set env vars.
+
+How to interpret reports/index.html.
+
+What fails the suite (any 4xx/5xx link, Lighthouse below thresholds, missing headers, /healthz not ok).
+
+12) Acceptance criteria
+npm run preflight:all produces reports/index.html.
+
+0 broken links reported (or explicit list).
+
+Lighthouse scores meet thresholds.
+
+A11y output present (issues summarized).
+
+Required security headers present.
+
+/healthz shows { ok:true, db:'up' }.
+
+/reports requires REPORTS_USER/REPORTS_PASS.
+
+Implementation notes
+Use Bearer token or cookie auth as already implemented.
+
+For SPA routes, use GET (not HEAD) in Playwright link checks to let the app respond properly.
+
+Store artifacts in reports/ and .gitignore it.
+
+Never include sensitive envs inside generated HTML; only counts/scores and non-secret URLs.
+
+Implement all of the above now so I can run the suite on Replit or my VPS by setting PREVIEW_URL and executing npm run preflight:all, then view the results at /reports (with basic auth).
+
