@@ -360,7 +360,7 @@ function BookCard({ book, layout }: BookCardProps) {
 
   const handleReadClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.location.href = `/reader/${book.id}`;
+    window.location.href = `/book/${book.id}`;
   };
 
   const bookTier = book.requiredTier || 'free';
@@ -431,7 +431,7 @@ function BookCard({ book, layout }: BookCardProps) {
                       onClick={handleReadClick}
                     >
                       <BookOpen className="w-4 h-4 mr-1" />
-                      Read
+                      View Details
                     </Button>
                     <Button 
                       size="sm"
@@ -457,17 +457,7 @@ function BookCard({ book, layout }: BookCardProps) {
                     Subscribe
                   </Button>
                 )}
-                <Button 
-                  size="sm"
-                  variant="outline"
-                  className="px-3"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.location.href = `/book/${book.id}`;
-                  }}
-                >
-                  Details
-                </Button>
+
               </div>
             </div>
           </div>
@@ -537,7 +527,7 @@ function BookCard({ book, layout }: BookCardProps) {
                   onClick={handleReadClick}
                 >
                   <BookOpen className="w-3 h-3 mr-1" />
-                  Read
+                  View Details
                 </Button>
                 <Button 
                   size="sm"
