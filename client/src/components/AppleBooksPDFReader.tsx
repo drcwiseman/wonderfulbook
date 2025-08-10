@@ -101,6 +101,7 @@ export function AppleBooksPDFReader({
   const { tracking, canCopy, recordCopy, getRemainingPercentage } = useCopyProtection(bookId);
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Get PDF access token on mount
   useEffect(() => {
@@ -120,6 +121,21 @@ export function AppleBooksPDFReader({
         
         // Keep loading state true until PDF document loads
         console.log('PDF token received, PDF document will start loading');
+        
+        // Set a loading timeout to catch stuck states
+        if (loadingTimeout) {
+          clearTimeout(loadingTimeout);
+        }
+        const timeout = setTimeout(() => {
+          console.warn('PDF loading timeout reached, forcing error state');
+          setIsLoading(false);
+          toast({
+            title: "Loading Timeout",
+            description: "The PDF is taking too long to load. Please try refreshing.",
+            variant: "destructive",
+          });
+        }, 15000); // 15 second timeout
+        setLoadingTimeout(timeout);
       } catch (error: any) {
         if (isCancelled) return;
         
@@ -240,9 +256,15 @@ export function AppleBooksPDFReader({
   });
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
+    // Clear the loading timeout
+    if (loadingTimeout) {
+      clearTimeout(loadingTimeout);
+      setLoadingTimeout(null);
+    }
+    
     setNumPages(numPages);
     setIsLoading(false);
-    console.log('PDF loaded:', numPages, 'pages');
+    console.log('✅ PDF loaded successfully:', numPages, 'pages');
     
     toast({
       title: "Book loaded",
@@ -251,10 +273,17 @@ export function AppleBooksPDFReader({
   }
 
   function onDocumentLoadError(error: Error) {
-    console.error('Error loading PDF:', error);
+    console.error('❌ PDF loading error:', error);
+    console.error('PDF URL that failed:', pdfUrl);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
     setIsLoading(false);
     
     if (error.message.includes('aborted') || error.name === 'AbortError') {
+      console.log('PDF loading was aborted');
       return;
     }
     
@@ -571,16 +600,24 @@ export function AppleBooksPDFReader({
               file={pdfFile}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
+              onLoadProgress={(progress) => {
+                console.log('PDF loading progress:', progress);
+              }}
+              onItemClick={(item) => {
+                console.log('PDF item clicked:', item);
+              }}
               loading={
                 <div className="text-center">
                   <div className="apple-loading-spinner w-12 h-12 mx-auto mb-4"></div>
                   <p className="font-medium">Loading PDF...</p>
+                  <p className="text-sm mt-2 text-gray-500">URL: {pdfFile.url}</p>
                 </div>
               }
               error={
                 <div className="text-center text-red-500">
                   <p>Failed to load PDF</p>
                   <p className="text-sm">Please check your connection and try again</p>
+                  <p className="text-xs mt-2">URL: {pdfFile.url}</p>
                 </div>
               }
               options={pdfOptions}
