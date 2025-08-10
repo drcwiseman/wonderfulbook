@@ -1,3 +1,4 @@
+import React from "react";
 import { ChevronRight, Home } from "lucide-react";
 import { motion } from "framer-motion";
 

@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Rocket, Heart, TrendingUp, Brain, Users, Activity } from "lucide-react";
 import type { Book } from "@shared/schema";
