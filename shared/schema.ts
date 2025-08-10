@@ -78,7 +78,7 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Books table
+// Books table (enhanced with encryption and chunking)
 export const books = pgTable("books", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
@@ -93,6 +93,13 @@ export const books = pgTable("books", {
   targetAudience: text("target_audience"), // Who this book is for
   coverImageUrl: text("cover_image_url"),
   pdfUrl: text("pdf_url"),
+  // Enhanced security fields
+  storagePath: text("storage_path"), // Path to encrypted chunks
+  sha256: varchar("sha256"), // File hash for integrity
+  fileSize: integer("file_size"), // Original file size in bytes
+  chunkSize: integer("chunk_size").default(1048576), // 1MB chunks
+  chunkCount: integer("chunk_count").default(0),
+  encryptionKeyId: varchar("encryption_key_id"), // Reference to encryption key
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),
   totalRatings: integer("total_ratings").default(0),
   totalReviews: integer("total_reviews").default(0),
@@ -521,6 +528,156 @@ export type Feedback = typeof feedback.$inferSelect;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type FeedbackComment = typeof feedbackComments.$inferSelect;
 export type InsertFeedbackComment = z.infer<typeof insertFeedbackCommentSchema>;
+
+// ===== DEVICE MANAGEMENT & DRM SYSTEM =====
+
+// User devices table for device-bound licensing
+export const devices = pgTable("devices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  name: text("name").notNull(), // User-friendly device name
+  publicKey: text("public_key").notNull(), // Device public key for encryption
+  deviceFingerprint: varchar("device_fingerprint"), // Browser/device fingerprint
+  userAgent: text("user_agent"), // Browser user agent
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Book loans table (replaces userSelectedBooks for new loan system)
+export const loans = pgTable("loans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  status: varchar("status").notNull().default("active"), // active, returned, revoked
+  loanType: varchar("loan_type").notNull().default("subscription"), // subscription, trial
+  startedAt: timestamp("started_at").defaultNow(),
+  returnedAt: timestamp("returned_at"),
+  revokedAt: timestamp("revoked_at"),
+  revokedBy: varchar("revoked_by").references(() => users.id), // Admin who revoked
+  revokeReason: text("revoke_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  userActiveLoansIndex: index("idx_user_active_loans").on(table.userId, table.status),
+  bookLoansIndex: index("idx_book_loans").on(table.bookId),
+}));
+
+// Device-bound licenses table
+export const licenses = pgTable("licenses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  loanId: varchar("loan_id").references(() => loans.id).notNull(),
+  deviceId: varchar("device_id").references(() => devices.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(), // Denormalized for performance
+  bookId: varchar("book_id").references(() => books.id).notNull(), // Denormalized for performance
+  keyWrapped: text("key_wrapped").notNull(), // AES key wrapped with device public key
+  offlineExpiresAt: timestamp("offline_expires_at").notNull(),
+  policy: jsonb("policy").notNull(), // License policy (watermark info, restrictions)
+  signature: text("signature").notNull(), // Ed25519 signature of license
+  serverTime: timestamp("server_time").defaultNow(), // Server time when issued
+  revoked: boolean("revoked").default(false),
+  revokedAt: timestamp("revoked_at"),
+  lastRenewedAt: timestamp("last_renewed_at"),
+  renewalCount: integer("renewal_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  deviceLicensesIndex: index("idx_device_licenses").on(table.deviceId),
+  userLicensesIndex: index("idx_user_licenses").on(table.userId),
+  loanLicenseIndex: unique("unique_loan_device").on(table.loanId, table.deviceId),
+  expiryIndex: index("idx_license_expiry").on(table.offlineExpiresAt),
+}));
+
+// Book chunks table for encrypted content delivery
+export const bookChunks = pgTable("book_chunks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  chunkIndex: integer("chunk_index").notNull(),
+  encryptedData: text("encrypted_data").notNull(), // Base64 encoded encrypted chunk
+  iv: varchar("iv").notNull(), // Initialization vector for this chunk
+  size: integer("size").notNull(), // Size of encrypted chunk
+  sha256: varchar("sha256").notNull(), // Hash of encrypted chunk for integrity
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  bookChunkIndex: unique("unique_book_chunk").on(table.bookId, table.chunkIndex),
+}));
+
+// System configuration for DRM settings
+export const systemConfig = pgTable("system_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: varchar("key").notNull().unique(),
+  value: text("value").notNull(),
+  description: text("description"),
+  dataType: varchar("data_type").notNull().default("string"), // string, number, boolean, json
+  isEditable: boolean("is_editable").default(true),
+  category: varchar("category").default("general"),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// DRM-related schemas
+export const insertDeviceSchema = createInsertSchema(devices, {
+  name: z.string().min(1, "Device name is required"),
+  publicKey: z.string().min(1, "Public key is required"),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLoanSchema = createInsertSchema(loans, {
+  status: z.enum(["active", "returned", "revoked"]).optional(),
+  loanType: z.enum(["subscription", "trial"]).optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLicenseSchema = createInsertSchema(licenses, {
+  policy: z.object({
+    watermark: z.object({
+      name: z.string(),
+      email: z.string(),
+      loanId: z.string(),
+    }),
+    copyProtection: z.object({
+      enabled: z.boolean().default(true),
+      maxCopyPercentage: z.number().default(40),
+    }),
+    offlineAccess: z.object({
+      enabled: z.boolean().default(true),
+      maxDays: z.number().default(30),
+    }),
+  }),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSystemConfigSchema = createInsertSchema(systemConfig, {
+  key: z.string().min(1, "Key is required"),
+  value: z.string().min(1, "Value is required"),
+  dataType: z.enum(["string", "number", "boolean", "json"]).optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Enhanced types
+export type Device = typeof devices.$inferSelect;
+export type InsertDevice = z.infer<typeof insertDeviceSchema>;
+export type Loan = typeof loans.$inferSelect;
+export type InsertLoan = z.infer<typeof insertLoanSchema>;
+export type License = typeof licenses.$inferSelect;
+export type InsertLicense = z.infer<typeof insertLicenseSchema>;
+export type BookChunk = typeof bookChunks.$inferSelect;
+export type SystemConfig = typeof systemConfig.$inferSelect;
+export type InsertSystemConfig = z.infer<typeof insertSystemConfigSchema>;
 
 // ===== SOCIAL READING CHALLENGES =====
 

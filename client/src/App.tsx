@@ -28,6 +28,8 @@ import Register from "@/pages/auth/register";
 import ForgotPassword from "@/pages/auth/forgot-password";
 import ResetPassword from "@/pages/auth/reset-password";
 import Profile from "@/pages/profile";
+import DevicesPage from "@/pages/devices";
+import LoansPage from "@/pages/loans";
 import NotFound from "@/pages/not-found";
 import ScrollToTop from "@/components/ScrollToTop";
 import AccessibilityButton from "@/components/AccessibilityButton";
@@ -60,6 +62,12 @@ function Router() {
         </Route>
         <Route path="/profile">
           <PageWrapper><Profile /></PageWrapper>
+        </Route>
+        <Route path="/devices">
+          <PageWrapper><DevicesPage /></PageWrapper>
+        </Route>
+        <Route path="/loans">
+          <PageWrapper><LoansPage /></PageWrapper>
         </Route>
         <Route path="/book/:id">
           <PageWrapper><BookDetail /></PageWrapper>

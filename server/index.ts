@@ -42,6 +42,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize crypto system first
+  try {
+    const { initializeCrypto } = await import('./crypto.js');
+    await initializeCrypto();
+  } catch (error) {
+    console.error('Failed to initialize crypto system:', error);
+  }
+
   const server = await registerRoutes(app);
   
   // Initialize email scheduler for automated campaigns

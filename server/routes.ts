@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { db } from "./db";
-import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, feedback, feedbackComments, insertFeedbackSchema, insertFeedbackCommentSchema, users } from "@shared/schema";
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, feedback, feedbackComments, insertFeedbackSchema, insertFeedbackCommentSchema, users, licenses, loans, bookChunks } from "@shared/schema";
 import { insertBookSchema, insertCategorySchema } from "@shared/schema";
 import { z } from "zod";
 import { sql, eq, desc, and } from "drizzle-orm";
@@ -91,6 +91,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
     proxy: process.env.NODE_ENV === 'production', // Trust proxy in production
   }));
+
+  // DRM and Device Management Routes
+  const deviceRoutes = await import('./routes/devices.js');
+  const loanRoutes = await import('./routes/loans.js');
+  const licenseRoutes = await import('./routes/licenses.js');
+  
+  app.use('/api/devices', deviceRoutes.default);
+  app.use('/api/loans', loanRoutes.default);
+  app.use('/api/licenses', licenseRoutes.default);
 
   // Copy protection routes
   app.get('/api/copy-tracking/:bookId', isAuthenticated, async (req: any, res) => {
@@ -3171,6 +3180,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Health monitoring routes
   app.use('/', healthRouter);
+
+  // Book chunks route for encrypted content delivery
+  app.get('/api/books/:bookId/chunks/:chunkIndex', isAuthenticated, async (req: any, res) => {
+    try {
+      const { bookId, chunkIndex } = req.params;
+      const userId = req.user.id;
+      
+      // For now, return empty response until we implement full DRM
+      // This is a placeholder for the encrypted chunk delivery system
+      res.json({
+        message: 'Encrypted chunk delivery system under development',
+        chunkIndex: parseInt(chunkIndex),
+        bookId
+      });
+
+    } catch (error) {
+      console.error('Error fetching book chunk:', error);
+      res.status(500).json({ message: 'Failed to fetch book chunk' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
