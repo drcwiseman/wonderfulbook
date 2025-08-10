@@ -50,17 +50,17 @@ export default function Library() {
   const [sortBy, setSortBy] = useState("recent");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const { data: allBooks = [], isLoading: booksLoading } = useQuery({
+  const { data: allBooks = [], isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books"],
     enabled: isAuthenticated,
   });
 
-  const { data: progressData = [], isLoading: progressLoading } = useQuery({
+  const { data: progressData = [], isLoading: progressLoading } = useQuery<any[]>({
     queryKey: ["/api/reading-progress"],
     enabled: isAuthenticated,
   });
 
-  const { data: bookmarks = [], isLoading: bookmarksLoading } = useQuery({
+  const { data: bookmarks = [], isLoading: bookmarksLoading } = useQuery<any[]>({
     queryKey: ["/api/bookmarks"],
     enabled: isAuthenticated,
   });
@@ -75,12 +75,12 @@ export default function Library() {
   const userTier = (user as any)?.subscriptionTier || 'free';
   const tierHierarchy: Record<string, number> = { free: 0, basic: 1, premium: 2 };
 
-  const libraryBooks: LibraryBook[] = allBooks
-    .filter(book => {
+  const libraryBooks: LibraryBook[] = (allBooks as Book[])
+    .filter((book: Book) => {
       const bookTier = book.requiredTier || 'free';
       return tierHierarchy[userTier] >= tierHierarchy[bookTier];
     })
-    .map(book => {
+    .map((book: Book) => {
       const progress = (progressData as any[]).find((p: any) => p.bookId === book.id);
       const isBookmarked = (bookmarks as any[]).some((b: any) => b.bookId === book.id);
       
