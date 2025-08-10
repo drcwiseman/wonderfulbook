@@ -2,20 +2,30 @@ import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 
 export function useAuth() {
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: (failureCount, error: any) => {
+      // Don't retry on rate limit errors
+      if (error?.message?.includes('429')) return false;
+      if (error?.message?.includes('Rate limited')) return false;
+      return failureCount < 1;
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes - even more aggressive
+    gcTime: 30 * 60 * 1000, // 30 minutes cache time
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    refetchInterval: false, // Disable automatic refetching
+    refetchInterval: false,
+    // Use the last successful data even on error
+    select: (data) => data,
+    // Keep previous data on error to prevent flicker
+    placeholderData: (previousData) => previousData,
   });
 
   return {
-    user,
+    user: user || null,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !error,
+    error,
   };
 }

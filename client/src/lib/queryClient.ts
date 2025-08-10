@@ -37,6 +37,12 @@ export const getQueryFn: <T>(options: {
       return null;
     }
 
+    // Handle rate limiting gracefully - return cached data or null instead of throwing
+    if (res.status === 429) {
+      console.warn('Rate limited, returning null to prevent cascading requests');
+      return null;
+    }
+
     await throwIfResNotOk(res);
     return await res.json();
   };
@@ -47,8 +53,16 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      refetchOnReconnect: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes - much more aggressive caching
+      gcTime: 10 * 60 * 1000, // 10 minutes cache time
+      retry: (failureCount, error: any) => {
+        // Don't retry on rate limit errors to prevent cascade
+        if (error?.message?.includes('429')) return false;
+        if (error?.message?.includes('Rate limited')) return false;
+        return failureCount < 1; // Only retry once for other errors
+      },
+      retryDelay: (attemptIndex) => Math.min(2000 * 2 ** attemptIndex, 10000), // Longer delays
     },
     mutations: {
       retry: false,
