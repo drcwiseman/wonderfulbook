@@ -69,7 +69,6 @@ export default function Header() {
     { href: "/bookstore", label: "Store", icon: BookOpen },
     ...(isAuthenticated ? [
       { href: "/library", label: "Library", icon: Library },
-      { href: "/loans", label: "Loans", icon: BookOpen },
       { href: "/dashboard", label: "Dashboard", icon: BarChart3 }
     ] : [])
   ];
@@ -80,7 +79,6 @@ export default function Header() {
     { href: "/bookstore", label: "Book Store", icon: BookOpen },
     ...(isAuthenticated ? [
       { href: "/library", label: "My Library", icon: Library },
-      { href: "/loans", label: "My Loans", icon: BookOpen },
       { href: "/devices", label: "Devices", icon: Settings },
       { href: "/challenges", label: "Challenges", icon: Trophy },
       { href: "/dashboard", label: "Dashboard", icon: BarChart3 },

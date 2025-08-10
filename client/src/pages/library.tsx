@@ -38,6 +38,9 @@ interface LibraryBook extends Book {
   };
   isBookmarked?: boolean;
   accessGranted: Date;
+  isDownloaded?: boolean;
+  downloadedAt?: Date;
+  loanStatus?: 'active' | 'returned' | 'revoked';
 }
 
 export default function Library() {
@@ -62,6 +65,12 @@ export default function Library() {
     enabled: isAuthenticated,
   });
 
+  // Get downloaded books (loans)
+  const { data: loansData = [], isLoading: loansLoading } = useQuery({
+    queryKey: ["/api/loans"],
+    enabled: isAuthenticated,
+  });
+
   // Filter books based on user's subscription tier
   const userTier = (user as any)?.subscriptionTier || 'free';
   const tierHierarchy: Record<string, number> = { free: 0, basic: 1, premium: 2 };
@@ -75,11 +84,20 @@ export default function Library() {
       const progress = (progressData as any[]).find((p: any) => p.bookId === book.id);
       const isBookmarked = (bookmarks as any[]).some((b: any) => b.bookId === book.id);
       
+      // Check if book is downloaded (has an active loan)
+      const loans = (loansData as any)?.loans || [];
+      const activeLoan = loans.find((loan: any) => 
+        loan.book.id === book.id && loan.status === 'active'
+      );
+      
       return {
         ...book,
         readingProgress: progress,
         isBookmarked,
-        accessGranted: new Date() // Mock access date - would be from subscription date
+        accessGranted: new Date(), // Mock access date - would be from subscription date
+        isDownloaded: !!activeLoan,
+        downloadedAt: activeLoan ? new Date(activeLoan.startedAt) : undefined,
+        loanStatus: activeLoan?.status
       };
     });
 
@@ -103,6 +121,9 @@ export default function Library() {
           break;
         case 'unread':
           matchesCategory = !book.readingProgress || book.readingProgress.currentPage === 0;
+          break;
+        case 'downloaded':
+          matchesCategory = !!book.isDownloaded;
           break;
         default:
           matchesCategory = true;
@@ -143,8 +164,10 @@ export default function Library() {
   const unreadBooks = libraryBooks.filter(book => 
     !book.readingProgress || book.readingProgress.currentPage === 0
   );
+  
+  const downloadedBooks = libraryBooks.filter(book => book.isDownloaded);
 
-  const isLoadingState = booksLoading || progressLoading || bookmarksLoading;
+  const isLoadingState = booksLoading || progressLoading || bookmarksLoading || loansLoading;
 
   if (!isAuthenticated) {
     return (
@@ -286,13 +309,17 @@ export default function Library() {
           
           {/* Library Content */}
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-            <TabsList className="grid w-full md:w-auto grid-cols-5 bg-white border border-orange-200 mb-8">
+            <TabsList className="grid w-full md:w-auto grid-cols-6 bg-white border border-orange-200 mb-8">
               <TabsTrigger value="all" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">
                 All ({libraryBooks.length})
               </TabsTrigger>
               <TabsTrigger value="reading" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">
                 <Play className="w-4 h-4 mr-1" />
                 Reading ({readingBooks.length})
+              </TabsTrigger>
+              <TabsTrigger value="downloaded" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">
+                <Download className="w-4 h-4 mr-1" />
+                Downloaded ({downloadedBooks.length})
               </TabsTrigger>
               <TabsTrigger value="completed" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">
                 <Award className="w-4 h-4 mr-1" />
@@ -314,6 +341,10 @@ export default function Library() {
             
             <TabsContent value="reading">
               <LibraryGrid books={readingBooks} viewMode={viewMode} />
+            </TabsContent>
+            
+            <TabsContent value="downloaded">
+              <LibraryGrid books={downloadedBooks} viewMode={viewMode} />
             </TabsContent>
             
             <TabsContent value="completed">
