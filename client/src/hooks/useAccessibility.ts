@@ -127,7 +127,10 @@ export function useAccessibility() {
   const getTextContent = useCallback((element: Element): string => {
     let text = '';
     
-    for (const node of element.childNodes) {
+    // Convert NodeList to Array for iteration
+    const childNodes = Array.from(element.childNodes);
+    
+    for (const node of childNodes) {
       if (node.nodeType === Node.TEXT_NODE) {
         text += (node.textContent || '').trim() + ' ';
       } else if (node.nodeType === Node.ELEMENT_NODE) {
