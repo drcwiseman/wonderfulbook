@@ -71,33 +71,56 @@ export function useAccessibility() {
     };
   }, []);
 
-  // Apply accessibility settings to the document
+  // Apply accessibility settings to the document only when features are enabled
   const applyAccessibilitySettings = useCallback((settings: AccessibilitySettings) => {
     const root = document.documentElement;
+    const body = document.body;
     
-    // Font settings
+    // Font settings - only apply when dyslexia font is enabled
     if (settings.dyslexiaFont) {
       root.style.setProperty('--font-family', '"OpenDyslexic", "Comic Sans MS", Arial, sans-serif');
-      root.classList.add('dyslexic-font');
+      body.classList.add('dyslexic-font');
     } else {
       root.style.removeProperty('--font-family');
-      root.classList.remove('dyslexic-font');
+      body.classList.remove('dyslexic-font');
     }
 
-    // Font size
+    // Typography settings - only store as CSS variables but don't apply to body
     root.style.setProperty('--accessibility-font-size', `${settings.fontSize}px`);
-    
-    // Line height
     root.style.setProperty('--accessibility-line-height', settings.lineHeight.toString());
-    
-    // Letter spacing
     root.style.setProperty('--accessibility-letter-spacing', `${settings.letterSpacing}px`);
+    
+    // Only apply typography classes when they differ from defaults significantly
+    const defaultFontSize = 16;
+    const defaultLineHeight = 1.6;
+    const defaultLetterSpacing = 0;
+    
+    // Font size class - only add if changed significantly
+    if (Math.abs(settings.fontSize - defaultFontSize) > 1) {
+      body.classList.add('accessibility-font-size');
+    } else {
+      body.classList.remove('accessibility-font-size');
+    }
+    
+    // Line height class - only add if changed significantly  
+    if (Math.abs(settings.lineHeight - defaultLineHeight) > 0.2) {
+      body.classList.add('accessibility-line-height');
+    } else {
+      body.classList.remove('accessibility-line-height');
+    }
+    
+    // Letter spacing class - only add if changed
+    if (settings.letterSpacing !== defaultLetterSpacing) {
+      body.classList.add('accessibility-letter-spacing');
+    } else {
+      body.classList.remove('accessibility-letter-spacing');
+    }
 
     // High contrast mode
     if (settings.highContrast) {
-      root.classList.add('high-contrast');
+      body.classList.add('high-contrast');
     } else {
-      root.classList.remove('high-contrast');
+      body.classList.remove('high-contrast');
     }
 
     // Dark mode
@@ -109,9 +132,9 @@ export function useAccessibility() {
 
     // Text highlighting
     if (settings.highlightText) {
-      root.classList.add('highlight-reading-text');
+      body.classList.add('highlight-reading-text');
     } else {
-      root.classList.remove('highlight-reading-text');
+      body.classList.remove('highlight-reading-text');
     }
   }, []);
 

@@ -105,12 +105,17 @@
   --orange-accessible-text: #ffffff; /* White text maintains 4.8:1 contrast */
 }
 
-/* Apply accessibility settings */
-body {
-  font-size: var(--accessibility-font-size);
-  line-height: var(--accessibility-line-height);
-  letter-spacing: var(--accessibility-letter-spacing);
-  font-family: var(--font-family, inherit);
+/* Apply accessibility settings only when specifically enabled */
+.accessibility-font-size {
+  font-size: var(--accessibility-font-size) !important;
+}
+
+.accessibility-line-height {
+  line-height: var(--accessibility-line-height) !important;
+}
+
+.accessibility-letter-spacing {
+  letter-spacing: var(--accessibility-letter-spacing) !important;
 }
 
 /* High contrast mode */
