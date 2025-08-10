@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { User, Lock, Mail, Crown, BarChart3, Shield, Eye, EyeOff, Home, Settings } from "lucide-react";
+import { ProfilePhotoUploader } from "@/components/ProfilePhotoUploader";
 import Header from "@/components/Header";
 import PageHeader from "@/components/PageHeader";
 import { useForm } from "react-hook-form";
@@ -205,11 +206,30 @@ export default function Profile() {
           <Card className="mb-8 bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
-                <img
-                  src={(user as any)?.profileImageUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"}
-                  alt="Profile"
-                  className="w-20 h-20 rounded-full object-cover border-4 border-orange-500/50 shadow-lg"
-                />
+                <div className="relative">
+                  {(user as any)?.profileImageUrl?.startsWith('/api/avatars/') ? (
+                    <img
+                      src={(user as any)?.profileImageUrl}
+                      alt="Profile Avatar"
+                      className="w-20 h-20 rounded-full border-4 border-orange-500/50 shadow-lg"
+                    />
+                  ) : (
+                    <img
+                      src={(user as any)?.profileImageUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"}
+                      alt="Profile"
+                      className="w-20 h-20 rounded-full object-cover border-4 border-orange-500/50 shadow-lg"
+                    />
+                  )}
+                  <ProfilePhotoUploader
+                    currentPhotoUrl={(user as any)?.profileImageUrl}
+                    userId={(user as any)?.id}
+                    onPhotoUpdate={(newPhotoUrl) => {
+                      // Update the local user data to show the change immediately
+                      const updatedUser = { ...(user as any), profileImageUrl: newPhotoUrl };
+                      queryClient.setQueryData(['/api/auth/user'], updatedUser);
+                    }}
+                  />
+                </div>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-gray-900">
                     {(user as any)?.firstName} {(user as any)?.lastName}

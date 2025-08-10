@@ -21,6 +21,7 @@ import { healthzRouter } from "./routes/healthz.js";
 import { securityHeaders, additionalSecurityHeaders } from "./middleware/securityHeaders.js";
 import { reportsAuth } from "./middleware/reportsAuth.js";
 import { systemSettingsManager } from "./systemSettingsManager.js";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage.js";
 
 import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth.js';
 import { 
@@ -527,6 +528,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Password change error:', error);
       res.status(500).json({ message: error.message || "Password change failed" });
+    }
+  });
+
+  // Object storage routes for profile photos
+  app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      res.status(500).json({ error: 'Failed to get upload URL' });
+    }
+  });
+
+  // Serve object storage files
+  app.get('/objects/:objectPath(*)', async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error('Error accessing object:', error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Update profile photo
+  app.put('/api/auth/profile-photo', isAuthenticated, async (req, res) => {
+    try {
+      const { profileImageUrl } = req.body;
+      const userId = (req.session as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      if (!profileImageUrl) {
+        return res.status(400).json({ message: 'Profile image URL is required' });
+      }
+
+      const success = await storage.updateUserProfile(userId, {
+        profileImageUrl
+      });
+
+      if (!success) {
+        return res.status(500).json({ message: "Failed to update profile photo" });
+      }
+
+      // Update session with new profile image
+      (req.session as any).user = {
+        ...(req.session as any).user,
+        profileImageUrl
+      };
+
+      res.json({ message: 'Profile photo updated successfully' });
+    } catch (error) {
+      console.error('Error updating profile photo:', error);
+      res.status(500).json({ message: 'Failed to update profile photo' });
+    }
+  });
+
+  // Generate avatar images
+  app.get('/api/avatars/:avatarId', async (req, res) => {
+    try {
+      const { avatarId } = req.params;
+      
+      // Generate simple SVG avatar based on avatarId
+      const avatarConfig = {
+        professional: { icon: 'M12 14c2 0 4-1 4-3V7c0-2-2-4-4-4s-4 2-4 4v4c0 2 2 3 4 3zm0 1c-3 0-6 1.5-6 3v1h12v-1c0-1.5-3-3-6-3z', color: '#3B82F6' },
+        royal: { icon: 'M5 16L3 6l5.5 2L12 4l3.5 4L21 6l-2 10H5z', color: '#EAB308' },
+        friendly: { icon: 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z', color: '#EF4444' },
+        happy: { icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z', color: '#10B981' },
+        star: { icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z', color: '#8B5CF6' },
+        energetic: { icon: 'M7 2v11h3v9l7-12h-4l4-8z', color: '#F97316' },
+        casual: { icon: 'M18.5 3H6c-1.1 0-2 .9-2 2v5.71c0 3.83 2.95 7.18 6.78 7.29 3.96.12 7.22-3.06 7.22-7v-1h.5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z', color: '#92400E' }
+      };
+
+      const config = avatarConfig[avatarId as keyof typeof avatarConfig];
+      if (!config) {
+        return res.status(404).json({ error: 'Avatar not found' });
+      }
+
+      const svg = `
+        <svg width="150" height="150" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="12" fill="${config.color}"/>
+          <path d="${config.icon}" fill="white" transform="scale(0.6) translate(4.8, 4.8)"/>
+        </svg>
+      `.trim();
+
+      res.set({
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'public, max-age=31536000', // 1 year
+      });
+      res.send(svg);
+    } catch (error) {
+      console.error('Error generating avatar:', error);
+      res.status(500).json({ error: 'Failed to generate avatar' });
     }
   });
 
