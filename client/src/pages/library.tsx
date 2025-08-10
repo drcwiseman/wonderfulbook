@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,57 +52,81 @@ export default function Library() {
 
   const { data: allBooks = [], isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books"],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !isLoading,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   const { data: progressData = [], isLoading: progressLoading } = useQuery<any[]>({
     queryKey: ["/api/reading-progress"],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !isLoading && allBooks.length > 0,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   const { data: bookmarks = [], isLoading: bookmarksLoading } = useQuery<any[]>({
     queryKey: ["/api/bookmarks"],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !isLoading && allBooks.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   // Get downloaded books (loans)
   const { data: loansData = [], isLoading: loansLoading } = useQuery({
     queryKey: ["/api/loans"],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !isLoading && allBooks.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 
-  // Filter books based on user's subscription tier
-  const userTier = (user as any)?.subscriptionTier || 'free';
-  const tierHierarchy: Record<string, number> = { free: 0, basic: 1, premium: 2 };
+  // Check if we're still loading any essential data
+  const isLoadingEssentialData = isLoading || booksLoading;
 
-  const libraryBooks: LibraryBook[] = (allBooks as Book[])
-    .filter((book: Book) => {
-      const bookTier = book.requiredTier || 'free';
-      return tierHierarchy[userTier] >= tierHierarchy[bookTier];
-    })
-    .map((book: Book) => {
-      const progress = (progressData as any[]).find((p: any) => p.bookId === book.id);
-      const isBookmarked = (bookmarks as any[]).some((b: any) => b.bookId === book.id);
-      
-      // Check if book is downloaded (has an active loan)
-      const loans = (loansData as any)?.loans || [];
-      const activeLoan = loans.find((loan: any) => 
-        loan.book.id === book.id && loan.status === 'active'
-      );
-      
-      return {
-        ...book,
-        readingProgress: progress,
-        isBookmarked,
-        accessGranted: new Date(), // Mock access date - would be from subscription date
-        isDownloaded: !!activeLoan,
-        downloadedAt: activeLoan ? new Date(activeLoan.startedAt) : undefined,
-        loanStatus: activeLoan?.status
-      };
-    });
+  // Memoize library books to prevent unnecessary recalculations
+  const libraryBooks: LibraryBook[] = useMemo(() => {
+    if (isLoadingEssentialData || !allBooks.length) return [];
 
-  // Filter and sort books
-  const filteredBooks = libraryBooks
+    // Filter books based on user's subscription tier
+    const userTier = (user as any)?.subscriptionTier || 'free';
+    const tierHierarchy: Record<string, number> = { free: 0, basic: 1, premium: 2 };
+
+    return (allBooks as Book[])
+      .filter((book: Book) => {
+        const bookTier = book.requiredTier || 'free';
+        return tierHierarchy[userTier] >= tierHierarchy[bookTier];
+      })
+      .map((book: Book) => {
+        const progress = (progressData as any[]).find((p: any) => p.bookId === book.id);
+        const isBookmarked = (bookmarks as any[]).some((b: any) => b.bookId === book.id);
+        
+        // Check if book is downloaded (has an active loan)
+        const loans = (loansData as any)?.loans || [];
+        const activeLoan = loans.find((loan: any) => 
+          loan.book.id === book.id && loan.status === 'active'
+        );
+        
+        return {
+          ...book,
+          readingProgress: progress,
+          isBookmarked,
+          accessGranted: new Date(), // Mock access date - would be from subscription date
+          isDownloaded: !!activeLoan,
+          downloadedAt: activeLoan ? new Date(activeLoan.startedAt) : undefined,
+          loanStatus: activeLoan?.status
+        };
+      });
+  }, [allBooks, progressData, bookmarks, loansData, user, isLoadingEssentialData]);
+
+  // Memoize filtered books to prevent unnecessary recalculations
+  const filteredBooks = useMemo(() => libraryBooks
     .filter(book => {
       const matchesSearch = book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            book.author.toLowerCase().includes(searchQuery.toLowerCase());
@@ -148,7 +172,7 @@ export default function Library() {
         default:
           return 0;
       }
-    });
+    }), [libraryBooks, searchQuery, selectedCategory, sortBy]);
 
   const readingBooks = libraryBooks.filter(book => 
     book.readingProgress && book.readingProgress.currentPage > 0 && 
