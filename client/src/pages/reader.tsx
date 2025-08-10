@@ -2,7 +2,7 @@ import React from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { PremiumPDFReader } from "@/components/PremiumPDFReader";
+import { AppleBooksPDFReader } from "@/components/AppleBooksPDFReader";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -108,7 +108,7 @@ export default function ReaderPage() {
 
   return (
     <main id="main-content" className="pdf-viewer book-content" role="main" aria-label="Book Reader">
-      <PremiumPDFReader
+      <AppleBooksPDFReader
         bookId={bookId}
         bookTitle={(book as any)?.title || 'Unknown Book'}
         initialPage={initialPage}
