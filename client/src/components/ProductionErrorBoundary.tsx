@@ -1,4 +1,4 @@
-import { Component, type PropsWithChildren, type ErrorInfo } from 'react';
+import React, { Component, type PropsWithChildren, type ErrorInfo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
@@ -9,10 +9,10 @@ interface ErrorBoundaryState {
 }
 
 export class ProductionErrorBoundary extends Component<
-  PropsWithChildren<{}>,
+  React.PropsWithChildren<{}>,
   ErrorBoundaryState
 > {
-  constructor(props: PropsWithChildren<{}>) {
+  constructor(props: React.PropsWithChildren<{}>) {
     super(props);
     this.state = { hasError: false };
   }
@@ -21,7 +21,7 @@ export class ProductionErrorBoundary extends Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Production Error Boundary caught an error:', error, errorInfo);
   }
 
