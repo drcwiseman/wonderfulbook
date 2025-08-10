@@ -86,6 +86,7 @@ export default function SystemSettings() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("general");
   const [localSettings, setLocalSettings] = useState<SystemSettings | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Fetch current system settings
   const { data: settings, isLoading } = useQuery<SystemSettings>({
@@ -110,15 +111,16 @@ export default function SystemSettings() {
     },
     onSuccess: () => {
       toast({
-        title: "Settings Updated",
-        description: "System settings have been successfully updated.",
+        title: "Settings Saved",
+        description: "System settings have been successfully saved.",
       });
+      setHasUnsavedChanges(false);
       queryClient.invalidateQueries({ queryKey: ["/api/super-admin/system-settings"] });
     },
     onError: (error: any) => {
       toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update system displaySettings.",
+        title: "Save Failed",
+        description: error.message || "Failed to save system settings.",
         variant: "destructive",
       });
     },
@@ -169,34 +171,27 @@ export default function SystemSettings() {
   const handleUpdateSettings = (section: keyof SystemSettings, updates: any) => {
     if (!displaySettings) return;
     
-    // Update local state immediately for UI responsiveness
+    // Update local state only - no automatic saving
     const currentSection = displaySettings[section] as any;
     const updatedSettings = {
       ...displaySettings,
       [section]: { ...currentSection, ...updates }
     };
     setLocalSettings(updatedSettings as SystemSettings);
-    
-    // Save to backend immediately for switches and important actions
-    updateSettingsMutation.mutate(updatedSettings);
+    setHasUnsavedChanges(true);
   };
 
   const handleInputChange = (section: keyof SystemSettings, field: string, value: any) => {
     if (!displaySettings) return;
     
-    // Update local state immediately for UI responsiveness
+    // Update local state only - no automatic saving
     const currentSection = displaySettings[section] as any;
     const updatedSettings = {
       ...displaySettings,
       [section]: { ...currentSection, [field]: value }
     };
     setLocalSettings(updatedSettings as SystemSettings);
-    
-    // Debounce the backend update
-    clearTimeout((window as any).settingsTimeout);
-    (window as any).settingsTimeout = setTimeout(() => {
-      updateSettingsMutation.mutate(updatedSettings);
-    }, 500);
+    setHasUnsavedChanges(true);
   };
 
   const handleMaintenanceToggle = (enabled: boolean) => {
@@ -211,11 +206,21 @@ export default function SystemSettings() {
       }
     };
     
-    // Update local state immediately
+    // Update local state only
     setLocalSettings(updatedSettings as SystemSettings);
-    
-    // Save to backend immediately for maintenance mode
-    updateSettingsMutation.mutate(updatedSettings);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSaveChanges = () => {
+    if (!localSettings || !hasUnsavedChanges) return;
+    updateSettingsMutation.mutate(localSettings);
+  };
+
+  const handleDiscardChanges = () => {
+    if (settings) {
+      setLocalSettings(settings);
+      setHasUnsavedChanges(false);
+    }
   };
 
   if (isLoading) {
@@ -262,6 +267,36 @@ export default function SystemSettings() {
             { label: "System Settings", href: "/system-settings" }
           ]}
         />
+
+        {/* Save/Discard Changes Bar */}
+        {hasUnsavedChanges && (
+          <Card className="mb-6 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-blue-700 dark:text-blue-300">
+                  <AlertTriangle className="h-5 w-5" />
+                  <span className="font-semibold">You have unsaved changes</span>
+                  <p className="text-sm">Save your changes to apply them to the system.</p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleDiscardChanges}
+                    disabled={updateSettingsMutation.isPending}
+                  >
+                    Discard Changes
+                  </Button>
+                  <Button
+                    onClick={handleSaveChanges}
+                    disabled={updateSettingsMutation.isPending}
+                  >
+                    {updateSettingsMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Maintenance Mode Alert */}
         {displaySettings.maintenanceMode.enabled && (
