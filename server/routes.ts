@@ -1176,11 +1176,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           enableTwoFactor: false
         },
         email: {
-          fromName: "Wonderful Books",
-          fromEmail: "noreply@wonderfulbooks.com",
-          smtpHost: "smtp.gmail.com",
-          smtpPort: 587,
-          smtpSecure: true,
+          fromName: process.env.SMTP_FROM_NAME || process.env.EMAIL_FROM_NAME || "Wonderful Books",
+          fromEmail: process.env.SMTP_FROM_EMAIL || process.env.EMAIL_FROM || process.env.SMTP_USER || "noreply@wonderfulbooks.com",
+          smtpHost: process.env.SMTP_HOST || "smtp.gmail.com",
+          smtpPort: parseInt(process.env.SMTP_PORT || "587"),
+          smtpSecure: parseInt(process.env.SMTP_PORT || "587") === 465 || process.env.SMTP_SECURE === 'true',
           welcomeEmailEnabled: true,
           reminderEmailsEnabled: true
         },
