@@ -47,7 +47,7 @@ export function PremiumPDFReader({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const { settings, speakText, stopReading, isReading } = useAccessibility();
+  const { settings, startTextToSpeech: speakText, stopTextToSpeech: stopReading, isReading } = useAccessibility();
   const { tracking, isBlocked, canCopy, recordCopy, getRemainingPercentage, isCloseToLimit } = useCopyProtection(bookId);
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -388,10 +388,10 @@ export function PremiumPDFReader({
 
   // Auto-read when page changes if enabled
   useEffect(() => {
-    if (settings.autoRead && settings.textToSpeech && !isLoading) {
+    if (settings.textToSpeech && !isLoading) {
       setTimeout(readCurrentPage, 500); // Small delay for page render
     }
-  }, [pageNumber, settings.autoRead, settings.textToSpeech, isLoading]);
+  }, [pageNumber, settings.textToSpeech, isLoading]);
 
   // Keyboard navigation
   useEffect(() => {
