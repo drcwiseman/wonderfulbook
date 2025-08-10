@@ -2206,7 +2206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Set proper PDF headers
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'inline; filename="' + book.title + '.pdf"');
+        res.setHeader('Content-Disposition', 'inline; filename="document.pdf"');
         res.setHeader('Cache-Control', 'private, max-age=3600');
         res.setHeader('Access-Control-Allow-Origin', '*');
 

@@ -5,13 +5,9 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 
-// Use a working PDF.js worker for Replit environment
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
-
-// Fallback if worker fails
-if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-  pdfjs.disableWorker = true;
-}
+// Completely disable PDF.js worker to avoid compatibility issues in Replit
+pdfjs.GlobalWorkerOptions.workerSrc = null;
+(pdfjs as any).disableWorker = true;
 
 interface SimplePDFReaderProps {
   pdfUrl: string;
