@@ -532,7 +532,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Object storage routes for profile photos
-  app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
+  // Simplified upload endpoint - direct file upload through server
+  const uploadMulter = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files allowed'), false);
+      }
+    }
+  });
+
+  app.post('/api/objects/upload', isAuthenticated, uploadMulter.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const privateObjectDir = objectStorageService.getPrivateObjectDir();
+      const objectId = require('crypto').randomUUID();
+      const fileExtension = path.extname(req.file.originalname);
+      const fullPath = `${privateObjectDir}/uploads/${objectId}${fileExtension}`;
+      
+      const { bucketName, objectName } = require('./objectStorage.js').parseObjectPath ? 
+        require('./objectStorage.js').parseObjectPath(fullPath) :
+        (() => {
+          const pathParts = fullPath.split("/");
+          return {
+            bucketName: pathParts[1],
+            objectName: pathParts.slice(2).join("/")
+          };
+        })();
+
+      const bucket = require('./objectStorage.js').objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+      
+      // Upload file directly
+      await file.save(req.file.buffer, {
+        metadata: {
+          contentType: req.file.mimetype,
+        },
+      });
+
+      const objectPath = `/objects/uploads/${objectId}${fileExtension}`;
+      res.json({ 
+        success: true,
+        objectPath: objectPath,
+        objectUrl: `https://storage.googleapis.com/${bucketName}/${objectName}`
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      res.status(500).json({ error: 'Failed to upload file' });
+    }
+  });
+
+  // Keep the old endpoint for presigned URLs as fallback
+  app.post('/api/objects/upload-url', isAuthenticated, async (req, res) => {
     try {
       const objectStorageService = new ObjectStorageService();
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();

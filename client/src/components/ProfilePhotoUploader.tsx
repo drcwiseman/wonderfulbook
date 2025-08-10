@@ -53,21 +53,40 @@ export function ProfilePhotoUploader({ currentPhotoUrl, userId, onPhotoUpdate }:
     },
   });
 
-  const handleGetUploadParameters = async () => {
+  const handleDirectUpload = async (file: File) => {
     try {
-      const response = await apiRequest("POST", "/api/objects/upload");
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/objects/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+      
       const data = await response.json();
-      return {
-        method: "PUT" as const,
-        url: data.uploadURL,
-      };
+      console.log('Upload response:', data);
+      
+      if (data.success && data.objectPath) {
+        // Update profile with the object path
+        updatePhotoMutation.mutate({ profileImageUrl: data.objectPath });
+        onPhotoUpdate(data.objectPath);
+        toast({
+          title: "Photo uploaded",
+          description: "Your profile photo has been uploaded successfully.",
+        });
+      }
     } catch (error) {
+      console.error('Upload error:', error);
       toast({
         title: "Upload error",
-        description: "Failed to get upload URL. Please try again.",
+        description: "Failed to upload file. Please try again.",
         variant: "destructive",
       });
-      throw error;
     }
   };
 
@@ -155,16 +174,24 @@ export function ProfilePhotoUploader({ currentPhotoUrl, userId, onPhotoUpdate }:
           {/* Upload Section */}
           <div className="space-y-3">
             <h4 className="font-medium">Upload New Photo</h4>
-            <ObjectUploader
-              maxNumberOfFiles={1}
-              maxFileSize={5242880} // 5MB
-              onGetUploadParameters={handleGetUploadParameters}
-              onComplete={handleUploadComplete}
-              buttonClassName="w-full"
-            >
-              <Camera className="w-4 h-4 mr-2" />
-              Choose Photo
-            </ObjectUploader>
+            <div className="space-y-2">
+              <label htmlFor="photo-upload" className="flex items-center justify-center gap-2 w-full bg-white border border-gray-300 rounded-md px-3 py-2 cursor-pointer hover:bg-gray-50">
+                <Camera className="w-4 h-4" />
+                Choose Photo
+              </label>
+              <input
+                id="photo-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleDirectUpload(file);
+                  }
+                }}
+              />
+            </div>
             <p className="text-xs text-gray-500">
               Maximum file size: 5MB. Supported formats: JPG, PNG, GIF
             </p>
