@@ -2151,6 +2151,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Direct PDF streaming endpoint (for SimplePDFReader compatibility)
+  app.get("/api/stream-pdf/:bookId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { bookId } = req.params;
+      const userId = req.user?.claims?.sub || req.session?.user?.id;
+
+      if (!userId) {
+        console.log('PDF streaming - No user ID found');
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      console.log('Direct PDF streaming request - User:', userId, 'Book:', bookId);
+
+      // Get the book to ensure it exists and user has access
+      const book = await storage.getBook(bookId);
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+
+      // Stream the actual PDF file from the book's pdfUrl
+      if (!book.pdfUrl) {
+        return res.status(404).json({ message: "PDF file not available for this book" });
+      }
+
+      // For local uploads (starts with /uploads/)
+      if (book.pdfUrl.startsWith('/uploads/')) {
+        const filePath = path.join(process.cwd(), book.pdfUrl.substring(1)); // Remove leading slash
+        
+        if (!fs.existsSync(filePath)) {
+          console.error('PDF file not found:', filePath);
+          return res.status(404).json({ message: "PDF file not found" });
+        }
+
+        // Set proper PDF headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="' + book.title + '.pdf"');
+        res.setHeader('Cache-Control', 'private, max-age=3600');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+
+        // Stream the actual PDF file
+        const stream = fs.createReadStream(filePath);
+        stream.pipe(res);
+        return;
+      }
+
+      // For external URLs, proxy the PDF content
+      try {
+        const response = await fetch(book.pdfUrl);
+        if (!response.ok) {
+          console.error('Failed to fetch PDF from URL:', book.pdfUrl, response.status);
+          return res.status(404).json({ message: "PDF file not accessible" });
+        }
+
+        const pdfBuffer = await response.arrayBuffer();
+
+        // Set proper PDF headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="' + book.title + '.pdf"');
+        res.setHeader('Cache-Control', 'private, max-age=3600');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+
+        // Stream the actual PDF content
+        res.send(Buffer.from(pdfBuffer));
+      } catch (error) {
+        console.error('Error fetching PDF from URL:', error);
+        return res.status(500).json({ message: "Failed to load PDF file" });
+      }
+
+    } catch (error) {
+      console.error("Error streaming PDF:", error);
+      res.status(500).json({ message: "Failed to stream PDF" });
+    }
+  });
+
   // Secure PDF streaming endpoint
   // Generate temporary access token for PDF streaming
   app.post("/api/pdf-token/:bookId", isAuthenticated, async (req: any, res) => {
