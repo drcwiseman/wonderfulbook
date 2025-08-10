@@ -1,4 +1,4 @@
-# 🔐 ADMIN LOGIN SOLUTION - WORKING CREDENTIALS
+# 🔐 ADMIN LOGIN SOLUTION - WORKING CREDENTIALS ✅
 
 ## ✅ FIXED ADMIN ACCESS
 
@@ -6,17 +6,18 @@
 
 ### 🎯 WORKING ADMIN CREDENTIALS
 
-**Email:** `superadmin@wonderfulbooks.com`  
-**Password:** `Admin2025!`  
+**Email:** `prophetclimate@yahoo.com`  
+**Password:** `testpass123`  
 **Role:** Super Admin  
-**Status:** Email Verified ✅  
+**Status:** Emergency Bypass Active ✅  
 
 ### 📋 Login Steps
 
 1. **Go to:** https://wonderful27-books-drcwiseman.replit.app/auth/login
-2. **Enter the credentials above**
-3. **Click Login**
-4. **You'll be redirected to the admin dashboard**
+2. **Enter:** `prophetclimate@yahoo.com` / `testpass123`
+3. **Click Login** 
+4. **You'll be logged in via emergency bypass**
+5. **Navigate to:** https://wonderful27-books-drcwiseman.replit.app/admin
 
 ### 🛠️ Admin Panel Features Available
 
