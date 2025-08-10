@@ -113,6 +113,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(validateAPIRoute);
   app.use(deviceFingerprint);
   
+  // Serve uploaded files
+  app.use('/uploads', express.static('./uploads'));
+  
   // Apply rate limiting to API routes
   app.use('/api/', rateLimit(200, 15 * 60 * 1000)); // 200 requests per 15 minutes
   app.use('/api/auth/', rateLimit(50, 15 * 60 * 1000)); // 50 auth requests per 15 minutes
@@ -531,10 +534,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Object storage routes for profile photos
-  // Simplified upload endpoint - direct file upload through server
+  // Simple file upload using local storage for profile photos
   const uploadMulter = multer({ 
-    storage: multer.memoryStorage(),
+    storage: multer.diskStorage({
+      destination: './uploads',
+      filename: (req, file, cb) => {
+        const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`;
+        cb(null, uniqueName);
+      }
+    }),
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
     fileFilter: (req, file, cb) => {
       if (file.mimetype.startsWith('image/')) {
@@ -551,53 +559,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      const objectStorageService = new ObjectStorageService();
-      const privateObjectDir = objectStorageService.getPrivateObjectDir();
-      const objectId = require('crypto').randomUUID();
-      const fileExtension = path.extname(req.file.originalname);
-      const fullPath = `${privateObjectDir}/uploads/${objectId}${fileExtension}`;
-      
-      const { bucketName, objectName } = require('./objectStorage.js').parseObjectPath ? 
-        require('./objectStorage.js').parseObjectPath(fullPath) :
-        (() => {
-          const pathParts = fullPath.split("/");
-          return {
-            bucketName: pathParts[1],
-            objectName: pathParts.slice(2).join("/")
-          };
-        })();
-
-      const bucket = require('./objectStorage.js').objectStorageClient.bucket(bucketName);
-      const file = bucket.file(objectName);
-      
-      // Upload file directly
-      await file.save(req.file.buffer, {
-        metadata: {
-          contentType: req.file.mimetype,
-        },
-      });
-
-      const objectPath = `/objects/uploads/${objectId}${fileExtension}`;
+      // Return the local file path that can be served by express.static
+      const objectPath = `/uploads/${req.file.filename}`;
       res.json({ 
         success: true,
-        objectPath: objectPath,
-        objectUrl: `https://storage.googleapis.com/${bucketName}/${objectName}`
+        objectPath: objectPath
       });
     } catch (error) {
       console.error('Error uploading file:', error);
       res.status(500).json({ error: 'Failed to upload file' });
-    }
-  });
-
-  // Keep the old endpoint for presigned URLs as fallback
-  app.post('/api/objects/upload-url', isAuthenticated, async (req, res) => {
-    try {
-      const objectStorageService = new ObjectStorageService();
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
-    } catch (error) {
-      console.error('Error getting upload URL:', error);
-      res.status(500).json({ error: 'Failed to get upload URL' });
     }
   });
 
