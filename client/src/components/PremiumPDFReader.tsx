@@ -717,42 +717,42 @@ export function PremiumPDFReader({
                   }
                 `}></div>
                 
-                {/* Page Content with Enhanced Padding */}
-                <div className="p-6 md:p-8 lg:p-10">
+                {/* Apple Books Style PDF Container */}
+                <div className="flex-1 flex items-center justify-center p-4 md:p-8">
                   <div className={`
-                    relative mx-auto flex items-center justify-center
-                    ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}
-                    rounded-xl p-6 md:p-8 lg:p-12
-                    min-h-[800px]
+                    relative w-full max-w-4xl mx-auto
+                    ${isDarkMode ? 'bg-gray-900' : 'bg-white'}
+                    rounded-2xl shadow-2xl overflow-hidden
                   `}>
-                    <Page
-                      pageNumber={pageNumber}
-                      scale={scale}
-                      renderTextLayer={true}
-                      renderAnnotationLayer={false}
-                      className="mx-auto block apple-books-page"
-                      canvasBackground="white"
-                      width={Math.min(800, window.innerWidth * 0.8)}
-                      loading={
-                        <div className={`flex items-center justify-center p-20 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
-                          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mr-4"></div>
-                          <span className="text-lg">Loading page...</span>
-                        </div>
-                      }
-                      error={
-                        <div className={`flex items-center justify-center p-20 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
-                          <span className="text-lg">Failed to load page</span>
-                        </div>
-                      }
-                    />
+                    {/* Book-like container with proper aspect ratio */}
+                    <div className="relative bg-white rounded-2xl shadow-inner p-8 md:p-12 lg:p-16">
+                      <Page
+                        pageNumber={pageNumber}
+                        scale={1.5}
+                        renderTextLayer={true}
+                        renderAnnotationLayer={false}
+                        className="mx-auto block professional-book-page"
+                        canvasBackground="white"
+                        width={Math.min(900, window.innerWidth * 0.75)}
+                        loading={
+                          <div className={`flex items-center justify-center p-20 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
+                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mr-4"></div>
+                            <span className="text-lg">Loading page...</span>
+                          </div>
+                        }
+                        error={
+                          <div className={`flex items-center justify-center p-20 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+                            <span className="text-lg">Failed to load page</span>
+                          </div>
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              )}
+            </Document>
           )}
-          </Document>
-        )}
-      </div>
+        </div>
 
       {/* Bottom Progress Bar */}
       <div className={`absolute bottom-0 left-0 right-0 z-10 transition-all duration-500 ease-in-out ${
