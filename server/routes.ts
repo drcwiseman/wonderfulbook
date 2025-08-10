@@ -18,6 +18,16 @@ import { AuditService } from "./auditService";
 import { healthRouter } from "./health/routes.js";
 
 import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth';
+import { 
+  rateLimit, 
+  requireAuth, 
+  requireSubscription, 
+  requireRole,
+  requirePremium,
+  securityHeaders,
+  validateAPIRoute,
+  deviceFingerprint
+} from "./middleware/routeProtection";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -91,6 +101,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
     proxy: process.env.NODE_ENV === 'production', // Trust proxy in production
   }));
+
+  // Apply global security middleware
+  app.use(securityHeaders);
+  app.use(validateAPIRoute);
+  app.use(deviceFingerprint);
+  
+  // Apply rate limiting to API routes
+  app.use('/api/', rateLimit(200, 15 * 60 * 1000)); // 200 requests per 15 minutes
+  app.use('/api/auth/', rateLimit(50, 15 * 60 * 1000)); // 50 auth requests per 15 minutes
 
   // DRM and Device Management Routes
   const deviceRoutes = await import('./routes/devices.js');

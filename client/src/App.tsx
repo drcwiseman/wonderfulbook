@@ -23,6 +23,7 @@ import ChallengesPage from "@/pages/challenges";
 import ChallengeDetailPage from "@/pages/challenge-detail";
 import TestingQA from "@/pages/testing-qa";
 import AccessibilityTestDemo from "@/components/AccessibilityTestDemo";
+import RouteProtectionDemo from "@/components/RouteProtectionDemo";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import ForgotPassword from "@/pages/auth/forgot-password";
@@ -33,7 +34,7 @@ import LoansPage from "@/pages/loans";
 import NotFound from "@/pages/not-found";
 import ScrollToTop from "@/components/ScrollToTop";
 import AccessibilityButton from "@/components/AccessibilityButton";
-
+import ProtectedRoute from "@/components/ProtectedRoute";
 import FeedbackButton from "@/components/FeedbackButton";
 
 function Router() {
@@ -55,19 +56,39 @@ function Router() {
           <PageWrapper><BookStore /></PageWrapper>
         </Route>
         <Route path="/library">
-          <PageWrapper><Library /></PageWrapper>
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true}>
+              <Library />
+            </ProtectedRoute>
+          </PageWrapper>
         </Route>
         <Route path="/dashboard">
-          <PageWrapper><Dashboard /></PageWrapper>
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true}>
+              <Dashboard />
+            </ProtectedRoute>
+          </PageWrapper>
         </Route>
         <Route path="/profile">
-          <PageWrapper><Profile /></PageWrapper>
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true}>
+              <Profile />
+            </ProtectedRoute>
+          </PageWrapper>
         </Route>
         <Route path="/devices">
-          <PageWrapper><DevicesPage /></PageWrapper>
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true}>
+              <DevicesPage />
+            </ProtectedRoute>
+          </PageWrapper>
         </Route>
         <Route path="/loans">
-          <PageWrapper><LoansPage /></PageWrapper>
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true}>
+              <LoansPage />
+            </ProtectedRoute>
+          </PageWrapper>
         </Route>
         <Route path="/book/:id">
           <PageWrapper><BookDetail /></PageWrapper>
@@ -82,25 +103,48 @@ function Router() {
           <PageWrapper><PaymentSuccess /></PageWrapper>
         </Route>
         <Route path="/reader/:bookId">
-          <PageWrapper><ReaderPage /></PageWrapper>
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true} requireSubscription={true}>
+              <ReaderPage />
+            </ProtectedRoute>
+          </PageWrapper>
         </Route>
         <Route path="/read/:bookId">
-          <PageWrapper><ReaderPage /></PageWrapper>
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true} requireSubscription={true}>
+              <ReaderPage />
+            </ProtectedRoute>
+          </PageWrapper>
         </Route>
         <Route path="/admin">
-          <PageWrapper><AdminPanel /></PageWrapper>
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true} allowedRoles={["admin", "super_admin"]}>
+              <AdminPanel />
+            </ProtectedRoute>
+          </PageWrapper>
         </Route>
         <Route path="/super-admin">
-          <PageWrapper><SuperAdminDashboard /></PageWrapper>
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true} allowedRoles={["super_admin"]}>
+              <SuperAdminDashboard />
+            </ProtectedRoute>
+          </PageWrapper>
         </Route>
         <Route path="/admin/email-management">
-          <PageWrapper><AdminEmailManagement /></PageWrapper>
+          <PageWrapper>
+            <ProtectedRoute requireAuth={true} allowedRoles={["admin", "super_admin"]}>
+              <AdminEmailManagement />
+            </ProtectedRoute>
+          </PageWrapper>
         </Route>
         <Route path="/testing-qa">
           <PageWrapper><TestingQA /></PageWrapper>
         </Route>
         <Route path="/accessibility-test">
           <PageWrapper><AccessibilityTestDemo /></PageWrapper>
+        </Route>
+        <Route path="/route-protection-demo">
+          <PageWrapper><RouteProtectionDemo /></PageWrapper>
         </Route>
         <Route path="/challenges">
           <PageWrapper><ChallengesPage /></PageWrapper>
