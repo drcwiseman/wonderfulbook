@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, useAnimation, PanInfo } from "framer-motion";
 import { useLocation } from "wouter";
 
