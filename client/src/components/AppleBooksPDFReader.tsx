@@ -583,92 +583,99 @@ export function AppleBooksPDFReader({
 
       {/* Main Content Area */}
       <div className={`${showSidebar ? 'ml-80' : ''} h-full pt-16 ${showSearch ? 'pt-28' : ''}`}>
-        <div className="flex items-center justify-center h-full p-4">
-          {isLoading ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div className="apple-loading-spinner w-12 h-12 mx-auto mb-4"></div>
               <p className="text-gray-600 dark:text-gray-400 font-medium">Loading book...</p>
             </div>
-          ) : pdfFile ? (
+          </div>
+        ) : pdfFile ? (
+          <div className="h-full overflow-auto pdf-scroll-container bg-gray-50 dark:bg-gray-900">
             <Document
               file={pdfFile}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
-              onLoadProgress={(progress) => {
-                console.log('PDF loading progress:', progress);
-              }}
-              onItemClick={(item) => {
-                console.log('PDF item clicked:', item);
-              }}
               loading={
-                <div className="text-center">
-                  <div className="apple-loading-spinner w-12 h-12 mx-auto mb-4"></div>
-                  <p className="font-medium">Loading PDF...</p>
-                  <p className="text-sm mt-2 text-gray-500">URL: {pdfFile.url}</p>
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="apple-loading-spinner w-12 h-12 mx-auto mb-4"></div>
+                    <p className="font-medium">Loading PDF...</p>
+                  </div>
                 </div>
               }
               error={
-                <div className="text-center text-red-500">
-                  <p>Failed to load PDF</p>
-                  <p className="text-sm">Please check your connection and try again</p>
-                  <p className="text-xs mt-2">URL: {pdfFile.url}</p>
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center text-red-500">
+                    <p>Failed to load PDF</p>
+                    <p className="text-sm">Please check your connection and try again</p>
+                  </div>
                 </div>
               }
-              options={pdfOptions}
+              options={{
+                cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+                cMapPacked: true,
+                standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/',
+                enableXfa: false,
+                disableAutoFetch: false,
+                disableStream: false
+              }}
             >
-              <div className="relative">
+              <div className="flex flex-col items-center py-4 space-y-4">
                 <Page
                   pageNumber={pageNumber}
-                  scale={scale}
+                  width={Math.min(window.innerWidth * 0.8, 800)}
                   loading={
-                    <div className="flex items-center justify-center h-96">
+                    <div className="flex items-center justify-center h-96 bg-white dark:bg-gray-800 rounded-lg shadow">
                       <div className="apple-loading-spinner w-8 h-8"></div>
                     </div>
                   }
                   error={
-                    <div className="flex items-center justify-center h-96 text-red-500">
+                    <div className="flex items-center justify-center h-96 bg-white dark:bg-gray-800 rounded-lg shadow text-red-500">
                       Failed to load page
                     </div>
                   }
-                  className="shadow-xl rounded-lg overflow-hidden"
+                  className="shadow-xl rounded-lg overflow-hidden bg-white dark:bg-gray-800"
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
                 />
                 
-                {/* Page Navigation Overlay */}
-                <div className="absolute inset-0 flex">
+                {/* Touch Navigation Areas */}
+                <div className="absolute inset-0 flex pointer-events-none">
                   {/* Previous Page Area */}
                   <div 
-                    className="w-1/3 cursor-pointer flex items-center justify-start pl-4"
+                    className="w-1/3 pointer-events-auto cursor-pointer flex items-center justify-start pl-4"
                     onClick={previousPage}
                   >
-                    {pageNumber > 1 && (
-                      <ChevronLeft className="w-8 h-8 text-gray-400 hover:text-gray-600 opacity-0 hover:opacity-100 transition-opacity" />
+                    {pageNumber > 1 && showControls && (
+                      <ChevronLeft className="w-8 h-8 text-gray-400 hover:text-gray-600 transition-opacity bg-black/10 rounded-full p-1" />
                     )}
                   </div>
                   
-                  {/* Middle Area - Show controls on click */}
+                  {/* Center tap area */}
                   <div 
-                    className="flex-1 cursor-pointer"
+                    className="flex-1 pointer-events-auto cursor-pointer"
                     onClick={resetControlsTimer}
                   />
                   
                   {/* Next Page Area */}
                   <div 
-                    className="w-1/3 cursor-pointer flex items-center justify-end pr-4"
+                    className="w-1/3 pointer-events-auto cursor-pointer flex items-center justify-end pr-4"
                     onClick={nextPage}
                   >
-                    {pageNumber < (numPages || 1) && (
-                      <ChevronRight className="w-8 h-8 text-gray-400 hover:text-gray-600 opacity-0 hover:opacity-100 transition-opacity" />
+                    {pageNumber < (numPages || 1) && showControls && (
+                      <ChevronRight className="w-8 h-8 text-gray-400 hover:text-gray-600 transition-opacity bg-black/10 rounded-full p-1" />
                     )}
                   </div>
                 </div>
               </div>
             </Document>
-          ) : (
-            <div className="text-center">
-              <p className="text-gray-600 dark:text-gray-400">Preparing book...</p>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-600 dark:text-gray-400">Preparing book...</p>
+          </div>
+        )}
       </div>
 
       {/* Bottom Controls - Apple Books Style */}
