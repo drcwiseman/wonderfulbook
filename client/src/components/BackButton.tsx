@@ -2,6 +2,7 @@ import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useLocation } from "wouter";
 
 interface BackButtonProps {
   onClick?: () => void;
@@ -16,13 +17,16 @@ export default function BackButton({
   label = "Back", 
   className = "" 
 }: BackButtonProps) {
+  const [, setLocation] = useLocation();
+  
   const handleClick = () => {
     if (onClick) {
       onClick();
     } else if (href) {
-      window.location.href = href;
+      setLocation(href);
     } else {
-      window.history.back();
+      // Default fallback to dashboard for better UX
+      setLocation('/dashboard');
     }
   };
 

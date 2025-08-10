@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAccessibility } from '@/hooks/useAccessibility';
 import { useCopyProtection } from '@/hooks/useCopyProtection';
 import AccessibilityPanel from '@/components/AccessibilityPanel';
+import { useLocation } from 'wouter';
 
 // Configure PDF.js worker using the bundled version from node_modules
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
@@ -45,6 +46,7 @@ export function PremiumPDFReader({
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const { settings, speakText, stopReading, isReading } = useAccessibility();
   const { tracking, isBlocked, canCopy, recordCopy, getRemainingPercentage, isCloseToLimit } = useCopyProtection(bookId);
 
@@ -495,7 +497,7 @@ export function PremiumPDFReader({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.history.back()}
+                onClick={() => setLocation('/dashboard')}
                 className={`${isDarkMode ? 'text-white hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors`}
               >
                 <ChevronLeft className="h-5 w-5 mr-1" />

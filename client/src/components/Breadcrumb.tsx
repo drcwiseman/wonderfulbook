@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronRight, Home } from "lucide-react";
 import { motion } from "framer-motion";
+import { useLocation } from "wouter";
 
 interface BreadcrumbItem {
   label: string;
@@ -14,6 +15,8 @@ interface BreadcrumbProps {
 }
 
 export default function Breadcrumb({ items, className = "" }: BreadcrumbProps) {
+  const [, setLocation] = useLocation();
+  
   return (
     <motion.nav 
       className={`flex items-center space-x-2 text-sm ${className}`}
@@ -28,15 +31,15 @@ export default function Breadcrumb({ items, className = "" }: BreadcrumbProps) {
         return (
           <div key={index} className="flex items-center space-x-2">
             {item.href && !isLast ? (
-              <motion.a
-                href={item.href}
-                className="flex items-center space-x-1 text-gray-600 hover:text-orange-600 transition-colors"
+              <motion.button
+                onClick={() => setLocation(item.href!)}
+                className="flex items-center space-x-1 text-gray-600 hover:text-orange-600 transition-colors cursor-pointer"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 {Icon && <Icon className="w-4 h-4" />}
                 <span>{item.label}</span>
-              </motion.a>
+              </motion.button>
             ) : (
               <div className={`flex items-center space-x-1 ${isLast ? 'text-orange-600 font-medium' : 'text-gray-600'}`}>
                 {Icon && <Icon className="w-4 h-4" />}
