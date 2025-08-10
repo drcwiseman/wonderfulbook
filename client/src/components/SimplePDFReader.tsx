@@ -5,8 +5,8 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 
-// Set up PDF.js worker with correct path
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Configure PDF.js worker with simple CDN fallback
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
 interface SimplePDFReaderProps {
   pdfUrl: string;
@@ -77,12 +77,20 @@ export function SimplePDFReader({ pdfUrl, bookTitle, onClose }: SimplePDFReaderP
       <div className="flex-1 overflow-auto p-8">
         <div className="max-w-4xl mx-auto">
           <Document
-            file={pdfUrl}
+            file={{
+              url: pdfUrl,
+              httpHeaders: {
+                'Cache-Control': 'no-cache'
+              }
+            }}
             onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={(error) => {
+              console.error('PDF load error:', error);
+            }}
             className="flex justify-center"
             error={
               <div className="flex items-center justify-center p-20 text-red-600">
-                <span className="text-lg">Failed to load PDF</span>
+                <span className="text-lg">Failed to load PDF - Check console for details</span>
               </div>
             }
             loading={
