@@ -72,6 +72,9 @@ function Router() {
         <Route path="/book/:id">
           <PageWrapper><BookDetail /></PageWrapper>
         </Route>
+        <Route path="/book-detail/:id">
+          <PageWrapper><BookDetail /></PageWrapper>
+        </Route>
         <Route path="/subscribe">
           <PageWrapper><Subscribe /></PageWrapper>
         </Route>

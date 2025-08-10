@@ -43,7 +43,7 @@ interface ReviewWithUser extends BookReview {
 }
 
 export default function BookDetail() {
-  const [, params] = useRoute("/book/:id");
+  const [, params] = useRoute("/book/:id") || useRoute("/book-detail/:id");
   const [, setLocation] = useLocation();
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
