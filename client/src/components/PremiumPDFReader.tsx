@@ -12,8 +12,8 @@ import { useAccessibility } from '@/hooks/useAccessibility';
 import { useCopyProtection } from '@/hooks/useCopyProtection';
 import AccessibilityPanel from '@/components/AccessibilityPanel';
 
-// Configure PDF.js with a reliable CDN - using unpkg.com which has better CORS support
-pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+// Configure PDF.js worker to use local file for reliability
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 interface PremiumPDFReaderProps {
   bookId: string;
