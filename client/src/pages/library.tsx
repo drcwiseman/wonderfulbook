@@ -28,6 +28,7 @@ import {
 import { Book } from "@shared/schema";
 import Header from "@/components/Header";
 import PageHeader from "@/components/PageHeader";
+import { DownloadBookButton } from "@/components/DownloadBookButton";
 
 interface LibraryBook extends Book {
   readingProgress?: {
@@ -66,12 +67,12 @@ export default function Library() {
   const userTier = (user as any)?.subscriptionTier || 'free';
   const tierHierarchy: Record<string, number> = { free: 0, basic: 1, premium: 2 };
 
-  const libraryBooks: LibraryBook[] = allBooks
-    .filter(book => {
+  const libraryBooks: LibraryBook[] = (allBooks as any[])
+    .filter((book: any) => {
       const bookTier = book.requiredTier || 'free';
       return tierHierarchy[userTier] >= tierHierarchy[bookTier];
     })
-    .map(book => {
+    .map((book: any) => {
       const progress = (progressData as any[]).find((p: any) => p.bookId === book.id);
       const isBookmarked = (bookmarks as any[]).some((b: any) => b.bookId === book.id);
       
