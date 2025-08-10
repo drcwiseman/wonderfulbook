@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 import type { Book } from "@shared/schema";
