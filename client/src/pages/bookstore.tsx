@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,9 @@ import {
   List,
   BookOpen,
   Award,
-  Clock
+  Clock,
+  Download,
+  Plus
 } from "lucide-react";
 import { Book } from "@shared/schema";
 import { SEOHead, seoConfigs } from "@/components/SEOHead";
@@ -284,13 +287,70 @@ interface BookCardProps {
 
 function BookCard({ book, layout }: BookCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  const handleBookClick = () => {
-    if (book.hasAccess) {
-      window.location.href = `/book/${book.id}`;
-    } else {
-      window.location.href = '/subscribe';
+  const hasActiveSubscription = () => {
+    if (!user) return false;
+    return (user as any).subscriptionTier !== "free" && (user as any).subscriptionStatus === "active";
+  };
+
+  const canBorrowBook = () => {
+    if (!user) return false;
+    if (book.requiredTier === "free") return true;
+    if ((user as any).subscriptionTier === "premium") return true;
+    if ((user as any).subscriptionTier === "basic" && book.requiredTier !== "premium") return true;
+    return false;
+  };
+
+  // Create loan (borrow book) mutation
+  const borrowBookMutation = useMutation({
+    mutationFn: async (bookId: string) => {
+      const response = await fetch('/api/loans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ bookId }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to borrow book');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Book borrowed successfully!',
+        description: 'You can now start reading this book.',
+      });
+      // Redirect to reader
+      window.location.href = `/reader/${book.id}`;
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Failed to borrow book',
+        description: error.message || 'Please try again',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleBookClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking a button
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
     }
+    
+    window.location.href = `/book/${book.id}`;
+  };
+
+  const handleBorrowClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    borrowBookMutation.mutate(book.id);
   };
 
   const bookTier = book.requiredTier || 'free';
@@ -332,7 +392,7 @@ function BookCard({ book, layout }: BookCardProps) {
               
               <p className="text-gray-600 text-sm line-clamp-2 mb-3">{book.description}</p>
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
@@ -349,6 +409,45 @@ function BookCard({ book, layout }: BookCardProps) {
                 {!book.hasAccess && (
                   <span className="text-xs text-gray-500">{book.accessReason}</span>
                 )}
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                {canBorrowBook() ? (
+                  <Button 
+                    size="sm"
+                    className="bg-orange-600 hover:bg-orange-700 text-white flex-1"
+                    onClick={handleBorrowClick}
+                    disabled={borrowBookMutation.isPending}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    {borrowBookMutation.isPending ? 'Borrowing...' : 'Borrow'}
+                  </Button>
+                ) : (
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    className="border-orange-500 text-orange-600 hover:bg-orange-50 flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.location.href = '/subscribe';
+                    }}
+                  >
+                    <Crown className="w-4 h-4 mr-1" />
+                    Subscribe
+                  </Button>
+                )}
+                <Button 
+                  size="sm"
+                  variant="outline"
+                  className="px-3"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.location.href = `/book/${book.id}`;
+                  }}
+                >
+                  Details
+                </Button>
               </div>
             </div>
           </div>
@@ -400,16 +499,38 @@ function BookCard({ book, layout }: BookCardProps) {
           <h3 className="font-semibold text-base text-gray-900 line-clamp-2 mb-1">{book.title}</h3>
           <p className="text-orange-600 text-sm font-medium mb-2">{book.author}</p>
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-400 fill-current" />
               <span className="text-sm font-medium">{book.rating || '0.0'}</span>
               <span className="text-xs text-gray-500">({book.totalRatings || 0})</span>
             </div>
-            
-            {isHovered && book.hasAccess && (
-              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-xs h-7 px-3">
-                Read Now
+          </div>
+          
+          {/* Grid Action Buttons */}
+          <div className="space-y-1">
+            {canBorrowBook() ? (
+              <Button 
+                size="sm"
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs h-7"
+                onClick={handleBorrowClick}
+                disabled={borrowBookMutation.isPending}
+              >
+                <Download className="w-3 h-3 mr-1" />
+                {borrowBookMutation.isPending ? 'Borrowing...' : 'Borrow'}
+              </Button>
+            ) : (
+              <Button 
+                size="sm"
+                variant="outline"
+                className="w-full border-orange-500 text-orange-600 hover:bg-orange-50 text-xs h-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.location.href = '/subscribe';
+                }}
+              >
+                <Crown className="w-3 h-3 mr-1" />
+                Subscribe
               </Button>
             )}
           </div>
