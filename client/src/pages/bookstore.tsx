@@ -331,10 +331,9 @@ function BookCard({ book, layout }: BookCardProps) {
     onSuccess: () => {
       toast({
         title: 'Book downloaded successfully!',
-        description: 'You can now start reading this book offline.',
+        description: 'You can now read this book offline.',
       });
-      // Redirect to reader
-      window.location.href = `/reader/${book.id}`;
+      // Don't redirect, just show success
     },
     onError: (error: any) => {
       toast({
@@ -357,6 +356,11 @@ function BookCard({ book, layout }: BookCardProps) {
   const handleDownloadClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     downloadBookMutation.mutate(book.id);
+  };
+
+  const handleReadClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.location.href = `/reader/${book.id}`;
   };
 
   const bookTier = book.requiredTier || 'free';
@@ -420,15 +424,25 @@ function BookCard({ book, layout }: BookCardProps) {
               {/* Action Buttons */}
               <div className="flex gap-2">
                 {canDownloadBook() ? (
-                  <Button 
-                    size="sm"
-                    className="bg-orange-600 hover:bg-orange-700 text-white flex-1"
-                    onClick={handleDownloadClick}
-                    disabled={downloadBookMutation.isPending}
-                  >
-                    <Download className="w-4 h-4 mr-1" />
-                    {downloadBookMutation.isPending ? 'Downloading...' : 'Download'}
-                  </Button>
+                  <>
+                    <Button 
+                      size="sm"
+                      className="bg-orange-600 hover:bg-orange-700 text-white flex-1"
+                      onClick={handleReadClick}
+                    >
+                      <BookOpen className="w-4 h-4 mr-1" />
+                      Read
+                    </Button>
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                      onClick={handleDownloadClick}
+                      disabled={downloadBookMutation.isPending}
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </>
                 ) : (
                   <Button 
                     size="sm"
@@ -516,15 +530,26 @@ function BookCard({ book, layout }: BookCardProps) {
           {/* Grid Action Buttons */}
           <div className="space-y-1">
             {canDownloadBook() ? (
-              <Button 
-                size="sm"
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs h-7"
-                onClick={handleDownloadClick}
-                disabled={downloadBookMutation.isPending}
-              >
-                <Download className="w-3 h-3 mr-1" />
-                {downloadBookMutation.isPending ? 'Downloading...' : 'Download'}
-              </Button>
+              <>
+                <Button 
+                  size="sm"
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs h-7"
+                  onClick={handleReadClick}
+                >
+                  <BookOpen className="w-3 h-3 mr-1" />
+                  Read
+                </Button>
+                <Button 
+                  size="sm"
+                  variant="outline"
+                  className="w-full border-orange-500 text-orange-600 hover:bg-orange-50 text-xs h-7"
+                  onClick={handleDownloadClick}
+                  disabled={downloadBookMutation.isPending}
+                >
+                  <Download className="w-3 h-3 mr-1" />
+                  {downloadBookMutation.isPending ? 'Downloading...' : 'Download'}
+                </Button>
+              </>
             ) : (
               <Button 
                 size="sm"
