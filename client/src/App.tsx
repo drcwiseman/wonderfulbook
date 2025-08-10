@@ -31,7 +31,6 @@ import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import ScrollToTop from "@/components/ScrollToTop";
 import AccessibilityButton from "@/components/AccessibilityButton";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 import FeedbackButton from "@/components/FeedbackButton";
 
@@ -129,7 +128,6 @@ function App() {
           <Router />
           <ScrollToTop />
           <AccessibilityButton />
-          <OfflineIndicator />
           <FeedbackButton />
         </TooltipProvider>
       </QueryClientProvider>

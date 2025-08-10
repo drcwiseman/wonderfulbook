@@ -56,7 +56,6 @@ export const users = pgTable("users", {
   freeTrialEndedAt: timestamp("free_trial_ended_at"),
   registrationIp: varchar("registration_ip"), // Track IP for duplicate prevention
   deviceFingerprint: varchar("device_fingerprint"), // Browser/device fingerprint
-
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -100,7 +99,6 @@ export const books = pgTable("books", {
   isFeatured: boolean("is_featured").default(false),
   requiredTier: varchar("required_tier").default("free"),
   previewPageCount: integer("preview_page_count").default(5), // Pages available for preview
-
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

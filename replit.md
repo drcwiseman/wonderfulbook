@@ -1,7 +1,7 @@
 # Wonderful Books
 
 ## Overview
-Wonderful Books is a subscription-based digital reading platform, similar to Netflix, offering a curated collection of self-improvement and educational books. It features a 3-tiered subscription model: a 7-day free trial (3 books), a Basic Plan (£5.99/month for 10 books), and a Premium Plan (£9.99/month for unlimited books). The platform provides comprehensive reading functionalities like progress tracking, bookmarks, and an Apple Books-inspired PDF reader. It also includes a robust admin panel for subscription and content management. The platform now includes Progressive Web App (PWA) capabilities with offline reading functionality, allowing users to download books for offline access. The platform aims to deliver a premium, engaging reading experience with a focus on transformational literature, utilizing easyJet's signature bright orange and clean white design.
+Wonderful Books is a subscription-based digital reading platform, similar to Netflix, offering a curated collection of self-improvement and educational books. It features a 3-tiered subscription model: a 7-day free trial (3 books), a Basic Plan (£5.99/month for 10 books), and a Premium Plan (£9.99/month for unlimited books). The platform provides comprehensive reading functionalities like progress tracking, bookmarks, and an Apple Books-inspired PDF reader. It also includes a robust admin panel for subscription and content management. The platform aims to deliver a premium, engaging reading experience with a focus on transformational literature, utilizing easyJet's signature bright orange and clean white design.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -22,16 +22,6 @@ Authentication is exclusively managed through a local email-based system with bc
 
 ### System Design Choices
 The platform incorporates a Netflix-style book selection system with time-based locking and billing cycle management. Free Trial users select 3 books for 7 days. Basic Plan users select 10 books for 30-day billing cycles. Premium users have unlimited access. Comprehensive admin interfaces (`/admin` and `/super-admin`) provide separate dashboards for content management and full system control, including user and subscription management with CRUD operations. A health monitoring system provides automated checks, performance tracking, and alerts. A complete navigation system with consistent headers, breadcrumbs, and back buttons is implemented across all major pages.
-
-### Progressive Web App & Offline Capabilities
-The platform is implemented as a Progressive Web App (PWA) with comprehensive offline reading functionality. Service workers cache books and essential app resources, enabling users to download books while online and read them offline. Features include:
-- Service worker-based caching with intelligent cache management
-- Offline indicator showing connection status and downloaded book count
-- Download buttons on book cards for easy offline access
-- Persistent storage using localStorage and Cache API
-- Automatic service worker registration and update management
-- Offline fallback pages and error handling
-- PWA manifest for app-like installation on devices
 
 ## External Dependencies
 

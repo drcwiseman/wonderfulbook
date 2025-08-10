@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { DownloadBookButton } from "@/components/DownloadBookButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -347,18 +346,9 @@ function BookCard({ book, layout }: BookCardProps) {
                   )}
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  {book.hasAccess && (
-                    <DownloadBookButton 
-                      book={book} 
-                      size="sm" 
-                      className="flex-shrink-0"
-                    />
-                  )}
-                  {!book.hasAccess && (
-                    <span className="text-xs text-gray-500">{book.accessReason}</span>
-                  )}
-                </div>
+                {!book.hasAccess && (
+                  <span className="text-xs text-gray-500">{book.accessReason}</span>
+                )}
               </div>
             </div>
           </div>
@@ -410,7 +400,7 @@ function BookCard({ book, layout }: BookCardProps) {
           <h3 className="font-semibold text-base text-gray-900 line-clamp-2 mb-1">{book.title}</h3>
           <p className="text-orange-600 text-sm font-medium mb-2">{book.author}</p>
           
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-400 fill-current" />
               <span className="text-sm font-medium">{book.rating || '0.0'}</span>
@@ -424,18 +414,9 @@ function BookCard({ book, layout }: BookCardProps) {
             )}
           </div>
           
-          <div className="flex items-center justify-between">
-            {book.hasAccess && (
-              <DownloadBookButton 
-                book={book} 
-                size="sm" 
-                className="flex-1"
-              />
-            )}
-            {!book.hasAccess && (
-              <p className="text-xs text-gray-500 text-center flex-1">{book.accessReason}</p>
-            )}
-          </div>
+          {!book.hasAccess && (
+            <p className="text-xs text-gray-500 mt-1 text-center">{book.accessReason}</p>
+          )}
         </div>
       </CardContent>
     </Card>
