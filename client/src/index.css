@@ -179,33 +179,53 @@ body {
 
 /* Color themes */
 .theme-sepia {
-  filter: sepia(20%) saturate(120%);
-  background-color: #f4f1e8 !important;
+  background-color: #f7f4e8 !important;
 }
 
 .theme-sepia * {
-  background-color: inherit;
+  background-color: #f7f4e8 !important;
+  color: #3d3d3d !important;
+}
+
+.theme-sepia .bg-white {
+  background-color: #f7f4e8 !important;
 }
 
 .theme-dark {
-  filter: invert(100%) hue-rotate(180deg);
+  background-color: #1a1a1a !important;
+}
+
+.theme-dark * {
+  background-color: #1a1a1a !important;
+  color: #e0e0e0 !important;
+}
+
+.theme-dark .bg-white {
+  background-color: #1a1a1a !important;
 }
 
 .theme-blue {
-  filter: sepia(100%) saturate(50%) hue-rotate(180deg);
+  background-color: #f0f4ff !important;
+}
+
+.theme-blue * {
+  background-color: #f0f4ff !important;
+  color: #2d3748 !important;
 }
 
 /* Dyslexia-friendly adjustments */
 .dyslexia-friendly,
 .dyslexia-friendly * {
-  font-family: 'Comic Sans MS', 'Trebuchet MS', 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', 'Arial', cursive !important;
+  font-family: 'Trebuchet MS', 'Lucida Grande', 'Lucida Sans Unicode', 'Verdana', 'Arial', sans-serif !important;
 }
 
 .dyslexia-friendly p,
 .dyslexia-friendly div,
 .dyslexia-friendly span {
-  font-weight: 500;
-  word-spacing: 0.16em;
+  font-weight: 400;
+  word-spacing: 0.1em;
+  letter-spacing: 0.05em;
+  line-height: 1.8;
 }
 
 .dyslexia-friendly h1,
@@ -214,8 +234,9 @@ body {
 .dyslexia-friendly h4,
 .dyslexia-friendly h5,
 .dyslexia-friendly h6 {
-  font-weight: 700;
-  margin-bottom: 1em;
+  font-weight: 600;
+  margin-bottom: 0.8em;
+  letter-spacing: 0.03em;
 }
 
 /* Text-to-speech highlighting */
@@ -271,130 +292,6 @@ textarea:focus-visible {
     min-height: 44px;
     min-width: 44px;
     padding: 12px;
-  }
-}
-
-/* Professional Apple Books PDF Styling */
-.react-pdf__Page {
-  margin: 0 auto;
-  display: block;
-  /* Clean book appearance */
-  box-shadow: none !important;
-  border: none !important;
-  background: transparent;
-  width: 100%;
-}
-
-.react-pdf__Page__canvas {
-  margin: 0 auto;
-  display: block;
-  /* Professional book shadows */
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.15),
-    0 8px 24px rgba(0, 0, 0, 0.1),
-    0 4px 12px rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  /* Crisp, professional rendering */
-  image-rendering: auto;
-  background: white !important;
-  width: 100% !important;
-  height: auto !important;
-}
-
-.react-pdf__Page__canvas:hover {
-  box-shadow: 
-    0 25px 75px rgba(0, 0, 0, 0.18),
-    0 12px 36px rgba(0, 0, 0, 0.12),
-    0 6px 18px rgba(0, 0, 0, 0.1);
-  transform: translateY(-3px) scale(1.01);
-}
-
-/* Professional book page styling */
-.professional-book-page .react-pdf__Page__canvas {
-  box-shadow: 
-    0 24px 80px rgba(0, 0, 0, 0.2),
-    0 12px 40px rgba(0, 0, 0, 0.15),
-    0 6px 20px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  border: 1px solid rgba(0, 0, 0, 0.03);
-}
-
-.react-pdf__Document {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-
-
-/* Text layer - Clean and Simple */
-.react-pdf__Page__textContent {
-  /* Simple, clean text rendering */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  /* NO filters that mess up readability */
-}
-
-/* Dark mode - Professional adjustments */
-.dark .react-pdf__Page {
-  background: #1f2937;
-}
-
-.dark .react-pdf__Page__canvas {
-  background: #1f2937 !important;
-  box-shadow: 
-    0 12px 48px rgba(0, 0, 0, 0.4),
-    0 6px 24px rgba(0, 0, 0, 0.3),
-    0 3px 12px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dark .react-pdf__Page__canvas:hover {
-  box-shadow: 
-    0 16px 64px rgba(0, 0, 0, 0.5),
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 4px 16px rgba(0, 0, 0, 0.3);
-  transform: translateY(-2px) scale(1.02);
-}
-
-/* Responsive Apple Books styling */
-@media (max-width: 768px) {
-  .professional-book-page .react-pdf__Page__canvas {
-    border-radius: 6px;
-    box-shadow: 
-      0 12px 40px rgba(0, 0, 0, 0.15),
-      0 6px 20px rgba(0, 0, 0, 0.1);
-  }
-}
-
-@media (min-width: 769px) {
-  .professional-book-page .react-pdf__Page__canvas {
-    border-radius: 8px;
-  }
-}
-
-@media (min-width: 1200px) {
-  .professional-book-page .react-pdf__Page__canvas {
-    border-radius: 10px;
-    box-shadow: 
-      0 30px 100px rgba(0, 0, 0, 0.25),
-      0 15px 50px rgba(0, 0, 0, 0.18),
-      0 8px 25px rgba(0, 0, 0, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  }
-}
-
-
-
-/* Fullscreen enhancements */
-@media (min-width: 1024px) {
-  .apple-books-page .react-pdf__Page__canvas {
-    max-width: 90vw;
-    max-height: 85vh;
   }
 }
 

@@ -2,7 +2,7 @@ import React from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { SimplePDFReader } from "@/components/SimplePDFReader";
+import { PremiumPDFReader } from "@/components/PremiumPDFReader";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -108,10 +108,12 @@ export default function ReaderPage() {
 
   return (
     <main id="main-content" className="pdf-viewer book-content" role="main" aria-label="Book Reader">
-      <SimplePDFReader
-        pdfUrl={`/api/stream-pdf/${bookId}`}
+      <PremiumPDFReader
+        bookId={bookId}
         bookTitle={(book as any)?.title || 'Unknown Book'}
-        onClose={() => setLocation('/dashboard')}
+        initialPage={initialPage}
+        onPageChange={handlePageChange}
+        bookmarks={Array.isArray(bookmarks) ? bookmarks : []}
       />
     </main>
   );
