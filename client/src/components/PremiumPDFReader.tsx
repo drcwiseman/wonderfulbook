@@ -680,28 +680,82 @@ export function PremiumPDFReader({
           options={pdfOptions}
         >
           {numPages && (
-            <div className="transition-all duration-300 ease-in-out">
-              <Page
-                pageNumber={pageNumber}
-                scale={scale}
-                renderTextLayer={true}
-                renderAnnotationLayer={false}
-                className={`shadow-2xl transition-all duration-500 ease-out ${
-                  isDarkMode ? 'shadow-black/50' : 'shadow-gray-400/30'
-                } hover:shadow-3xl transform hover:scale-[1.02]`}
-                canvasBackground={isDarkMode ? '#1f2937' : 'white'}
-                loading={
-                  <div className={`flex items-center justify-center p-8 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mr-3"></div>
-                    Loading page...
+            <div className="transition-all duration-300 ease-in-out p-4 md:p-8">
+              {/* Book Container with Professional Styling */}
+              <div className={`
+                relative mx-auto max-w-4xl
+                ${isDarkMode ? 'bg-gray-800' : 'bg-white'}
+                rounded-lg shadow-2xl
+                ${isDarkMode ? 'shadow-black/50' : 'shadow-gray-500/30'}
+                border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}
+                transition-all duration-500 ease-out
+                hover:shadow-3xl hover:scale-[1.01]
+                before:absolute before:inset-0 before:rounded-lg
+                before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent
+                before:opacity-20 before:pointer-events-none
+              `}>
+                {/* Book Spine Effect */}
+                <div className={`
+                  absolute -left-1 top-2 bottom-2 w-2 rounded-l-md
+                  ${isDarkMode ? 'bg-gradient-to-b from-gray-600 to-gray-800' : 'bg-gradient-to-b from-orange-200 to-orange-400'}
+                  shadow-lg
+                `}></div>
+                
+                {/* Inner Book Page */}
+                <div className={`
+                  relative overflow-hidden rounded-lg
+                  ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}
+                  p-4 md:p-6 lg:p-8
+                `}>
+                  {/* Page Header */}
+                  <div className={`
+                    absolute top-0 left-0 right-0 h-1
+                    ${isDarkMode ? 'bg-gradient-to-r from-gray-700 via-orange-500 to-gray-700' : 'bg-gradient-to-r from-gray-200 via-orange-400 to-gray-200'}
+                  `}></div>
+                  
+                  {/* Page Content */}
+                  <div className="relative">
+                    <Page
+                      pageNumber={pageNumber}
+                      scale={scale}
+                      renderTextLayer={true}
+                      renderAnnotationLayer={false}
+                      className={`
+                        rounded shadow-lg transition-all duration-300
+                        ${isDarkMode ? 'shadow-black/20' : 'shadow-gray-300/50'}
+                      `}
+                      canvasBackground={isDarkMode ? '#1f2937' : 'white'}
+                      loading={
+                        <div className={`flex items-center justify-center p-16 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mr-3"></div>
+                          Loading page...
+                        </div>
+                      }
+                      error={
+                        <div className={`flex items-center justify-center p-16 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+                          Failed to load page
+                        </div>
+                      }
+                    />
                   </div>
-                }
-                error={
-                  <div className={`flex items-center justify-center p-8 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
-                    Failed to load page
+                  
+                  {/* Page Number Indicator */}
+                  <div className={`
+                    absolute bottom-4 right-6 text-xs font-medium
+                    ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}
+                    bg-transparent
+                  `}>
+                    {pageNumber}
                   </div>
-                }
-              />
+                </div>
+                
+                {/* Book Corner Shadow Effect */}
+                <div className={`
+                  absolute -bottom-1 -right-1 w-4 h-4
+                  ${isDarkMode ? 'bg-gray-900' : 'bg-gray-200'}
+                  rounded-br-lg opacity-30
+                `}></div>
+              </div>
             </div>
           )}
           </Document>
