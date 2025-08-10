@@ -26,7 +26,8 @@ import {
   Users,
   ThumbsUp,
   ThumbsDown,
-  MessageSquare
+  MessageSquare,
+  Download
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -50,6 +51,44 @@ export default function BookDetail() {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  // Create loan (borrow book) mutation
+  const borrowBookMutation = useMutation({
+    mutationFn: async (bookId: string) => {
+      const response = await fetch('/api/loans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ bookId }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to borrow book');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Book borrowed successfully!',
+        description: 'You can now start reading this book.',
+      });
+      // Redirect to reader
+      if (book?.id) {
+        setLocation(`/reader/${book.id}`);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Failed to borrow book',
+        description: error.message || 'Please try again',
+        variant: 'destructive',
+      });
+    },
+  });
 
   const { data: book, isLoading: bookLoading } = useQuery<BookType>({
     queryKey: ["/api/books", params?.id],
@@ -174,11 +213,13 @@ export default function BookDetail() {
                     ) : (
                       <div className="space-y-3">
                         {hasActiveSubscription() ? (
-                          <Button asChild className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-lg py-3">
-                            <Link href="/book-selection">
-                              <Target className="w-5 h-5 mr-2" />
-                              Select This Book
-                            </Link>
+                          <Button 
+                            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-lg py-3"
+                            onClick={() => borrowBookMutation.mutate(book.id)}
+                            disabled={borrowBookMutation.isPending}
+                          >
+                            <Download className="w-5 h-5 mr-2" />
+                            {borrowBookMutation.isPending ? 'Borrowing...' : 'Borrow Book'}
                           </Button>
                         ) : (
                           <Button asChild className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-lg py-3">
@@ -247,16 +288,27 @@ export default function BookDetail() {
                           </h3>
                           <p className="text-gray-700 mb-4">
                             {hasActiveSubscription() 
-                              ? "This book is available with your subscription. Add it to your reading list to start reading."
+                              ? "This book is available with your subscription. Borrow it to start reading and download for offline access."
                               : "This book requires a premium subscription. Start your free trial to access our complete library."
                             }
                           </p>
-                          <Button asChild className="btn-orange-accessible">
-                            <Link href={hasActiveSubscription() ? "/book-selection" : "/subscribe"}>
-                              <Zap className="w-4 h-4 mr-2" />
-                              {hasActiveSubscription() ? "Add to Library" : "Start Free Trial"}
-                            </Link>
-                          </Button>
+                          {hasActiveSubscription() ? (
+                            <Button 
+                              className="btn-orange-accessible"
+                              onClick={() => borrowBookMutation.mutate(book.id)}
+                              disabled={borrowBookMutation.isPending}
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              {borrowBookMutation.isPending ? 'Borrowing...' : 'Borrow Book'}
+                            </Button>
+                          ) : (
+                            <Button asChild className="btn-orange-accessible">
+                              <Link href="/subscribe">
+                                <Zap className="w-4 h-4 mr-2" />
+                                Start Free Trial
+                              </Link>
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>
