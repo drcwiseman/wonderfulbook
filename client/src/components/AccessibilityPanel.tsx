@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAccessibility } from "@/hooks/useAccessibility";
 import { 
   Accessibility, 
   Volume2, 
@@ -53,160 +54,35 @@ interface AccessibilityPanelProps {
 }
 
 export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPanelProps) {
-  const [settings, setSettings] = useState<AccessibilitySettings>(defaultSettings);
-  const [isReading, setIsReading] = useState(false);
-  const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const {
+    settings,
+    isReading,
+    isPaused,
+    availableVoices,
+    updateSettings,
+    startTextToSpeech,
+    pauseTextToSpeech,
+    resumeTextToSpeech,
+    stopTextToSpeech
+  } = useAccessibility();
+  
   const [selectedVoice, setSelectedVoice] = useState<string>('');
 
-  // Initialize speech synthesis
+  // Initialize voice selection
   useEffect(() => {
-    if ('speechSynthesis' in window) {
-      const loadVoices = () => {
-        const availableVoices = speechSynthesis.getVoices();
-        setVoices(availableVoices);
-        
-        // Select a default English voice
-        const englishVoice = availableVoices.find(voice => 
-          voice.lang.startsWith('en') && voice.default
-        ) || availableVoices[0];
-        
-        if (englishVoice) {
-          setSelectedVoice(englishVoice.name);
-        }
-      };
-
-      loadVoices();
-      speechSynthesis.addEventListener('voiceschanged', loadVoices);
-
-      return () => {
-        speechSynthesis.removeEventListener('voiceschanged', loadVoices);
-      };
+    if (availableVoices.length > 0 && !selectedVoice) {
+      const englishVoice = availableVoices.find(voice => 
+        voice.lang.startsWith('en') && voice.default
+      ) || availableVoices[0];
+      
+      if (englishVoice) {
+        setSelectedVoice(englishVoice.name);
+      }
     }
-  }, []);
-
-  // Load saved settings
-  useEffect(() => {
-    const savedSettings = localStorage.getItem('accessibilitySettings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
-  }, []);
-
-  // Save settings when they change
-  useEffect(() => {
-    localStorage.setItem('accessibilitySettings', JSON.stringify(settings));
-    applyAccessibilitySettings(settings);
-  }, [settings]);
-
-  const applyAccessibilitySettings = (newSettings: AccessibilitySettings) => {
-    console.log('Applying accessibility settings:', newSettings);
-    const root = document.documentElement;
-    
-    // Apply dyslexia-friendly font
-    if (newSettings.dyslexiaFont) {
-      root.style.setProperty('--font-family', '"Trebuchet MS", "Verdana", "Arial", sans-serif');
-      document.body.classList.add('dyslexia-friendly');
-    } else {
-      root.style.removeProperty('--font-family');
-      document.body.classList.remove('dyslexia-friendly');
-    }
-    
-    // Apply font size
-    root.style.setProperty('--accessibility-font-size', `${newSettings.fontSize}px`);
-    
-    // Apply line height
-    root.style.setProperty('--accessibility-line-height', newSettings.lineHeight.toString());
-    
-    // Apply letter spacing
-    root.style.setProperty('--accessibility-letter-spacing', `${newSettings.letterSpacing}px`);
-    
-    // Apply high contrast mode
-    if (newSettings.highContrast) {
-      document.body.classList.add('high-contrast');
-    } else {
-      document.body.classList.remove('high-contrast');
-    }
-    
-    // Apply color theme - remove all theme classes first
-    document.body.classList.remove('theme-sepia', 'theme-dark', 'theme-blue');
-    if (newSettings.colorTheme !== 'default') {
-      document.body.classList.add(`theme-${newSettings.colorTheme}`);
-    }
-    
-    // Apply focus mode
-    if (newSettings.focusMode) {
-      document.body.classList.add('focus-mode');
-    } else {
-      document.body.classList.remove('focus-mode');
-    }
-  };
-
-  const speakText = (text: string) => {
-    if (!('speechSynthesis' in window) || !settings.textToSpeech) return;
-
-    // Stop current speech
-    speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voice = voices.find(v => v.name === selectedVoice);
-    
-    if (voice) {
-      utterance.voice = voice;
-    }
-    
-    utterance.rate = settings.voiceRate;
-    utterance.pitch = settings.voicePitch;
-    
-    utterance.onstart = () => {
-      setIsReading(true);
-      setCurrentUtterance(utterance);
-    };
-    
-    utterance.onend = () => {
-      setIsReading(false);
-      setCurrentUtterance(null);
-    };
-    
-    utterance.onerror = () => {
-      setIsReading(false);
-      setCurrentUtterance(null);
-    };
-
-    speechSynthesis.speak(utterance);
-  };
-
-  const stopReading = () => {
-    speechSynthesis.cancel();
-    setIsReading(false);
-    setCurrentUtterance(null);
-  };
-
-  const pauseReading = () => {
-    if (speechSynthesis.speaking) {
-      speechSynthesis.pause();
-    }
-  };
-
-  const resumeReading = () => {
-    if (speechSynthesis.paused) {
-      speechSynthesis.resume();
-    }
-  };
+  }, [availableVoices, selectedVoice]);
 
   const readPageContent = () => {
-    const content = document.querySelector('main')?.textContent || 
-                   document.body.textContent || '';
-    
-    // Clean up the text
-    const cleanText = content
-      .replace(/\s+/g, ' ')
-      .replace(/[^\w\s.,!?;:]/g, '')
-      .trim();
-    
-    if (cleanText) {
-      speakText(cleanText);
-    }
+    startTextToSpeech();
   };
 
   const updateSetting = <K extends keyof AccessibilitySettings>(
@@ -214,7 +90,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPan
     value: AccessibilitySettings[K]
   ) => {
     console.log(`Accessibility setting changed: ${key}`, value);
-    setSettings(prev => ({ ...prev, [key]: value }));
+    updateSettings({ [key]: value });
   };
 
   return (
@@ -293,7 +169,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPan
                         
                         {isReading && (
                           <Button
-                            onClick={stopReading}
+                            onClick={stopTextToSpeech}
                             variant="outline"
                             className="border-red-500 text-red-500 hover:bg-red-50"
                           >
@@ -303,7 +179,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPan
                       </div>
 
                       {/* Voice Selection */}
-                      {voices.length > 0 && (
+                      {availableVoices.length > 0 && (
                         <div>
                           <label className="text-sm text-gray-700 dark:text-gray-300 block mb-2">
                             Voice
@@ -313,7 +189,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPan
                               <SelectValue placeholder="Select voice" />
                             </SelectTrigger>
                             <SelectContent>
-                              {voices.map((voice) => (
+                              {availableVoices.map((voice) => (
                                 <SelectItem key={voice.name} value={voice.name}>
                                   {voice.name} ({voice.lang})
                                 </SelectItem>
@@ -478,7 +354,7 @@ export default function AccessibilityPanel({ isOpen, onClose }: AccessibilityPan
 
               {/* Reset Button */}
               <Button
-                onClick={() => setSettings(defaultSettings)}
+                onClick={() => updateSettings(defaultSettings)}
                 variant="outline"
                 className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
               >

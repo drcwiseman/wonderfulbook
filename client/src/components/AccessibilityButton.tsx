@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Accessibility } from "lucide-react";
-import AccessibilityPanel from "./AccessibilityPanel";
+import SimpleAccessibilityPanel from "./SimpleAccessibilityPanel";
 
 export default function AccessibilityButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +32,7 @@ export default function AccessibilityButton() {
       </motion.div>
 
       {/* Accessibility Panel */}
-      <AccessibilityPanel isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      <SimpleAccessibilityPanel isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </>
   );
 }
