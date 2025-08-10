@@ -105,4 +105,8 @@ app.use((req, res, next) => {
     console.error('Server initialization failed:', error);
     process.exit(1);
   }
+})().catch((error) => {
+  console.error('Unhandled async error in server initialization:', error);
+  process.exit(1);
+});
 })();
