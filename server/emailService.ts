@@ -193,7 +193,7 @@ class EmailService {
    */
   generateUnsubscribeUrl(token: string): string {
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://${process.env.REPL_SLUG ?? 'app'}.${process.env.REPL_OWNER ?? 'user'}.repl.co`
+      ? `https://${process.env.REPL_SLUG ?? 'app'}.${process.env.REPL_OWNER ?? 'user'}.replit.app`
       : 'http://localhost:3000';
     
     return `${baseUrl}/unsubscribe?token=${token}`;
@@ -314,7 +314,7 @@ class EmailService {
       daysLeft,
       trialEndDate: user.freeTrialEndedAt?.toLocaleDateString() || 'soon',
       upgradeUrl: `${process.env.NODE_ENV === 'production' 
-        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.app`
         : 'http://localhost:3000'}/subscription`,
       unsubscribeUrl,
     };
@@ -348,7 +348,7 @@ class EmailService {
       planPrice,
       billingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(), // 30 days from now
       accountUrl: `${process.env.NODE_ENV === 'production' 
-        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.app`
         : 'http://localhost:3000'}/account`,
       unsubscribeUrl,
     };
@@ -377,7 +377,7 @@ class EmailService {
       planName,
       endDate,
       reactivateUrl: `${process.env.NODE_ENV === 'production' 
-        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.app`
         : 'http://localhost:3000'}/subscription`,
       unsubscribeUrl,
     };
@@ -405,7 +405,7 @@ class EmailService {
     const unsubscribeUrl = this.generateUnsubscribeUrl(preferences.unsubscribeToken);
     
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.app`
       : 'http://localhost:5000';
     
     const verificationUrl = `${baseUrl}/api/auth/verify-email/${user.emailVerificationToken}`;
@@ -442,7 +442,7 @@ class EmailService {
     const unsubscribeUrl = this.generateUnsubscribeUrl(preferences.unsubscribeToken);
     
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.app`
       : 'http://localhost:5000';
     
     const resetUrl = `${baseUrl}/auth/reset-password?token=${user.passwordResetToken}`;
