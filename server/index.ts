@@ -68,10 +68,15 @@ app.use((req, res, next) => {
     // importantly only setup vite in development and after
     // setting up all the other routes so the catch-all route
     // doesn't interfere with the other routes
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
+    const isProduction = process.env.NODE_ENV === "production";
+    console.log(`Environment check: NODE_ENV=${process.env.NODE_ENV}, isProduction=${isProduction}`);
+    
+    if (isProduction) {
+      console.log('Serving static files from production build...');
       serveStatic(app);
+    } else {
+      console.log('Setting up Vite development server...');
+      await setupVite(app, server);
     }
 
     // ALWAYS serve the app on the port specified in the environment variable PORT
