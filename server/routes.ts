@@ -53,6 +53,20 @@ console.log('Using Stripe secret key starting with:', secretKey.substring(0, 3))
 const stripe = new Stripe(secretKey);
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register immediate health endpoints FIRST for deployment readiness
+  app.get('/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      service: 'book-streaming-platform',
+      ready: true
+    });
+  });
+  
+  // Register health check routes for monitoring
+  app.use('/', healthRouter);
+  app.use('/', healthzRouter);
+  
   // Production environment detection and configuration
   const isProduction = process.env.NODE_ENV === 'production';
   
@@ -3788,9 +3802,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Health monitoring routes
-  app.use('/', healthRouter);
-  app.use('/', healthzRouter);
+  // Health monitoring routes already registered at the top for immediate availability
   
   // Reports route with basic auth protection
   app.use('/reports', reportsAuth, express.static('reports'));

@@ -207,8 +207,8 @@ class EmailService {
       const htmlTemplatePath = path.join(this.templatesPath, `${templateName}.html.ejs`);
       const textTemplatePath = path.join(this.templatesPath, `${templateName}.text.ejs`);
 
-      const html = await ejs.renderFile(htmlTemplatePath, data);
-      const text = await ejs.renderFile(textTemplatePath, data);
+      const html = await ejs.renderFile(htmlTemplatePath, data) as string;
+      const text = await ejs.renderFile(textTemplatePath, data) as string;
 
       return { html, text };
     } catch (error) {
