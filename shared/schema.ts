@@ -13,7 +13,6 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import crypto from "crypto";
 
 // Session storage table for Replit Auth
 export const sessions = pgTable(
@@ -26,29 +25,28 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for production auth system
+// User storage table for Replit Auth and Local Registration
 export const users = pgTable("users", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull(),
-  email: text("email").unique().notNull(),
-  phone: text("phone").notNull(),
-  passwordHash: text("password_hash").notNull(),
-  isActive: boolean("is_active").default(true).notNull(),
-  role: varchar("role").default("user"), // user, admin, super_admin
-  // Legacy fields for backward compatibility
+  id: varchar("id").primaryKey(),
+  email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  // Local authentication fields
   username: varchar("username").unique(),
+  passwordHash: varchar("password_hash"), // For local auth
   emailVerified: boolean("email_verified").default(false),
   emailVerificationToken: varchar("email_verification_token"),
-  authProvider: varchar("auth_provider").default("local"), // replit, local, google
+  // OAuth provider info
+  authProvider: varchar("auth_provider").default("replit"), // replit, local, google
   // Subscription fields
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   subscriptionTier: varchar("subscription_tier").default("free"),
   subscriptionStatus: varchar("subscription_status").default("inactive"),
   booksReadThisMonth: integer("books_read_this_month").default(0),
+  role: varchar("role").default("user"), // user, admin, super_admin
+  isActive: boolean("is_active").default(true),
   lastLoginAt: timestamp("last_login_at"),
   passwordResetToken: varchar("password_reset_token"),
   passwordResetExpires: timestamp("password_reset_expires"),
@@ -58,12 +56,9 @@ export const users = pgTable("users", {
   freeTrialEndedAt: timestamp("free_trial_ended_at"),
   registrationIp: varchar("registration_ip"), // Track IP for duplicate prevention
   deviceFingerprint: varchar("device_fingerprint"), // Browser/device fingerprint
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => [
-  index("users_email_idx").on(table.email),
-  index("users_phone_idx").on(table.phone),
-]);
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
 // Subscription plans table (admin configurable)
 export const subscriptionPlans = pgTable("subscription_plans", {
@@ -352,27 +347,6 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(1, "Password is required"),
-});
-
-// New production auth schemas
-export const newRegisterSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Invalid email format"),
-  phone: z.string().min(7, "Phone must be at least 7 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  captchaToken: z.string().optional()
-});
-
-export const newLoginSchema = z.object({
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(1, "Password is required"),
-  captchaToken: z.string().optional()
-});
-
-export const adminResetPasswordSchema = z.object({
-  newPassword: z.string().min(6, "Password must be at least 6 characters")
 });
 
 export const forgotPasswordSchema = z.object({

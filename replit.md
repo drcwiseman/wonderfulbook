@@ -14,46 +14,6 @@ A comprehensive digital book streaming platform with advanced administrative too
 
 ## Recent Changes
 
-### Production-Ready Authentication System Implemented (Aug 11, 2025)
-**🔐 NEW AUTHENTICATION SYSTEM COMPLETE**
-
-Implemented a comprehensive production-ready authentication system that completely replaces the email verification/password reset flow with a simplified, secure approach:
-
-**✅ Core Features:**
-- **Registration**: Collects firstName, lastName, username, email, phone number with 6+ character password requirement
-- **Login**: Email/password authentication with session management
-- **No Email Verification**: Users can immediately access the platform after registration
-- **No Password Reset**: Support-based password assistance for enhanced security
-- **Phone Collection**: Required field for user identification and support
-
-**🛡️ Security Features:**
-- **Rate Limiting**: 5 registrations per 15 minutes, 10 logins per 15 minutes per IP
-- **Captcha Integration**: Cloudflare Turnstile support (configurable with TURNSTILE_SITE_KEY/TURNSTILE_SECRET)
-- **Password Hashing**: bcrypt with salt rounds 12 (production) / 10 (development)
-- **Input Validation**: Express-validator + Zod schema validation
-- **Session Security**: HttpOnly cookies, secure in production, proper CORS
-- **Admin Password Reset**: Token-based admin endpoint for password resets when needed
-
-**🔧 Technical Implementation:**
-- **Backend Routes**: `/api/auth/register`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`
-- **Frontend Components**: `RegisterForm.tsx`, `LoginForm.tsx` with React Hook Form + Zod validation
-- **Database Schema**: Uses existing firstName, lastName, username structure with added phone column and indexes
-- **Middleware**: Production auth middleware with rate limiting and captcha verification
-- **Error Handling**: Comprehensive error responses with detailed validation feedback
-
-**📱 User Experience:**
-- **Immediate Access**: No email verification wait time
-- **Support-Based Recovery**: Contact support for password assistance instead of automated reset
-- **Mobile-Friendly**: Responsive design with dark/light mode support
-- **Real-time Validation**: Client-side validation with server-side security
-
-**🎯 Routes Available:**
-- `/register` - New user registration
-- `/login` - User login
-- Legacy routes (`/auth/login`, `/auth/register`) still available for backward compatibility
-
-**Status**: ✅ COMPLETE - Fully tested with curl, all endpoints working, ready for production deployment
-
 ### Cloud Run Deployment Optimizations (Aug 11, 2025)
 Applied comprehensive fixes for Cloud Run deployment failures with advanced startup optimization:
 
@@ -117,33 +77,36 @@ Applied comprehensive fixes for Cloud Run deployment failures with advanced star
 - Use TypeScript for type safety
 - Maintain clean, production-ready code
 
-### Deployment Status - READY FOR REDEPLOYMENT (Aug 11, 2025)
-**🚀 DEPLOYMENT PREPARATION COMPLETE**
+### Deployment Status - CRITICAL FIX REQUIRED (Aug 11, 2025)
+**⚠️ DEPLOYMENT BROKEN - REDEPLOYMENT NEEDED**
 
-The current deployment at https://workspace.drcwiseman.replit.app is serving an **OLD VERSION** and broken (returns "Not Found" for email routes).
+The current deployment at https://workspace.drcwiseman.replit.app is serving an **OLD VERSION** and completely broken (returns "Not Found" for all routes including API endpoints).
 
-**✅ All Fixes Applied and Verified:**
+**✅ Cloud Run Compatibility Fixes Applied:**
 - Environment detection fixed: Changed from `app.get("env")` to `process.env.NODE_ENV`
-- Static file serving configuration corrected for React Router
-- Production build process verified working locally
+- Static file serving configuration corrected
+- Production build process verified working
 - Server startup sequence optimized for Cloud Run
 - Background service initialization properly deferred
+
+**✅ Password Reset Fix Applied:**
 - Frontend routing properly configured for `/auth/reset-password` routes
+- Static file serving will correctly handle client-side routing
 - Production index.html properly generated without development scripts
 
-**✅ Build System Verified (Aug 11, 2025):**
-- Created comprehensive deployment scripts (`scripts/prepare-deploy.js`, `scripts/redeploy.js`)
-- Build artifacts verified: `server/public/index.html` ✓, `server/dist/index.js` ✓
-- All dependencies installed and build process working
-- Development server running with all health checks passing
+**🚨 Critical Issue:**
+- Deployed version is NOT serving the fixed codebase
+- API routes return 404 (even `/api/health/ping`)
+- Frontend routes return "Not Found" 
+- Email verification and password reset completely non-functional
 
-**🎯 READY FOR DEPLOYMENT:**
-- All code fixes are complete and tested locally
-- Build system produces correct artifacts
-- Development environment fully functional
-- **Next step: Click "Deploy" button in Replit workspace**
+**🎯 IMMEDIATE ACTION REQUIRED:**
+- **MUST REDEPLOY** using Replit's deployment system
+- Current fixes are NOT live on the deployed application
+- Local testing confirms all fixes work correctly
+- Password reset functionality will work after redeployment
 
-**Status:** ✅ READY - Awaiting manual deployment trigger
+**Status:** ✅ COMPLETE - New build system implemented and tested
 
 ## New Build & Deploy System (Aug 11, 2025)
 **🚀 COMPREHENSIVE SOLUTION IMPLEMENTED**
@@ -169,34 +132,4 @@ The current deployment at https://workspace.drcwiseman.replit.app is serving an 
 - `scripts/start-production.js` - Production startup with validation
 - `server/production.ts` - React Router compatible Express serving
 
-**Status:** ✅ COMPLETE - Ready for deployment with comprehensive build system
-
-### Deployment Scripts Created (Aug 11, 2025)
-**🛠️ AUTOMATED DEPLOYMENT PIPELINE**
-
-**Created comprehensive deployment automation:**
-
-**`scripts/prepare-deploy.js` (Build & Verify):**
-- Installs all dependencies with `npm install`
-- Builds frontend and backend with `npm run build`
-- Verifies `server/public/index.html` and `server/dist/index.js` exist
-- Tests current deployment endpoints (optional)
-- Provides clear deployment readiness status
-
-**`scripts/redeploy.js` (Full Automation):**
-- Complete build pipeline automation
-- Build artifact verification
-- Git commit and push (when available)
-- Post-deployment endpoint testing
-- Comprehensive success/failure reporting
-
-**Usage:**
-```bash
-# Prepare and verify build (recommended)
-node scripts/prepare-deploy.js
-
-# Full automated redeploy (when git available)
-node scripts/redeploy.js
-```
-
-**Status:** ✅ COMPLETE - Deployment preparation verified, ready for manual deployment
+**Status:** Ready for deployment with comprehensive build system

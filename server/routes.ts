@@ -26,7 +26,6 @@ import { reportsAuth } from "./middleware/reportsAuth.js";
 import { systemSettingsManager } from "./systemSettingsManager.js";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage.js";
 import emailService from "./emailService.js";
-import productionAuthRouter from "./routes/productionAuth.js";
 
 import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth.js';
 import { 
@@ -95,8 +94,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Production environment detection and configuration
   const isProduction = process.env.NODE_ENV === 'production';
   
-  // Trust proxy configuration for rate limiting and proxy detection
-  app.set("trust proxy", 1);
+  // Trust proxy configuration for production deployment
+  if (isProduction) {
+    app.set("trust proxy", 1);
+  }
   
   // CORS configuration
   app.use((req, res, next) => {
@@ -354,10 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Register production auth routes first
-  app.use('/api/auth', productionAuthRouter);
-  
-  // Legacy auth routes (for backward compatibility)
+  // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
     try {
       // Check if user session exists
