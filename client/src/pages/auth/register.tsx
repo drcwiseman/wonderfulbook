@@ -47,8 +47,8 @@ export default function Register() {
     onSuccess: (data) => {
       setRegistrationSuccess(true);
       toast({
-        title: "Free Trial Started!",
-        description: "Your 7-day free trial has begun! Check your email to verify your account.",
+        title: "Welcome to Wonderful Books!",
+        description: "Your 7-day free trial has begun! You can start reading immediately.",
       });
     },
     onError: (error: any) => {
@@ -89,22 +89,26 @@ export default function Register() {
                 <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Account Created!</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome to Wonderful Books!</h2>
                 <p className="text-gray-600 dark:text-gray-300 mt-2">
-                  We've sent a verification email to your address. Please check your inbox and click the verification link to activate your account.
+                  Your account is ready! You can start reading immediately - no email verification required.
                 </p>
               </div>
             </div>
             <div className="space-y-3">
               <Button
-                onClick={() => setLocation('/auth/login')}
+                onClick={() => setLocation('/dashboard')}
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white"
               >
-                Go to Sign In
+                Start Reading Now
               </Button>
-              <Link href="/" className="block text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                ← Back to home
-              </Link>
+              <Button
+                variant="outline"
+                onClick={() => setLocation('/bookstore')}
+                className="w-full border-orange-200 text-orange-600 hover:bg-orange-50"
+              >
+                Browse Books
+              </Button>
             </div>
           </CardContent>
         </Card>

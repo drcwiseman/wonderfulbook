@@ -439,22 +439,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Record successful free trial start
       await antiAbuseService.recordFreeTrialStart(user, userIP, deviceFingerprint);
       
-      // Send verification email
-      try {
-        const { emailService } = await import('./emailService');
-        const emailSent = await emailService.sendEmailVerification(user);
-        if (emailSent) {
-          console.log('✅ Verification email sent to:', user.email);
-        } else {
-          console.error('❌ Failed to send verification email to:', user.email);
-        }
-      } catch (emailError) {
-        console.error('Error sending verification email:', emailError);
-        // Don't fail registration if email fails - user can still verify later
-      }
+      // No email verification required - users are ready to use the platform immediately
+      console.log('✅ User registered successfully without email verification:', user.email);
       
       res.status(201).json({ 
-        message: "Registration successful! Your 7-day free trial has started. Please check your email to verify your account.",
+        message: "Registration successful! Your 7-day free trial has started. You can start reading books immediately!",
         userId: user.id,
         freeTrialEndsAt: user.freeTrialEndedAt
       });
@@ -726,43 +715,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Resend verification email
+  // Resend verification email - disabled (email verification no longer required)
   app.post('/api/auth/resend-verification', async (req, res) => {
-    try {
-      const { email } = req.body;
-      
-      if (!email) {
-        return res.status(400).json({ message: "Email address is required" });
-      }
-      
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        // Don't reveal if email exists
-        return res.json({ message: "If an account with that email exists and is unverified, we've sent a verification email." });
-      }
-      
-      if (user.emailVerified) {
-        return res.json({ message: "This email address is already verified." });
-      }
-      
-      // Send verification email
-      try {
-        const { emailService } = await import('./emailService');
-        const emailSent = await emailService.sendEmailVerification(user);
-        if (emailSent) {
-          console.log('✅ Verification email resent to:', user.email);
-        } else {
-          console.error('❌ Failed to resend verification email to:', user.email);
-        }
-      } catch (emailError) {
-        console.error('Error resending verification email:', emailError);
-      }
-      
-      res.json({ message: "If an account with that email exists and is unverified, we've sent a verification email." });
-    } catch (error: any) {
-      console.error('Resend verification error:', error);
-      res.status(500).json({ message: "Failed to resend verification email" });
-    }
+    // Email verification is no longer required - all users are verified upon registration
+    res.json({ message: "Email verification is not required. All accounts are automatically verified upon registration." });
   });
 
   // Profile update route

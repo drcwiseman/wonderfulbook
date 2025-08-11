@@ -19,10 +19,10 @@ export default function EmailVerified() {
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Email Verified Successfully! 🎉
+              Welcome to Wonderful Books! 🎉
             </h1>
             <p className="text-gray-600 text-base">
-              Welcome to Wonderful Books! Your account is now fully activated.
+              Email verification is no longer required. You can start reading immediately!
             </p>
           </div>
 

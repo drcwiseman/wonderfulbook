@@ -146,7 +146,15 @@ export interface IStorage {
   
   // Stripe and subscription operations
   updateUserStripeInfo(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<User>;
-  updateUserSubscription(userId: string, tier: string, status: string): Promise<User>;
+  updateUserSubscription(userId: string, subscriptionData: {
+    tier: string;
+    status: string;
+    stripeCustomerId?: string;
+    stripeSubscriptionId?: string;
+    trialEndsAt?: Date;
+    subscriptionEndsAt?: Date;
+    nextBillingDate?: Date;
+  }): Promise<User>;
   getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined>;
   
   // Admin operations
@@ -254,9 +262,7 @@ export class DatabaseStorage implements IStorage {
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(userData.password, saltRounds);
     
-    // Generate email verification token
-    const emailVerificationToken = nanoid(32);
-
+    // No email verification required - users are verified immediately upon registration
     const [user] = await db
       .insert(users)
       .values({
@@ -267,8 +273,8 @@ export class DatabaseStorage implements IStorage {
         username: userData.username,
         passwordHash,
         authProvider: 'local',
-        emailVerified: false,
-        emailVerificationToken,
+        emailVerified: true, // Set to true immediately - no verification required
+        emailVerificationToken: null, // No verification token needed
         subscriptionTier: 'free',
         subscriptionStatus: 'inactive',
         role: 'user',
