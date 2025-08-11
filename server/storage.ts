@@ -280,15 +280,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async authenticateUser(email: string, password: string): Promise<User | null> {
+    console.log('Authentication attempt for:', email);
+    
     const [user] = await db.select().from(users)
       .where(and(eq(users.email, email), eq(users.authProvider, 'local')));
     
+    console.log('User found:', {
+      exists: !!user,
+      email: user?.email,
+      hasPasswordHash: !!user?.passwordHash,
+      authProvider: user?.authProvider,
+      emailVerified: user?.emailVerified,
+      isActive: user?.isActive
+    });
+    
     if (!user || !user.passwordHash) {
+      console.log('Authentication failed: User not found or no password hash');
       return null;
     }
 
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    console.log('Password verification result:', isValidPassword);
+    
     if (!isValidPassword) {
+      console.log('Authentication failed: Invalid password');
       return null;
     }
 
@@ -297,6 +312,7 @@ export class DatabaseStorage implements IStorage {
       .set({ lastLoginAt: new Date() })
       .where(eq(users.id, user.id));
 
+    console.log('Authentication successful for:', email);
     return user;
   }
 

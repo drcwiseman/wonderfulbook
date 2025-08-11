@@ -98,9 +98,6 @@ export default function SystemSettings() {
   const [activeTab, setActiveTab] = useState("general");
   const [localSettings, setLocalSettings] = useState<SystemSettings | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
-  // Email testing state
-  const [testEmail, setTestEmail] = useState('');
 
   // Fetch current system settings
   const { data: settings, isLoading } = useQuery<SystemSettings>({
@@ -142,16 +139,14 @@ export default function SystemSettings() {
 
   // Test email configuration mutation
   const testEmailMutation = useMutation({
-    mutationFn: async (email?: string) => {
-      const requestBody = email ? { email } : {};
-      const response = await apiRequest("POST", "/api/super-admin/test-email", requestBody);
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/super-admin/test-email");
       return response.json();
     },
-    onSuccess: (_, email) => {
-      const recipient = email ? ` to ${email}` : '';
+    onSuccess: () => {
       toast({
         title: "Email Test Successful",
-        description: `Test email sent successfully${recipient}.`,
+        description: "Test email sent successfully.",
       });
     },
     onError: (error: any) => {
@@ -843,45 +838,14 @@ export default function SystemSettings() {
                     </div>
                   </div>
 
-                  <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-900/50">
-                    <div className="space-y-2">
-                      <Label htmlFor="testEmail">Test Email Address</Label>
-                      <Input
-                        id="testEmail"
-                        type="email"
-                        placeholder="Enter email address to test (optional)"
-                        value={testEmail}
-                        onChange={(e) => setTestEmail(e.target.value)}
-                        className="w-full"
-                      />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Leave empty to send test email to system admin email
-                      </p>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => testEmailMutation.mutate(testEmail || undefined)}
-                        disabled={testEmailMutation.isPending}
-                        className="flex-1"
-                      >
-                        <Mail className="h-4 w-4 mr-2" />
-                        {testEmailMutation.isPending ? 'Sending...' : 'Send Test Email'}
-                      </Button>
-                      
-                      {testEmail && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => setTestEmail('')}
-                          disabled={testEmailMutation.isPending}
-                          size="sm"
-                        >
-                          Clear
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => testEmailMutation.mutate()}
+                    disabled={testEmailMutation.isPending}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Test Email Configuration
+                  </Button>
                 </div>
               </CardContent>
             </Card>

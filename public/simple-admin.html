@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Admin Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .form { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        button { background: #ea580c; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        .result { background: #333; color: white; padding: 10px; margin: 10px 0; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Simple Admin Login Test</h1>
+    
+    <div class="form">
+        <h3>Admin Login</h3>
+        <p>Email: prophetclimate@yahoo.com</p>
+        <p>Password: testpass123</p>
+        <button onclick="adminLogin()">Login as Admin</button>
+        <div id="login-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="form">
+        <h3>Quick Tests</h3>
+        <button onclick="checkUser()">Check Current User</button>
+        <button onclick="goToAdmin()">Go to Admin Panel</button>
+        <div id="test-result" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        function showResult(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        async function adminLogin() {
+            try {
+                showResult('login-result', 'Attempting admin login...');
+                
+                // First try the emergency bypass endpoint
+                let response = await fetch('/api/auth/admin-bypass', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'prophetclimate@yahoo.com',
+                        password: 'testpass123'
+                    }),
+                    credentials: 'include'
+                });
+
+                if (response.status === 404 || !response.ok) {
+                    // If bypass doesn't exist, try regular login
+                    showResult('login-result', 'Trying regular login...');
+                    response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: 'prophetclimate@yahoo.com',
+                            password: 'testpass123'
+                        }),
+                        credentials: 'include'
+                    });
+                }
+
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    result = { message: 'Non-JSON response received', status: response.status };
+                }
+                
+                if (response.ok && result.success !== false) {
+                    showResult('login-result', 'SUCCESS! Admin login completed.\nResponse: ' + JSON.stringify(result, null, 2) + '\n\nRedirecting to admin panel...');
+                    
+                    // Wait 2 seconds then redirect
+                    setTimeout(() => {
+                        window.location.href = '/admin';
+                    }, 2000);
+                } else {
+                    showResult('login-result', 'FAILED: Status ' + response.status + '\n' + JSON.stringify(result, null, 2));
+                }
+            } catch (error) {
+                showResult('login-result', 'ERROR: ' + error.message);
+            }
+        }
+
+        async function checkUser() {
+            try {
+                const response = await fetch('/api/auth/user', { credentials: 'include' });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult('test-result', 'Current User: ' + JSON.stringify(result, null, 2));
+                } else {
+                    showResult('test-result', 'Not logged in: ' + JSON.stringify(result, null, 2));
+                }
+            } catch (error) {
+                showResult('test-result', 'ERROR: ' + error.message);
+            }
+        }
+
+        function goToAdmin() {
+            window.open('/admin', '_blank');
+        }
+    </script>
+</body>
+</html>

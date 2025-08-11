@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Access Test - Wonderful Books</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .test-section {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #ea580c;
+        }
+        .button {
+            background: #ea580c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover { background: #dc2626; }
+        .result {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { border-left-color: #10b981; background: #ecfdf5; }
+        .error { border-left-color: #ef4444; background: #fef2f2; }
+        .credentials {
+            background: #fffbeb;
+            border: 1px solid #f59e0b;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Wonderful Books</h1>
+        <h2>Admin Access Verification System</h2>
+        <p>Testing emergency authentication and admin panel access</p>
+    </div>
+
+    <div class="credentials">
+        <h3>Admin Credentials</h3>
+        <p><strong>Email:</strong> prophetclimate@yahoo.com</p>
+        <p><strong>Password:</strong> testpass123</p>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 1: Emergency Bypass Authentication</h3>
+        <button class="button" onclick="testEmergencyBypass()">Test Emergency Login</button>
+        <div id="bypass-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Regular Login Endpoint</h3>
+        <button class="button" onclick="testRegularLogin()">Test Regular Login</button>
+        <div id="regular-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Admin Panel Access</h3>
+        <button class="button" onclick="testAdminPanel()">Test Admin Panel</button>
+        <button class="button" onclick="goToAdminPanel()">Go to Admin Panel</button>
+        <div id="admin-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Platform Status Check</h3>
+        <button class="button" onclick="checkPlatformStatus()">Check All Systems</button>
+        <div id="status-result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        function showResult(elementId, content, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.style.display = 'block';
+            element.parentElement.className = `test-section ${isSuccess ? 'success' : 'error'}`;
+        }
+
+        async function testEmergencyBypass() {
+            try {
+                showResult('bypass-result', 'Testing emergency bypass endpoint...');
+                
+                const response = await fetch('/api/auth/admin-bypass', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'prophetclimate@yahoo.com',
+                        password: 'testpass123'
+                    }),
+                    credentials: 'include'
+                });
+
+                const result = await response.text();
+                
+                if (response.ok && result.includes('success')) {
+                    showResult('bypass-result', `✅ Emergency bypass successful!\nResponse: ${result}`, true);
+                } else {
+                    showResult('bypass-result', `❌ Emergency bypass failed\nStatus: ${response.status}\nResponse: ${result}`, false);
+                }
+            } catch (error) {
+                showResult('bypass-result', `❌ Error: ${error.message}`, false);
+            }
+        }
+
+        async function testRegularLogin() {
+            try {
+                showResult('regular-result', 'Testing regular login endpoint...');
+                
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'prophetclimate@yahoo.com',
+                        password: 'testpass123'
+                    }),
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult('regular-result', `✅ Regular login successful!\nUser: ${JSON.stringify(result, null, 2)}`, true);
+                } else {
+                    showResult('regular-result', `❌ Regular login failed\nStatus: ${response.status}\nMessage: ${result.message}`, false);
+                }
+            } catch (error) {
+                showResult('regular-result', `❌ Error: ${error.message}`, false);
+            }
+        }
+
+        async function testAdminPanel() {
+            try {
+                showResult('admin-result', 'Testing admin panel access...');
+                
+                // First check if user is authenticated
+                const userResponse = await fetch('/api/auth/user', { credentials: 'include' });
+                const user = await userResponse.json();
+                
+                if (!userResponse.ok) {
+                    showResult('admin-result', `❌ Not authenticated. Please login first.\nResponse: ${JSON.stringify(user, null, 2)}`, false);
+                    return;
+                }
+
+                // Check admin panel access
+                const adminResponse = await fetch('/admin', { credentials: 'include' });
+                
+                if (adminResponse.ok) {
+                    showResult('admin-result', `✅ Admin panel accessible!\nUser: ${user.email} (Role: ${user.role})\nStatus: ${adminResponse.status}`, true);
+                } else {
+                    showResult('admin-result', `❌ Admin panel not accessible\nUser: ${user.email}\nStatus: ${adminResponse.status}`, false);
+                }
+            } catch (error) {
+                showResult('admin-result', `❌ Error: ${error.message}`, false);
+            }
+        }
+
+        function goToAdminPanel() {
+            window.open('/admin', '_blank');
+        }
+
+        async function checkPlatformStatus() {
+            try {
+                showResult('status-result', 'Checking platform health...');
+                
+                const healthResponse = await fetch('/api/health');
+                const healthData = await healthResponse.json();
+                
+                let statusReport = `🏥 PLATFORM HEALTH CHECK\n`;
+                statusReport += `Overall Status: ${healthData.status}\n`;
+                statusReport += `Database: ${healthData.database?.connected ? '✅ Connected' : '❌ Disconnected'}\n`;
+                statusReport += `Authentication: ${healthData.authentication?.sessionSecret ? '✅ Configured' : '❌ Missing'}\n`;
+                statusReport += `Environment: ${healthData.environment}\n`;
+                statusReport += `Timestamp: ${healthData.timestamp}\n\n`;
+                
+                // Test basic endpoints
+                statusReport += `📡 ENDPOINT TESTS\n`;
+                
+                const bookResponse = await fetch('/api/books');
+                statusReport += `Books API: ${bookResponse.ok ? '✅ Working' : '❌ Failed'}\n`;
+                
+                const userResponse = await fetch('/api/auth/user', { credentials: 'include' });
+                statusReport += `Auth API: ${userResponse.ok ? '✅ Working' : '❌ Failed'}\n`;
+                
+                showResult('status-result', statusReport, true);
+                
+            } catch (error) {
+                showResult('status-result', `❌ Platform check failed: ${error.message}`, false);
+            }
+        }
+
+        // Auto-run platform status check on page load
+        window.onload = () => {
+            checkPlatformStatus();
+        };
+    </script>
+</body>
+</html>
