@@ -71,17 +71,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).json({ status: 'alive' });
   });
   
-  // Cloud Run health check for root requests (only respond to health check user agents)
+  // Cloud Run health check for root requests only
   app.get('/', (req, res, next) => {
     const userAgent = req.get('User-Agent') || '';
     const isHealthCheck = userAgent.includes('GoogleHC') || 
                          userAgent.includes('kube-probe') || 
-                         userAgent.includes('ELB-HealthChecker');
+                         userAgent.includes('ELB-HealthChecker') ||
+                         userAgent.includes('Cloud Run');
     
     if (isHealthCheck) {
       res.status(200).json({ status: 'healthy' });
     } else {
-      // Let Vite (development) or static handler (production) handle the root route
+      // Let Vite (development) or static handler (production) handle frontend routes
       next();
     }
   });
