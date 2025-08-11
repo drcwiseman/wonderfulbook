@@ -3017,7 +3017,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: 'User',
         email: email,
         verificationUrl: `${process.env.NODE_ENV === 'production' 
-          ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+          ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.app`
           : 'http://localhost:5000'}/api/auth/verify-email/test-token-${Date.now()}`,
         fromEmail: fromEmail,
         unsubscribeUrl: 'https://wonderfulbooks.com/unsubscribe?test=true'
