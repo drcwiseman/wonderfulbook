@@ -30,6 +30,8 @@ import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import ForgotPassword from "@/pages/auth/forgot-password";
 import ResetPassword from "@/pages/auth/reset-password";
+import EmailVerified from "@/pages/email-verified";
+import Unsubscribe from "@/pages/unsubscribe";
 import Profile from "@/pages/profile";
 import Billing from "@/pages/billing";
 import DevicesPage from "@/pages/devices";
@@ -181,6 +183,13 @@ function Router() {
         </Route>
         <Route path="/auth/reset-password">
           <PageWrapper><ResetPassword /></PageWrapper>
+        </Route>
+        {/* Email-related routes */}
+        <Route path="/email-verified">
+          <PageWrapper><EmailVerified /></PageWrapper>
+        </Route>
+        <Route path="/unsubscribe">
+          <PageWrapper><Unsubscribe /></PageWrapper>
         </Route>
         <Route>
           <PageWrapper><NotFound /></PageWrapper>
