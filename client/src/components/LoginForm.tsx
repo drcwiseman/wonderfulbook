@@ -36,7 +36,7 @@ export default function LoginForm() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
-      if (!captchaToken && import.meta.env.VITE_TURNSTILE_SITE_KEY) {
+      if (!captchaToken && import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
         throw new Error("Please complete the captcha verification");
       }
 
@@ -69,8 +69,8 @@ export default function LoginForm() {
       setCaptchaToken("");
       setCaptchaError("Login failed. Please check your credentials.");
       // Trigger captcha reset if needed
-      if (window.turnstile) {
-        window.turnstile.reset();
+      if (window.grecaptcha) {
+        window.grecaptcha.reset();
       }
     },
   });
@@ -105,7 +105,7 @@ export default function LoginForm() {
     requestResetMutation.mutate();
   };
 
-  // Cloudflare Turnstile callback
+  // Google reCAPTCHA callback
   const onCaptchaSuccess = (token: string) => {
     setCaptchaToken(token);
     setCaptchaError("");
@@ -116,11 +116,11 @@ export default function LoginForm() {
     setCaptchaError("Captcha verification failed");
   };
 
-  // Load Turnstile script
+  // Load Google reCAPTCHA script
   React.useEffect(() => {
-    if (!window.turnstile && import.meta.env.VITE_TURNSTILE_SITE_KEY) {
+    if (!window.grecaptcha && import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
       const script = document.createElement("script");
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+      script.src = `https://www.google.com/recaptcha/api.js?render=${import.meta.env.VITE_RECAPTCHA_SITE_KEY}`;
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
@@ -185,17 +185,18 @@ export default function LoginForm() {
             {/* Captcha Widget */}
             <div className="space-y-2">
               <Label>Security Verification</Label>
-              {import.meta.env.VITE_TURNSTILE_SITE_KEY ? (
+              {import.meta.env.VITE_RECAPTCHA_SITE_KEY ? (
                 <div
-                  className="cf-turnstile"
-                  data-sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                  id="recaptcha-login-container"
+                  className="g-recaptcha"
+                  data-sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                   data-callback="onCaptchaSuccess"
                   data-error-callback="onCaptchaError"
-                  data-theme="auto"
+                  data-theme="light"
                 ></div>
               ) : (
                 <div className="p-4 border border-dashed border-gray-300 rounded-lg text-center text-sm text-gray-500">
-                  Captcha verification (configure TURNSTILE_SITE_KEY)
+                  Captcha verification (configure RECAPTCHA_SITE_KEY)
                 </div>
               )}
               {captchaError && (
@@ -206,7 +207,7 @@ export default function LoginForm() {
             <Button
               type="submit"
               className="w-full"
-              disabled={loginMutation.isPending || (!captchaToken && import.meta.env.VITE_TURNSTILE_SITE_KEY)}
+              disabled={loginMutation.isPending || (!captchaToken && import.meta.env.VITE_RECAPTCHA_SITE_KEY)}
             >
               {loginMutation.isPending ? (
                 <>
@@ -246,4 +247,24 @@ export default function LoginForm() {
       </Card>
     </div>
   );
+}
+
+// Global callback functions for Google reCAPTCHA
+declare global {
+  interface Window {
+    onCaptchaSuccess: (token: string) => void;
+    onCaptchaError: () => void;
+    grecaptcha?: any;
+  }
+}
+
+// Set global callbacks
+if (typeof window !== "undefined") {
+  window.onCaptchaSuccess = (token: string) => {
+    console.log("Captcha success:", token);
+  };
+
+  window.onCaptchaError = () => {
+    console.log("Captcha error");
+  };
 }

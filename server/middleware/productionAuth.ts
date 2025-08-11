@@ -31,7 +31,7 @@ export const loginRateLimit = rateLimit({
   legacyHeaders: false,
 });
 
-// Captcha verification middleware (Cloudflare Turnstile)
+// Captcha verification middleware (Google reCAPTCHA, Cloudflare Turnstile, or hCaptcha)
 export const verifyCaptcha = async (req: Request, res: Response, next: NextFunction) => {
   // Skip captcha completely in development mode
   if (process.env.NODE_ENV === "development") {
@@ -49,7 +49,7 @@ export const verifyCaptcha = async (req: Request, res: Response, next: NextFunct
   }
 
   try {
-    const secretKey = process.env.TURNSTILE_SECRET || process.env.HCAPTCHA_SECRET;
+    const secretKey = process.env.RECAPTCHA_SECRET || process.env.TURNSTILE_SECRET || process.env.HCAPTCHA_SECRET;
     
     if (!secretKey) {
       console.error("❌ No captcha secret key configured");
@@ -59,10 +59,13 @@ export const verifyCaptcha = async (req: Request, res: Response, next: NextFunct
       });
     }
 
-    // Verify with Cloudflare Turnstile or hCaptcha
-    const verifyUrl = process.env.TURNSTILE_SECRET 
-      ? "https://challenges.cloudflare.com/turnstile/v0/siteverify"
-      : "https://hcaptcha.com/siteverify";
+    // Verify with Google reCAPTCHA (preferred), Cloudflare Turnstile, or hCaptcha
+    let verifyUrl = "https://www.google.com/recaptcha/api/siteverify";
+    if (process.env.TURNSTILE_SECRET && !process.env.RECAPTCHA_SECRET) {
+      verifyUrl = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+    } else if (process.env.HCAPTCHA_SECRET && !process.env.RECAPTCHA_SECRET && !process.env.TURNSTILE_SECRET) {
+      verifyUrl = "https://hcaptcha.com/siteverify";
+    }
 
     const verifyResponse = await fetch(verifyUrl, {
       method: "POST",

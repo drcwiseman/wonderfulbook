@@ -77,8 +77,8 @@ export default function RegisterForm() {
       setCaptchaToken("");
       setCaptchaError("Registration failed. Please try again.");
       // Trigger captcha reset if needed
-      if (window.turnstile) {
-        window.turnstile.reset();
+      if (window.grecaptcha) {
+        window.grecaptcha.reset();
       }
     },
   });
@@ -88,7 +88,7 @@ export default function RegisterForm() {
     registerMutation.mutate(data);
   };
 
-  // Cloudflare Turnstile callback
+  // Google reCAPTCHA callback
   const onCaptchaSuccess = (token: string) => {
     setCaptchaToken(token);
     setCaptchaError("");
@@ -99,11 +99,11 @@ export default function RegisterForm() {
     setCaptchaError("Captcha verification failed");
   };
 
-  // Load Turnstile script
+  // Load Google reCAPTCHA script
   React.useEffect(() => {
-    if (!window.turnstile && import.meta.env.VITE_TURNSTILE_SITE_KEY) {
+    if (!window.grecaptcha && import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
       const script = document.createElement("script");
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+      script.src = `https://www.google.com/recaptcha/api.js?render=${import.meta.env.VITE_RECAPTCHA_SITE_KEY}`;
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
@@ -216,17 +216,18 @@ export default function RegisterForm() {
             {/* Captcha Widget */}
             <div className="space-y-2">
               <Label>Security Verification</Label>
-              {import.meta.env.VITE_TURNSTILE_SITE_KEY ? (
+              {import.meta.env.VITE_RECAPTCHA_SITE_KEY ? (
                 <div
-                  className="cf-turnstile"
-                  data-sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                  id="recaptcha-container"
+                  className="g-recaptcha"
+                  data-sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                   data-callback="onCaptchaSuccess"
                   data-error-callback="onCaptchaError"
-                  data-theme="auto"
+                  data-theme="light"
                 ></div>
               ) : (
                 <div className="p-4 border border-dashed border-gray-300 rounded-lg text-center text-sm text-gray-500">
-                  Captcha verification (configure TURNSTILE_SITE_KEY)
+                  Captcha verification (configure RECAPTCHA_SITE_KEY)
                 </div>
               )}
               {captchaError && (
@@ -237,7 +238,7 @@ export default function RegisterForm() {
             <Button
               type="submit"
               className="w-full"
-              disabled={registerMutation.isPending || (!captchaToken && import.meta.env.VITE_TURNSTILE_SITE_KEY)}
+              disabled={registerMutation.isPending || (!captchaToken && import.meta.env.VITE_RECAPTCHA_SITE_KEY)}
             >
               {registerMutation.isPending ? (
                 <>
@@ -270,12 +271,12 @@ export default function RegisterForm() {
   );
 }
 
-// Global callback functions for Turnstile
+// Global callback functions for Google reCAPTCHA
 declare global {
   interface Window {
     onCaptchaSuccess: (token: string) => void;
     onCaptchaError: () => void;
-    turnstile: any;
+    grecaptcha: any;
   }
 }
 
