@@ -64,7 +64,7 @@ class EmailService {
       port: parseInt((process.env.SMTP_PORT || '587').trim()),
       secure: parseInt((process.env.SMTP_PORT || '587').trim()) === 465, // SSL for port 465, STARTTLS for 587
       user: (process.env.SMTP_USER || '').trim(),
-      pass: (process.env.SMTP_PASS || '').trim(),
+      pass: (process.env.SMTP_PASSWORD || process.env.SMTP_PASS || '').trim(), // Use SMTP_PASSWORD secret
       fromEmail: (process.env.EMAIL_FROM || process.env.SMTP_USER || '').trim(),
       fromName: 'Wonderful Books',
     };
