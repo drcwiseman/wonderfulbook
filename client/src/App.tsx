@@ -1,4 +1,5 @@
 import React from "react";
+// Force deployment refresh - August 11, 2025
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
