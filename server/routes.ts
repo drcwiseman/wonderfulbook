@@ -22,6 +22,7 @@ import { securityHeaders, additionalSecurityHeaders } from "./middleware/securit
 import { reportsAuth } from "./middleware/reportsAuth.js";
 import { systemSettingsManager } from "./systemSettingsManager.js";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage.js";
+import emailService from "./emailService.js";
 
 import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth.js';
 import { 
@@ -123,6 +124,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Apply rate limiting to API routes
   app.use('/api/', rateLimit(500, 15 * 60 * 1000)); // 500 requests per 15 minutes
   app.use('/api/auth/', rateLimit(200, 15 * 60 * 1000)); // 200 auth requests per 15 minutes
+  
+  // Make email service available to all routes
+  app.use((req: any, res, next) => {
+    req.emailService = emailService;
+    next();
+  });
 
   // DRM and Device Management Routes
   const deviceRoutes = await import('./routes/devices.js');
