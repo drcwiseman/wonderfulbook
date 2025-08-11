@@ -57,6 +57,11 @@ interface VerificationData extends BaseEmailData {
   fromEmail: string;
 }
 
+interface PasswordResetData extends BaseEmailData {
+  resetUrl: string;
+  fromEmail: string;
+}
+
 class EmailService {
   private transporter!: nodemailer.Transporter;
   private config: EmailConfig;
@@ -425,6 +430,43 @@ class EmailService {
   }
 
   /**
+   * Send password reset email
+   */
+  async sendPasswordReset(user: User): Promise<boolean> {
+    if (!user.passwordResetToken) {
+      console.error('No password reset token found for user:', user.id);
+      return false;
+    }
+
+    const preferences = await this.getEmailPreferences(user.id, user.email!);
+    const unsubscribeUrl = this.generateUnsubscribeUrl(preferences.unsubscribeToken);
+    
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+      : 'http://localhost:5000';
+    
+    const resetUrl = `${baseUrl}/auth/reset-password?token=${user.passwordResetToken}`;
+
+    const templateData: PasswordResetData = {
+      firstName: user.firstName || 'Reader',
+      lastName: user.lastName || '',
+      email: user.email!,
+      resetUrl,
+      fromEmail: this.config.fromEmail,
+      unsubscribeUrl,
+    };
+
+    return this.sendEmail(
+      user.email!,
+      '🔐 Reset your password - Wonderful Books',
+      'password_reset',
+      templateData,
+      'password_reset',
+      user.id
+    );
+  }
+
+  /**
    * Get users with trials expiring in X days
    */
   async getUsersWithTrialsExpiring(daysFromNow: number): Promise<User[]> {
@@ -532,6 +574,30 @@ class EmailService {
         };
         break;
       
+      case 'email_verification':
+        templateName = 'verification';
+        templateData = {
+          firstName: mockUser.firstName,
+          lastName: mockUser.lastName,
+          email: mockUser.email,
+          verificationUrl: '/auth/verify-email/mock-token-123',
+          fromEmail: this.config.fromEmail,
+          unsubscribeUrl,
+        };
+        break;
+      
+      case 'password_reset':
+        templateName = 'password_reset';
+        templateData = {
+          firstName: mockUser.firstName,
+          lastName: mockUser.lastName,
+          email: mockUser.email,
+          resetUrl: '/auth/reset-password?token=mock-token-123',
+          fromEmail: this.config.fromEmail,
+          unsubscribeUrl,
+        };
+        break;
+
       default:
         throw new Error(`Unknown template type: ${templateType}`);
     }

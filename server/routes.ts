@@ -607,9 +607,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const resetToken = await storage.generatePasswordResetToken(email);
       
       if (resetToken) {
-        // TODO: Send password reset email
-        console.log('Password reset token:', resetToken);
-        console.log('Reset URL:', `${req.protocol}://${req.get('host')}/auth/reset-password?token=${resetToken}`);
+        // Get user and send password reset email
+        const user = await storage.getUserByEmail(email);
+        if (user) {
+          console.log('📧 Sending password reset email to:', email);
+          const { emailService } = await import('./emailService');
+          const emailSent = await emailService.sendPasswordReset(user);
+          if (emailSent) {
+            console.log('✅ Password reset email sent successfully to:', email);
+          } else {
+            console.error('❌ Failed to send password reset email to:', email);
+          }
+        }
       }
       
       // Always return success to prevent email enumeration
