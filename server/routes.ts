@@ -12,7 +12,9 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+// @ts-ignore - Missing types for express-session 
 import session from "express-session";
+// @ts-ignore - Missing types for connect-pg-simple
 import connectPg from "connect-pg-simple";
 
 import { antiAbuseService } from "./antiAbuseService.js";
@@ -55,17 +57,29 @@ const stripe = new Stripe(secretKey);
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register immediate health endpoints FIRST for deployment readiness
   app.get('/health', (req, res) => {
+    res.set('Cache-Control', 'no-cache');
     res.status(200).json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
       service: 'book-streaming-platform',
-      ready: true
+      ready: true,
+      uptime: process.uptime()
     });
   });
   
   // Simple ping endpoint for load balancer health checks
   app.get('/ping', (req, res) => {
+    res.set('Cache-Control', 'no-cache');
     res.status(200).send('pong');
+  });
+  
+  // Kubernetes/Cloud Run liveness probe
+  app.get('/healthz', (req, res) => {
+    res.set('Cache-Control', 'no-cache');
+    res.status(200).json({ 
+      status: 'alive',
+      timestamp: new Date().toISOString() 
+    });
   });
   
   // Root health check for various deployment systems
@@ -869,7 +883,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (file.mimetype.startsWith('image/')) {
         cb(null, true);
       } else {
-        cb(new Error('Only image files allowed'), false);
+        cb(new Error('Only image files allowed'));
       }
     }
   });
@@ -1669,7 +1683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send test email
       const success = await emailService.sendEmail(
         email,
-        `[TEST] Wonderful Books - ${templateType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`,
+        `[TEST] Wonderful Books - ${templateType.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}`,
         templateType,
         defaultTestData,
         'admin_test'
@@ -2374,7 +2388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (tier === 'free') {
         // Handle free tier - no Stripe subscription needed
-        await storage.updateUserSubscription(userId, 'free', 'active');
+        await storage.updateUserSubscription(userId, { tier: 'free', status: 'active' });
         return res.json({ message: "Free trial activated" });
       }
 
@@ -2422,7 +2436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       await storage.updateUserStripeInfo(userId, customer.id, subscription.id);
-      await storage.updateUserSubscription(userId, tier, 'pending');
+      await storage.updateUserSubscription(userId, { tier, status: 'pending' });
 
       const latestInvoice = subscription.latest_invoice as any;
       const paymentIntent = latestInvoice?.payment_intent as any;
@@ -2464,7 +2478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const status = subscription.status === 'active' ? 'active' : 'inactive';
           const tier = subscription.items.data[0]?.price?.unit_amount === 599 ? 'basic' : 'premium';
           
-          await storage.updateUserSubscription(user.id, tier, status);
+          await storage.updateUserSubscription(user.id, { tier, status });
 
           // Send conversion success email for new active subscriptions
           if (subscription.status === 'active' && event.type === 'customer.subscription.created') {
@@ -2491,7 +2505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (!cancelledUser) break;
 
           // Update subscription status to cancelled
-          await storage.updateUserSubscription(cancelledUser.id, 'free', 'cancelled');
+          await storage.updateUserSubscription(cancelledUser.id, { tier: 'free', status: 'cancelled' });
 
           // Send cancellation confirmation email
           try {

@@ -11,6 +11,16 @@ app.use(express.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
 app.set('views', path.join(process.cwd(), 'views'));
 
+// Cloud Run environment variable validation
+const requiredEnvVars = ['DATABASE_URL', 'STRIPE_SECRET_KEY'];
+const missingVars = requiredEnvVars.filter(env => !process.env[env]);
+if (missingVars.length > 0) {
+  console.error('Missing required environment variables:', missingVars);
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+}
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -73,11 +83,8 @@ app.use((req, res, next) => {
     const port = parseInt(process.env.PORT || '5000', 10);
     
     // Start listening FIRST before heavy initialization
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, async () => {
+    // Cloud Run compatibility: bind to all interfaces
+    server.listen(port, "0.0.0.0", async () => {
       log(`serving on port ${port}`);
       
       // Production deployment readiness confirmation
@@ -85,39 +92,27 @@ app.use((req, res, next) => {
         console.log('🚀 PRODUCTION DEPLOYMENT READY');
         console.log(`✅ Server listening on 0.0.0.0:${port}`);
         console.log('✅ Health endpoints available at /health, /ping, /healthz');
+        console.log('✅ Cloud Run compatible configuration active');
+        
+        // Signal deployment readiness to Cloud Run
+        console.log('READY FOR TRAFFIC');
       }
       
       // Now perform heavy initialization after server is listening
-      console.log('Server listening, starting background initialization...');
-      
-      // Initialize crypto system
-      try {
-        const { initializeCrypto } = await import('./crypto.js');
-        await initializeCrypto();
-        console.log('✅ Crypto system initialized');
-      } catch (error) {
-        console.error('❌ Failed to initialize crypto system:', error);
-      }
-
-      // Initialize email scheduler for automated campaigns
-      try {
-        const { emailScheduler } = await import('./emailScheduler.js');
-        await emailScheduler.initialize();
-        console.log('✅ Email scheduler initialized');
-      } catch (error) {
-        console.error('❌ Failed to initialize email scheduler:', error);
-      }
-
-      // Initialize health monitoring scheduler
-      try {
-        const { startHealthScheduler } = await import('./health/scheduler.js');
-        startHealthScheduler();
-        console.log('✅ Health monitoring scheduler started');
-      } catch (error) {
-        console.error('❌ Failed to initialize health monitoring scheduler:', error);
+      // Cloud Run optimization: only start heavy services in production after traffic readiness
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Development mode: Starting all background services...');
+        await initializeBackgroundServices();
+      } else {
+        // In production, defer heavy initialization to allow Cloud Run health checks
+        console.log('Production mode: Deferring background services to allow traffic...');
+        setTimeout(async () => {
+          console.log('Starting background services after deployment initialization...');
+          await initializeBackgroundServices();
+        }, 2000); // 2-second delay for Cloud Run
       }
       
-      console.log('🚀 All background services initialized');
+      console.log('🚀 Server initialization complete');
     });
     
     // Graceful shutdown handling for production deployments
@@ -140,3 +135,35 @@ app.use((req, res, next) => {
   console.error('Unhandled async error in server initialization:', error);
   process.exit(1);
 });
+
+// Background service initialization function
+async function initializeBackgroundServices() {
+  // Initialize crypto system
+  try {
+    const { initializeCrypto } = await import('./crypto.js');
+    await initializeCrypto();
+    console.log('✅ Crypto system initialized');
+  } catch (error) {
+    console.error('❌ Failed to initialize crypto system:', error);
+  }
+
+  // Initialize email scheduler for automated campaigns
+  try {
+    const { emailScheduler } = await import('./emailScheduler.js');
+    await emailScheduler.initialize();
+    console.log('✅ Email scheduler initialized');
+  } catch (error) {
+    console.error('❌ Failed to initialize email scheduler:', error);
+  }
+
+  // Initialize health monitoring scheduler
+  try {
+    const { startHealthScheduler } = await import('./health/scheduler.js');
+    startHealthScheduler();
+    console.log('✅ Health monitoring scheduler started');
+  } catch (error) {
+    console.error('❌ Failed to initialize health monitoring scheduler:', error);
+  }
+  
+  console.log('🚀 All background services initialized');
+}
