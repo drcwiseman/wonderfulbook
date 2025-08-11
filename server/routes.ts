@@ -642,13 +642,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const success = await storage.verifyEmail(token);
       
       if (!success) {
-        return res.status(400).json({ message: "Invalid or expired verification token" });
+        return res.status(400).send(`
+          <html>
+            <head>
+              <title>Email Verification Failed - Wonderful Books</title>
+              <style>
+                body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f8f9fa; }
+                .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .error { color: #dc3545; font-size: 48px; margin-bottom: 20px; }
+                h1 { color: #333; margin-bottom: 20px; }
+                p { color: #666; line-height: 1.6; margin-bottom: 15px; }
+                .brand { color: #ff6600; font-weight: bold; }
+                .btn { display: inline-block; background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; text-decoration: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; margin-top: 20px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="error">❌</div>
+                <h1>Verification Failed</h1>
+                <p>This verification link is invalid or has expired.</p>
+                <p>Please request a new verification email or contact support if you continue to have issues.</p>
+                <a href="/" class="btn">Return to <span class="brand">Wonderful Books</span></a>
+              </div>
+            </body>
+          </html>
+        `);
       }
       
-      res.json({ message: "Email verified successfully! You can now sign in." });
+      res.send(`
+        <html>
+          <head>
+            <title>Email Verified Successfully - Wonderful Books</title>
+            <style>
+              body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f8f9fa; }
+              .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .success { color: #28a745; font-size: 48px; margin-bottom: 20px; }
+              h1 { color: #333; margin-bottom: 20px; }
+              p { color: #666; line-height: 1.6; margin-bottom: 15px; }
+              .brand { color: #ff6600; font-weight: bold; }
+              .btn { display: inline-block; background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; text-decoration: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; margin-top: 20px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="success">✅</div>
+              <h1>Email Verified Successfully!</h1>
+              <p>Your email address has been verified. You can now sign in to your <span class="brand">Wonderful Books</span> account.</p>
+              <p>Welcome to our premium digital reading platform!</p>
+              <a href="/auth/login" class="btn">Sign In Now</a>
+            </div>
+          </body>
+        </html>
+      `);
     } catch (error: any) {
       console.error('Email verification error:', error);
-      res.status(500).json({ message: "Verification failed" });
+      res.status(500).send(`
+        <html>
+          <head>
+            <title>Verification Error - Wonderful Books</title>
+            <style>
+              body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f8f9fa; }
+              .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .error { color: #dc3545; font-size: 48px; margin-bottom: 20px; }
+              h1 { color: #333; margin-bottom: 20px; }
+              p { color: #666; line-height: 1.6; margin-bottom: 15px; }
+              .brand { color: #ff6600; font-weight: bold; }
+              .btn { display: inline-block; background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; text-decoration: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; margin-top: 20px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="error">⚠️</div>
+              <h1>Verification Error</h1>
+              <p>An error occurred while verifying your email address.</p>
+              <p>Please try again or contact our support team for assistance.</p>
+              <a href="/" class="btn">Return to <span class="brand">Wonderful Books</span></a>
+            </div>
+          </body>
+        </html>
+      `);
     }
   });
 
