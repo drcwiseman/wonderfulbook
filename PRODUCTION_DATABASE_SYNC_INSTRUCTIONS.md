@@ -1,62 +1,48 @@
-# Production Database Sync Instructions
+# PRODUCTION DATABASE SYNC - FINAL INSTRUCTIONS
 
-## Goal
-Make production database match development database 100%
+## Current Status
+❌ **User sync incomplete** - Login test failing with "Invalid email or password"
+✅ **Books sync complete** - 10 books with 6 featured books synchronized
 
-## Current State
-- **Development**: 6 featured books, full data set
-- **Production**: 0 featured books, same books but different featured status
+## Problem
+Production database has 0 development users while development has 3 verified users.
 
-## Step-by-Step Sync Process
+## Solution
+Run this SINGLE SQL command on your production database:
 
-### Option 1: Using Replit Database Panel (Recommended)
-1. Open your Replit deployment
-2. Go to the Database tab
-3. Run this SQL query:
+### Access Production Database
+1. Go to: https://replit.com/@drcwiseman/wonderful-books
+2. Find your deployed project
+3. Click "Database" tab in the sidebar
+4. This opens the production database interface
+
+### Run This Command
+Copy and paste this ENTIRE command:
 
 ```sql
-UPDATE books SET is_featured = true WHERE id IN (
-  '25eade19-d8ab-4c25-b9e9-7f2fc63d6808',
-  '39a430b3-9bfd-4d3d-a848-2b450f4cfe13', 
-  'b9ad5b9d-2437-4ed8-be2b-6bb517ecd1aa',
-  'deba8249-6ec8-4771-adc4-aa450387bd1a',
-  '82f9671f-5e8c-41dc-a8b0-22f1852e8532',
-  '2c38e9b8-a06c-40fa-a055-f55ebaef7edc'
-);
+INSERT INTO users (id, email, password_hash, email_verified, first_name, last_name, subscription_status, subscription_tier, created_at, updated_at, auth_provider, role, is_active, last_login_at, books_read_this_month) VALUES 
+('manual_1754457852879_osie0x', 'prophetclimate@yahoo.com', '$2b$12$ezeTWYV/OiwaGPXvzUdM4.m3CC7KAsdctUsm/p9.30r..Uh4jnnWm', true, 'Climate', 'Wiseman', 'active', 'premium', '2025-08-06 05:24:12.879', '2025-08-10 22:17:28.8', 'local', 'super_admin', true, '2025-08-10 22:08:40.215', 0),
+('di2O3E6bDYAH', 'john.doe@example.com', '$2b$12$GeYxS7V5BFWidpu0wtnwCu1oRVZgWxiyU7lND5VxefKofInLRPymi', true, 'John', 'Doe', 'inactive', 'free', '2025-08-06 08:26:24.021979', '2025-08-06 08:26:41.61', 'local', 'user', true, '2025-08-06 08:32:42.22', 0),
+('admin-test-email-system', 'admin@wonderfulbooks.com', '$2b$12$ezeTWYV/OiwaGPXvzUdM4.m3CC7KAsdctUsm/p9.30r..Uh4jnnWm', true, 'Admin', 'User', 'inactive', 'free', '2025-08-06 22:53:41.404366', '2025-08-08 03:02:14.468', 'local', 'super_admin', true, '2025-08-08 03:02:13.545', 0)
+ON CONFLICT (id) DO NOTHING;
 ```
 
-4. Verify with: `SELECT COUNT(*) FROM books WHERE is_featured = true;` 
-   (Should return 6)
-
-### Option 2: Using SQL File
-Run the complete sync script at `scripts/sync-dev-to-production.sql`
-
-## Expected Results After Sync
-- Production will have 6 featured books
-- "Featured This Week" section will show the same content on both environments
-- Both environments will be 100% synchronized
-
-## Verification Commands
-After running the sync, test these URLs:
-
-**Development Featured Books:**
-```bash
-curl "http://localhost:5000/api/books?featured=true" | jq '. | length'
+### Verify Success
+After running the command, check with:
+```sql
+SELECT COUNT(*) FROM users WHERE email = 'prophetclimate@yahoo.com';
 ```
 
-**Production Featured Books:**
-```bash
-curl "https://wonderful-books-drcwiseman.replit.app/api/books?featured=true" | jq '. | length'
-```
+**Should return: 1**
 
-Both should return `6`.
+## After Completion
+- ✅ Login test will pass
+- ✅ Both environments will have identical users
+- ✅ 100% database synchronization complete
 
-## Files Created
-- `scripts/sync-dev-to-production.sql` - Complete sync script
-- This instruction file for reference
+## User Credentials (After Sync)
+- **Super Admin**: prophetclimate@yahoo.com / password
+- **Regular User**: john.doe@example.com / password  
+- **Admin User**: admin@wonderfulbooks.com / password
 
-## Next Steps
-Once you run the SQL on production:
-1. Both environments will show identical "Featured This Week" sections
-2. Production and development databases will be 100% synchronized
-3. The empty featured section issue will be completely resolved
+Password for all accounts: `password`
