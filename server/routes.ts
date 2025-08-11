@@ -2839,7 +2839,8 @@ Wonderful Books - Premium Digital Reading Platform`
       const { templateType } = req.params;
       const { firstName = 'John', lastName = 'Doe', email = 'preview@example.com' } = req.query;
       
-      const { emailService } = await import('./emailService');
+      const { EmailService } = await import('./emailService.js');
+      const emailService = new EmailService();
       const preview = await emailService.generateEmailPreview(templateType, {
         firstName: firstName as string,
         lastName: lastName as string,
