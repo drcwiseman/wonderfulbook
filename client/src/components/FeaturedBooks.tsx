@@ -35,6 +35,11 @@ export default function FeaturedBooks() {
     );
   }
 
+  // Don't render the section if there are no featured books
+  if (!books || books.length === 0) {
+    return null;
+  }
+
   return (
     <section id="featured" className="py-16 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
