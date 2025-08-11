@@ -29,6 +29,8 @@ import AccessibilityTestDemo from "@/components/AccessibilityTestDemo";
 import RouteProtectionDemo from "@/components/RouteProtectionDemo";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
+import NewLogin from "@/pages/Login";
+import NewRegister from "@/pages/Register";
 import ForgotPassword from "@/pages/auth/forgot-password";
 import ResetPassword from "@/pages/auth/reset-password";
 import EmailVerified from "@/pages/email-verified";
@@ -178,6 +180,12 @@ function Router() {
         </Route>
         <Route path="/auth/register">
           <PageWrapper><Register /></PageWrapper>
+        </Route>
+        <Route path="/login">
+          <PageWrapper><NewLogin /></PageWrapper>
+        </Route>
+        <Route path="/register">
+          <PageWrapper><NewRegister /></PageWrapper>
         </Route>
         <Route path="/auth/forgot-password">
           <PageWrapper><ForgotPassword /></PageWrapper>

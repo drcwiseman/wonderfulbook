@@ -26,6 +26,7 @@ import { reportsAuth } from "./middleware/reportsAuth.js";
 import { systemSettingsManager } from "./systemSettingsManager.js";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage.js";
 import emailService from "./emailService.js";
+import productionAuthRouter from "./routes/productionAuth.js";
 
 import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth.js';
 import { 
@@ -355,7 +356,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Auth routes
+  // Register production auth routes first
+  app.use('/api/auth', productionAuthRouter);
+  
+  // Legacy auth routes (for backward compatibility)
   app.get('/api/auth/user', async (req: any, res) => {
     try {
       // Check if user session exists
