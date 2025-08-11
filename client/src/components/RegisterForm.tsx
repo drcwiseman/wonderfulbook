@@ -14,7 +14,9 @@ import { apiRequest } from "@/lib/queryClient";
 
 // Registration schema
 const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Invalid email format"),
   phone: z.string().min(7, "Phone must be at least 7 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -31,7 +33,9 @@ export default function RegisterForm() {
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: "",
+      firstName: "",
+      lastName: "",
+      username: "",
       email: "",
       phone: "",
       password: "",
@@ -112,7 +116,7 @@ export default function RegisterForm() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
           <CardDescription className="text-center">
-            Join Wonderful Books to access our digital library
+            Create your account with first name, last name, username, email and phone
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -126,16 +130,44 @@ export default function RegisterForm() {
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="firstName">First Name</Label>
               <Input
-                id="name"
+                id="firstName"
                 type="text"
-                placeholder="Enter your full name"
-                {...form.register("name")}
+                placeholder="Enter your first name"
+                {...form.register("firstName")}
                 disabled={registerMutation.isPending}
               />
-              {form.formState.errors.name && (
-                <p className="text-sm text-red-600">{form.formState.errors.name.message}</p>
+              {form.formState.errors.firstName && (
+                <p className="text-sm text-red-600">{form.formState.errors.firstName.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                type="text"
+                placeholder="Enter your last name"
+                {...form.register("lastName")}
+                disabled={registerMutation.isPending}
+              />
+              {form.formState.errors.lastName && (
+                <p className="text-sm text-red-600">{form.formState.errors.lastName.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Choose a username"
+                {...form.register("username")}
+                disabled={registerMutation.isPending}
+              />
+              {form.formState.errors.username && (
+                <p className="text-sm text-red-600">{form.formState.errors.username.message}</p>
               )}
             </div>
 

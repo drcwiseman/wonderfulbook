@@ -20,7 +20,7 @@ A comprehensive digital book streaming platform with advanced administrative too
 Implemented a comprehensive production-ready authentication system that completely replaces the email verification/password reset flow with a simplified, secure approach:
 
 **✅ Core Features:**
-- **Registration**: Collects name, email, phone number with 6+ character password requirement
+- **Registration**: Collects firstName, lastName, username, email, phone number with 6+ character password requirement
 - **Login**: Email/password authentication with session management
 - **No Email Verification**: Users can immediately access the platform after registration
 - **No Password Reset**: Support-based password assistance for enhanced security
@@ -37,7 +37,7 @@ Implemented a comprehensive production-ready authentication system that complete
 **🔧 Technical Implementation:**
 - **Backend Routes**: `/api/auth/register`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`
 - **Frontend Components**: `RegisterForm.tsx`, `LoginForm.tsx` with React Hook Form + Zod validation
-- **Database Schema**: Added `name` and `phone` columns to users table with indexes
+- **Database Schema**: Uses existing firstName, lastName, username structure with added phone column and indexes
 - **Middleware**: Production auth middleware with rate limiting and captcha verification
 - **Error Handling**: Comprehensive error responses with detailed validation feedback
 

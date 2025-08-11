@@ -22,9 +22,19 @@ router.post("/register",
   registerRateLimit,
   verifyCaptcha,
   // Express-validator rules
-  body("name")
+  body("firstName")
     .isLength({ min: 2 })
-    .withMessage("Name must be at least 2 characters")
+    .withMessage("First name must be at least 2 characters")
+    .trim()
+    .escape(),
+  body("lastName")
+    .isLength({ min: 2 })
+    .withMessage("Last name must be at least 2 characters")
+    .trim()
+    .escape(),
+  body("username")
+    .isLength({ min: 3 })
+    .withMessage("Username must be at least 3 characters")
     .trim()
     .escape(),
   body("email")
@@ -61,7 +71,7 @@ router.post("/register",
         });
       }
 
-      const { name, email, phone, password } = validation.data;
+      const { firstName, lastName, username, email, phone, password } = validation.data;
 
       // Check if user already exists
       const existingUser = await db
@@ -85,7 +95,9 @@ router.post("/register",
       const newUser = await db
         .insert(users)
         .values({
-          name,
+          firstName,
+          lastName,
+          username,
           email,
           phone,
           passwordHash,
@@ -95,7 +107,9 @@ router.post("/register",
         })
         .returning({
           id: users.id,
-          name: users.name,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          username: users.username,
           email: users.email,
           phone: users.phone,
           role: users.role,
@@ -108,7 +122,9 @@ router.post("/register",
       // Create session
       req.session.user = {
         id: user.id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
         email: user.email,
         phone: user.phone,
         role: user.role,
@@ -122,7 +138,9 @@ router.post("/register",
         ok: true,
         user: {
           id: user.id,
-          name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username,
           email: user.email,
           phone: user.phone,
           role: user.role,
@@ -233,7 +251,9 @@ router.post("/login",
       // Create session
       req.session.user = {
         id: user.id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
         email: user.email,
         phone: user.phone,
         role: user.role,
@@ -247,7 +267,9 @@ router.post("/login",
         ok: true,
         user: {
           id: user.id,
-          name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username,
           email: user.email,
           phone: user.phone,
           role: user.role,
@@ -312,7 +334,9 @@ router.get("/me", requireProductionAuth, (req: any, res) => {
       ok: true,
       user: {
         id: user.id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
         email: user.email,
         phone: user.phone,
         role: user.role,
