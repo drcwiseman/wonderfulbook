@@ -13,29 +13,37 @@ class EmailScheduler {
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) {
-      console.log('📧 Email scheduler already initialized');
       return;
     }
 
     try {
-      // Verify email service connection first
-      const isConnected = await emailService.verifyConnection();
-      if (!isConnected) {
-        console.error('❌ Cannot initialize email scheduler - SMTP connection failed');
-        return;
+      // Cloud Run optimization: Skip SMTP verification in production to avoid blocking
+      // SMTP will be verified when first email is sent
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      if (!isProduction) {
+        // Only verify in development
+        const isConnected = await emailService.verifyConnection();
+        if (!isConnected) {
+          console.error('SMTP connection failed - email features disabled');
+          return;
+        }
       }
 
       // Schedule trial reminder campaigns
       this.scheduleTrialReminders();
 
-      // Schedule cleanup jobs
+      // Schedule cleanup jobs  
       this.scheduleCleanupJobs();
 
       this.isInitialized = true;
-      console.log('📧 Email scheduler initialized successfully');
-      console.log('📅 Scheduled jobs:', Array.from(this.scheduledJobs.keys()));
+      
+      if (!isProduction) {
+        console.log('📧 Email scheduler initialized successfully');
+        console.log('📅 Scheduled jobs:', Array.from(this.scheduledJobs.keys()));
+      }
     } catch (error) {
-      console.error('❌ Failed to initialize email scheduler:', error);
+      console.error('Email scheduler init failed:', error);
     }
   }
 

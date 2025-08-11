@@ -25,18 +25,19 @@ let isRunning = false;
 
 export function startHealthScheduler(): void {
   if (process.env.NODE_ENV === 'test') {
-    logger.info('Health scheduler disabled in test mode');
     return;
   }
 
   const cronPattern = process.env.HEALTH_CRON || '*/5 * * * *'; // Default: every 5 minutes
 
   if (healthCheckTask) {
-    logger.info('Health scheduler already running');
     return;
   }
 
-  logger.info('Starting health scheduler', { pattern: cronPattern });
+  // Minimal logging for Cloud Run
+  if (process.env.NODE_ENV !== 'production') {
+    logger.info('Starting health scheduler', { pattern: cronPattern });
+  }
 
   healthCheckTask = cron.schedule(cronPattern, async () => {
     if (isRunning) {
@@ -64,14 +65,22 @@ export function startHealthScheduler(): void {
         );
       }
 
-      logger.info('Scheduled health checks completed', {
-        runId: result.runId,
-        overallStatus: result.overallStatus,
-        itemCount: result.items.length,
-        failedCount: failedChecks.length
-      });
+      // Minimal logging for production
+      if (process.env.NODE_ENV !== 'production') {
+        logger.info('Scheduled health checks completed', {
+          runId: result.runId,
+          overallStatus: result.overallStatus,
+          itemCount: result.items.length,
+          failedCount: failedChecks.length
+        });
+      }
     } catch (error) {
-      logger.error('Scheduled health check failed', { error });
+      // Only log critical errors in production
+      if (process.env.NODE_ENV === 'production') {
+        console.error('Health check failed:', error.message);
+      } else {
+        logger.error('Scheduled health check failed', { error });
+      }
     } finally {
       isRunning = false;
     }
@@ -80,7 +89,14 @@ export function startHealthScheduler(): void {
     timezone: 'Europe/London'
   });
 
-  logger.info('Health scheduler started successfully');
+  try {
+    healthCheckTask.start();
+    if (process.env.NODE_ENV !== 'production') {
+      logger.info('Health scheduler started successfully');
+    }
+  } catch (error) {
+    console.error('Health scheduler start failed:', error);
+  }
 }
 
 export function stopHealthScheduler(): void {

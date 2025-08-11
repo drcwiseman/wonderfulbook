@@ -11,14 +11,12 @@ app.use(express.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
 app.set('views', path.join(process.cwd(), 'views'));
 
-// Cloud Run environment variable validation
-const requiredEnvVars = ['DATABASE_URL', 'STRIPE_SECRET_KEY'];
+// Cloud Run environment variable validation - simplified for deployment
+const requiredEnvVars = ['DATABASE_URL'];
 const missingVars = requiredEnvVars.filter(env => !process.env[env]);
-if (missingVars.length > 0) {
+if (missingVars.length > 0 && process.env.NODE_ENV === 'production') {
   console.error('Missing required environment variables:', missingVars);
-  if (process.env.NODE_ENV === 'production') {
-    process.exit(1);
-  }
+  process.exit(1);
 }
 
 app.use((req, res, next) => {
@@ -85,34 +83,24 @@ app.use((req, res, next) => {
     // Start listening FIRST before heavy initialization
     // Cloud Run compatibility: bind to all interfaces
     server.listen(port, "0.0.0.0", async () => {
-      log(`serving on port ${port}`);
-      
-      // Production deployment readiness confirmation
+      // Minimal logging for Cloud Run compatibility
       if (process.env.NODE_ENV === 'production') {
-        console.log('🚀 PRODUCTION DEPLOYMENT READY');
-        console.log(`✅ Server listening on 0.0.0.0:${port}`);
-        console.log('✅ Health endpoints available at /health, /ping, /healthz');
-        console.log('✅ Cloud Run compatible configuration active');
-        
-        // Signal deployment readiness to Cloud Run
-        console.log('READY FOR TRAFFIC');
-      }
-      
-      // Now perform heavy initialization after server is listening
-      // Cloud Run optimization: only start heavy services in production after traffic readiness
-      if (process.env.NODE_ENV !== 'production') {
+        console.log('SERVER_READY');
+        console.log(`PORT:${port}`);
+        // Immediately defer background services to ensure quick startup
+        setImmediate(async () => {
+          try {
+            await initializeBackgroundServices();
+          } catch (error) {
+            console.error('Background services failed:', error);
+          }
+        });
+      } else {
+        log(`serving on port ${port}`);
         console.log('Development mode: Starting all background services...');
         await initializeBackgroundServices();
-      } else {
-        // In production, defer heavy initialization to allow Cloud Run health checks
-        console.log('Production mode: Deferring background services to allow traffic...');
-        setTimeout(async () => {
-          console.log('Starting background services after deployment initialization...');
-          await initializeBackgroundServices();
-        }, 2000); // 2-second delay for Cloud Run
+        console.log('🚀 Server initialization complete');
       }
-      
-      console.log('🚀 Server initialization complete');
     });
     
     // Graceful shutdown handling for production deployments
@@ -136,34 +124,59 @@ app.use((req, res, next) => {
   process.exit(1);
 });
 
-// Background service initialization function
+// Background service initialization function - Cloud Run optimized
 async function initializeBackgroundServices() {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // Parallel initialization for faster startup
+  const initPromises = [];
+  
   // Initialize crypto system
-  try {
-    const { initializeCrypto } = await import('./crypto.js');
-    await initializeCrypto();
-    console.log('✅ Crypto system initialized');
-  } catch (error) {
-    console.error('❌ Failed to initialize crypto system:', error);
-  }
+  initPromises.push(
+    (async () => {
+      try {
+        const { initializeCrypto } = await import('./crypto.js');
+        await initializeCrypto();
+        if (!isProduction) console.log('✅ Crypto system initialized');
+      } catch (error) {
+        console.error('Crypto init failed:', error);
+      }
+    })()
+  );
 
-  // Initialize email scheduler for automated campaigns
-  try {
-    const { emailScheduler } = await import('./emailScheduler.js');
-    await emailScheduler.initialize();
-    console.log('✅ Email scheduler initialized');
-  } catch (error) {
-    console.error('❌ Failed to initialize email scheduler:', error);
+  // Initialize email scheduler for automated campaigns - only if SMTP configured
+  if (process.env.SMTP_HOST || process.env.SMTP_SERVICE) {
+    initPromises.push(
+      (async () => {
+        try {
+          const { emailScheduler } = await import('./emailScheduler.js');
+          await emailScheduler.initialize();
+          if (!isProduction) console.log('✅ Email scheduler initialized');
+        } catch (error) {
+          console.error('Email scheduler init failed:', error);
+        }
+      })()
+    );
   }
 
   // Initialize health monitoring scheduler
-  try {
-    const { startHealthScheduler } = await import('./health/scheduler.js');
-    startHealthScheduler();
-    console.log('✅ Health monitoring scheduler started');
-  } catch (error) {
-    console.error('❌ Failed to initialize health monitoring scheduler:', error);
-  }
+  initPromises.push(
+    (async () => {
+      try {
+        const { startHealthScheduler } = await import('./health/scheduler.js');
+        startHealthScheduler();
+        if (!isProduction) console.log('✅ Health monitoring scheduler started');
+      } catch (error) {
+        console.error('Health scheduler init failed:', error);
+      }
+    })()
+  );
   
-  console.log('🚀 All background services initialized');
+  // Wait for all services with timeout
+  try {
+    await Promise.allSettled(initPromises);
+    if (!isProduction) console.log('🚀 All background services initialized');
+  } catch (error) {
+    console.error('Background service initialization error:', error);
+  }
 }

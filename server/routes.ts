@@ -38,70 +38,51 @@ import {
   deviceFingerprint
 } from "./middleware/routeProtection.js";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+// Cloud Run optimization: Handle missing Stripe gracefully
+let stripe: Stripe | null = null;
+try {
+  if (process.env.STRIPE_SECRET_KEY) {
+    const secretKey = process.env.STRIPE_SECRET_KEY?.startsWith('sk_') 
+      ? process.env.STRIPE_SECRET_KEY 
+      : process.env.VITE_STRIPE_PUBLIC_KEY;
+
+    if (secretKey?.startsWith('sk_')) {
+      stripe = new Stripe(secretKey);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Using Stripe secret key starting with:', secretKey.substring(0, 3));
+      }
+    }
+  }
+} catch (error) {
+  console.error('Stripe initialization failed:', error);
 }
-
-// Stripe keys are swapped in environment - fix this automatically
-const secretKey = process.env.STRIPE_SECRET_KEY?.startsWith('sk_') 
-  ? process.env.STRIPE_SECRET_KEY 
-  : process.env.VITE_STRIPE_PUBLIC_KEY;
-
-if (!secretKey?.startsWith('sk_')) {
-  throw new Error('No valid Stripe secret key found. Please verify STRIPE_SECRET_KEY contains a secret key (sk_...)');
-}
-
-console.log('Using Stripe secret key starting with:', secretKey.substring(0, 3));
-const stripe = new Stripe(secretKey);
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Register immediate health endpoints FIRST for deployment readiness
+  // Ultra-lightweight health endpoints for Cloud Run deployment readiness
   app.get('/health', (req, res) => {
-    res.set('Cache-Control', 'no-cache');
-    res.status(200).json({ 
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      service: 'book-streaming-platform',
-      ready: true,
-      uptime: process.uptime()
-    });
+    res.status(200).json({ status: 'ok' });
   });
   
-  // Simple ping endpoint for load balancer health checks
   app.get('/ping', (req, res) => {
-    res.set('Cache-Control', 'no-cache');
     res.status(200).send('pong');
   });
   
-  // Kubernetes/Cloud Run liveness probe
   app.get('/healthz', (req, res) => {
-    res.set('Cache-Control', 'no-cache');
-    res.status(200).json({ 
-      status: 'alive',
-      timestamp: new Date().toISOString() 
-    });
+    res.status(200).json({ status: 'alive' });
   });
   
-  // Root health check for various deployment systems
-  app.get('/', (req, res) => {
-    // Only respond with health if this is a health check request
+  // Cloud Run health check for root requests (only respond to health check user agents)
+  app.get('/', (req, res, next) => {
     const userAgent = req.get('User-Agent') || '';
     const isHealthCheck = userAgent.includes('GoogleHC') || 
                          userAgent.includes('kube-probe') || 
-                         userAgent.includes('ELB-HealthChecker') ||
-                         req.headers['x-forwarded-for'] ||
-                         req.path === '/' && req.method === 'GET' && 
-                         Object.keys(req.query).length === 0;
+                         userAgent.includes('ELB-HealthChecker');
     
     if (isHealthCheck) {
-      res.status(200).json({ 
-        status: 'healthy',
-        service: 'book-streaming-platform',
-        timestamp: new Date().toISOString()
-      });
+      res.status(200).json({ status: 'healthy' });
     } else {
-      // Let the frontend handle the root route
-      res.status(404).send('Not Found - Frontend routes handled by client');
+      // Let Vite (development) or static handler (production) handle the root route
+      next();
     }
   });
   
@@ -115,7 +96,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Trust proxy configuration for production deployment
   if (isProduction) {
     app.set("trust proxy", 1);
-    console.log('✅ Production mode: Proxy trust enabled');
   }
   
   // CORS configuration
@@ -2343,6 +2323,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Stripe subscription routes
   app.post('/api/create-subscription', isAuthenticated, async (req: any, res) => {
+    if (!stripe) {
+      return res.status(503).json({ error: 'Payment processing not configured' });
+    }
+
     try {
       const userId = req.user.claims.sub;
       const { tier } = req.body;
@@ -2452,6 +2436,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Stripe webhook for handling subscription events
   app.post('/api/stripe-webhook', async (req, res) => {
+    if (!stripe) {
+      return res.status(503).json({ error: 'Stripe not configured' });
+    }
+
     const sig = req.headers['stripe-signature'];
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
