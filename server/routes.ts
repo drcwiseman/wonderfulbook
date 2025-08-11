@@ -22,6 +22,7 @@ import { securityHeaders, additionalSecurityHeaders } from "./middleware/securit
 import { reportsAuth } from "./middleware/reportsAuth.js";
 import { systemSettingsManager } from "./systemSettingsManager.js";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage.js";
+import nodemailer from 'nodemailer';
 
 import { isAuthenticated, requireAdmin, requireSuperAdmin } from './middleware/auth.js';
 import { 
@@ -1296,6 +1297,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       systemSettingsManager.saveSettings(settings);
       console.log('System settings updated:', settings);
       
+      // If email settings were updated, reinitialize the email service
+      if (settings.email) {
+        try {
+          console.log('📧 Email settings updated, reinitializing email service...');
+          
+          // Update environment variables to reflect new settings
+          process.env.SMTP_HOST = settings.email.smtpHost;
+          process.env.SMTP_PORT = settings.email.smtpPort.toString();
+          process.env.SMTP_USER = settings.email.smtpUser;
+          process.env.SMTP_PASS = settings.email.smtpPassword;
+          process.env.EMAIL_FROM = settings.email.fromEmail;
+          process.env.SMTP_FROM_NAME = settings.email.fromName;
+          process.env.SMTP_SECURE = settings.email.smtpSecure ? 'true' : 'false';
+          
+          console.log('✅ Email service environment variables updated');
+        } catch (emailError) {
+          console.error('❌ Failed to reinitialize email service:', emailError);
+          // Don't fail the entire settings update if email service fails
+        }
+      }
+      
       res.json({ 
         message: 'System settings updated successfully',
         settings 
@@ -1316,57 +1338,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Testing email configuration...');
       console.log(`Target email: ${targetEmail}`);
       
-      // Use the actual email service to send test email
-      const testEmailResult = await emailService.sendEmail(
-        targetEmail,
-        '[Test] Email Configuration Test',
-        `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #ea580c;">Email Configuration Test</h2>
-            <p>This is a test email to verify your email configuration is working correctly.</p>
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
-              <strong>Test Details:</strong><br>
-              • Sent at: ${new Date().toISOString()}<br>
-              • Target: ${targetEmail}<br>
-              • From: ${process.env.EMAIL_FROM || 'Wonderful Books'}<br>
-              • SMTP Host: ${process.env.SMTP_HOST}<br>
+      // Get current system settings for SMTP configuration
+      const settings = systemSettingsManager.getSettings();
+      const emailConfig = settings.email;
+      
+      // Create transporter with current settings
+      const transporter = nodemailer.createTransporter({
+        host: emailConfig.smtpHost,
+        port: emailConfig.smtpPort,
+        secure: emailConfig.smtpSecure, // SSL for port 465
+        auth: {
+          user: emailConfig.smtpUser,
+          pass: emailConfig.smtpPassword,
+        },
+        connectionTimeout: emailConfig.connectionTimeout,
+        greetingTimeout: emailConfig.greetingTimeout,
+        socketTimeout: emailConfig.socketTimeout,
+        tls: {
+          // Accept self-signed certificates for private SMTP servers
+          rejectUnauthorized: false,
+        },
+      });
+      
+      // Verify connection first
+      await transporter.verify();
+      
+      // Send test email
+      const mailOptions = {
+        from: `"${emailConfig.fromName}" <${emailConfig.fromEmail}>`,
+        to: targetEmail,
+        subject: '[Test] Email Configuration Test - Wonderful Books',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #ea580c; margin-bottom: 20px;">✅ Email Configuration Test</h2>
+            <p>This is a test email to verify your updated SMTP configuration is working correctly.</p>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ea580c;">
+              <h3 style="color: #333; margin-top: 0;">📧 SMTP Configuration Details:</h3>
+              <ul style="list-style: none; padding: 0; margin: 10px 0;">
+                <li><strong>Host:</strong> ${emailConfig.smtpHost}</li>
+                <li><strong>Port:</strong> ${emailConfig.smtpPort} ${emailConfig.smtpSecure ? '(SSL)' : '(TLS)'}</li>
+                <li><strong>From:</strong> ${emailConfig.fromName} &lt;${emailConfig.fromEmail}&gt;</li>
+                <li><strong>User:</strong> ${emailConfig.smtpUser}</li>
+                <li><strong>Target:</strong> ${targetEmail}</li>
+                <li><strong>Sent at:</strong> ${new Date().toLocaleString()}</li>
+              </ul>
             </div>
-            <p>If you're receiving this email, your SMTP configuration is working properly!</p>
-            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-            <p style="color: #666; font-size: 12px;">
-              This is an automated test email from Wonderful Books admin panel.
+            
+            <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <strong>🎉 Success!</strong> If you're receiving this email, your new SMTP configuration is working properly!
+            </div>
+            
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <strong>💡 Note:</strong> This test email confirms your email settings have been successfully updated and are operational.
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="color: #666; font-size: 14px; text-align: center;">
+              This is an automated test email from the Wonderful Books admin panel.<br>
+              Wonderful Books - Premium Digital Reading Platform
             </p>
           </div>
         `,
-        `Email Configuration Test
+        text: `Email Configuration Test - Wonderful Books
 
-This is a test email to verify your email configuration is working correctly.
+This is a test email to verify your updated SMTP configuration is working correctly.
 
-Test Details:
-• Sent at: ${new Date().toISOString()}
+SMTP Configuration Details:
+• Host: ${emailConfig.smtpHost}
+• Port: ${emailConfig.smtpPort} ${emailConfig.smtpSecure ? '(SSL)' : '(TLS)'}
+• From: ${emailConfig.fromName} <${emailConfig.fromEmail}>
+• User: ${emailConfig.smtpUser}
 • Target: ${targetEmail}
-• From: ${process.env.EMAIL_FROM || 'Wonderful Books'}
-• SMTP Host: ${process.env.SMTP_HOST}
+• Sent at: ${new Date().toLocaleString()}
 
-If you're receiving this email, your SMTP configuration is working properly!
+SUCCESS! If you're receiving this email, your new SMTP configuration is working properly!
 
-This is an automated test email from Wonderful Books admin panel.`
-      );
+This is an automated test email from the Wonderful Books admin panel.
+Wonderful Books - Premium Digital Reading Platform`
+      };
       
-      if (testEmailResult.success) {
-        console.log('Email test completed successfully');
-        res.json({ 
-          message: 'Test email sent successfully',
-          targetEmail,
-          messageId: testEmailResult.messageId
-        });
-      } else {
-        console.error('Email test failed:', testEmailResult.error);
-        res.status(500).json({ 
-          message: 'Failed to send test email',
-          error: testEmailResult.error
-        });
-      }
+      const result = await transporter.sendMail(mailOptions);
+      
+      console.log('Email test completed successfully');
+      console.log('Message ID:', result.messageId);
+      
+      res.json({ 
+        message: 'Test email sent successfully',
+        targetEmail,
+        messageId: result.messageId,
+        smtpHost: emailConfig.smtpHost,
+        fromEmail: emailConfig.fromEmail
+      });
+      
     } catch (error) {
       console.error('Error testing email:', error);
       res.status(500).json({ 
