@@ -146,14 +146,22 @@ export default function SystemSettings() {
   // Test email configuration mutation
   const testEmailMutation = useMutation({
     mutationFn: async ({ email, templateType }: { email: string; templateType: string }) => {
-      const response = await apiRequest("POST", "/api/super-admin/test-email", {
-        email,
-        templateType,
-        testData: {
-          firstName: "Test",
-          lastName: "User"
-        }
-      });
+      const endpoint = templateType === 'email_verification' 
+        ? "/api/super-admin/test-verification-email"
+        : "/api/super-admin/test-email";
+      
+      const payload = templateType === 'email_verification'
+        ? { email }
+        : {
+            email,
+            templateType,
+            testData: {
+              firstName: "Test",
+              lastName: "User"
+            }
+          };
+      
+      const response = await apiRequest("POST", endpoint, payload);
       return response.json();
     },
     onSuccess: (data) => {
@@ -884,6 +892,7 @@ export default function SystemSettings() {
                             <SelectItem value="trial_reminder">Trial Reminder</SelectItem>
                             <SelectItem value="conversion_success">Conversion Success</SelectItem>
                             <SelectItem value="cancellation">Cancellation Notice</SelectItem>
+                            <SelectItem value="email_verification">Email Verification</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -926,6 +935,7 @@ export default function SystemSettings() {
                         <li>• <strong>Trial Reminder:</strong> Reminds users about their trial ending</li>
                         <li>• <strong>Conversion Success:</strong> Welcomes users who upgraded to premium</li>
                         <li>• <strong>Cancellation:</strong> Confirms subscription cancellation</li>
+                        <li>• <strong>Email Verification:</strong> Verifies new user email addresses</li>
                       </ul>
                     </div>
                   </div>

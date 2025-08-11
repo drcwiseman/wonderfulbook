@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email - Wonderful Books</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f8f9fa;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0; font-size: 28px; font-weight: bold;">📚 Wonderful Books</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your Premium Digital Reading Platform</p>
+        </div>
+
+        <!-- Main Content -->
+        <div style="background: white; padding: 40px 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 48px; margin-bottom: 20px;">✉️</div>
+                <h2 style="color: #333; margin: 0 0 10px 0; font-size: 24px;">Verify Your Email Address</h2>
+                <p style="color: #666; margin: 0; font-size: 16px;">Welcome to Wonderful Books, <%= firstName %>!</p>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #ff6600;">
+                <h3 style="color: #333; margin: 0 0 15px 0; font-size: 18px;">🎉 Your Free Trial is Ready!</h3>
+                <p style="color: #666; margin: 0; line-height: 1.6;">
+                    Your 7-day free trial has started, giving you access to our premium collection of self-improvement and educational books. 
+                    To complete your registration and secure your account, please verify your email address.
+                </p>
+            </div>
+
+            <!-- Verification Button -->
+            <div style="text-align: center; margin: 35px 0;">
+                <a href="<%= verificationUrl %>" 
+                   style="display: inline-block; background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; text-decoration: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3); transition: all 0.3s ease;">
+                    ✅ Verify My Email Address
+                </a>
+            </div>
+
+            <!-- Alternative Link -->
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                <p style="color: #666; margin: 0 0 10px 0; font-size: 14px; text-align: center;">
+                    <strong>Can't click the button?</strong> Copy and paste this link into your browser:
+                </p>
+                <p style="color: #ff6600; margin: 0; word-break: break-all; text-align: center; font-size: 14px; font-family: monospace; background: white; padding: 10px; border-radius: 4px;">
+                    <%= verificationUrl %>
+                </p>
+            </div>
+
+            <!-- What's Next -->
+            <div style="margin: 30px 0;">
+                <h3 style="color: #333; margin: 0 0 15px 0; font-size: 18px;">📖 What's Next?</h3>
+                <ul style="color: #666; padding-left: 20px; line-height: 1.8;">
+                    <li>Browse our curated collection of premium books</li>
+                    <li>Start reading immediately with our advanced PDF reader</li>
+                    <li>Track your progress and bookmark your favorite passages</li>
+                    <li>Enjoy 7 days of unlimited access during your trial</li>
+                </ul>
+            </div>
+
+            <!-- Security Notice -->
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 25px 0;">
+                <p style="margin: 0; color: #856404; font-size: 14px;">
+                    🔒 <strong>Security Note:</strong> This verification link will expire in 24 hours. 
+                    If you didn't create this account, please ignore this email.
+                </p>
+            </div>
+
+            <!-- Support -->
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                <p style="color: #999; margin: 0; font-size: 14px;">
+                    Need help? Contact us at 
+                    <a href="mailto:<%= fromEmail %>" style="color: #ff6600; text-decoration: none;"><%= fromEmail %></a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
+            <p style="margin: 0 0 10px 0;">© <%= new Date().getFullYear() %> Wonderful Books. All rights reserved.</p>
+            <p style="margin: 0;">
+                <a href="<%= unsubscribeUrl %>" style="color: #999; text-decoration: underline;">Unsubscribe from emails</a> | 
+                <a href="https://wonderfulbooks.com/privacy" style="color: #999; text-decoration: underline;">Privacy Policy</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

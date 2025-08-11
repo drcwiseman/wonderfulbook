@@ -52,6 +52,11 @@ interface CancellationData extends BaseEmailData {
   reactivateUrl: string;
 }
 
+interface VerificationData extends BaseEmailData {
+  verificationUrl: string;
+  fromEmail: string;
+}
+
 class EmailService {
   private transporter!: nodemailer.Transporter;
   private config: EmailConfig;
@@ -230,8 +235,8 @@ class EmailService {
     userId?: string
   ): Promise<boolean> {
     try {
-      // Check if user can receive this email type
-      if (userId && !(await this.canSendEmail(userId, emailType))) {
+      // Check if user can receive this email type (skip for test users)
+      if (userId && !userId.startsWith('test-') && !(await this.canSendEmail(userId, emailType))) {
         console.log(`📧 Email blocked for user ${userId}, type: ${emailType}`);
         await this.logEmail({
           userId,
@@ -258,29 +263,33 @@ class EmailService {
 
       console.log(`📧 Email sent successfully to ${to}, Subject: ${subject}, MessageId: ${info.messageId}`);
 
-      // Log successful send
-      await this.logEmail({
-        userId,
-        email: to,
-        emailType,
-        subject,
-        status: 'sent',
-        sentAt: new Date(),
-      });
+      // Log successful send (skip for test users)
+      if (!userId?.startsWith('test-')) {
+        await this.logEmail({
+          userId,
+          email: to,
+          emailType,
+          subject,
+          status: 'sent',
+          sentAt: new Date(),
+        });
+      }
 
       return true;
     } catch (error) {
       console.error(`📧 Failed to send email to ${to}:`, error);
 
-      // Log failed send
-      await this.logEmail({
-        userId,
-        email: to,
-        emailType,
-        subject,
-        status: 'failed',
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      });
+      // Log failed send (skip for test users)
+      if (!userId?.startsWith('test-')) {
+        await this.logEmail({
+          userId,
+          email: to,
+          emailType,
+          subject,
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
 
       return false;
     }
@@ -374,6 +383,43 @@ class EmailService {
       'cancellation',
       templateData,
       'cancellation',
+      user.id
+    );
+  }
+
+  /**
+   * Send email verification email
+   */
+  async sendEmailVerification(user: User): Promise<boolean> {
+    if (!user.emailVerificationToken) {
+      console.error('No email verification token found for user:', user.id);
+      return false;
+    }
+
+    const preferences = await this.getEmailPreferences(user.id, user.email!);
+    const unsubscribeUrl = this.generateUnsubscribeUrl(preferences.unsubscribeToken);
+    
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+      : 'http://localhost:5000';
+    
+    const verificationUrl = `${baseUrl}/api/auth/verify-email/${user.emailVerificationToken}`;
+
+    const templateData: VerificationData = {
+      firstName: user.firstName || 'Reader',
+      lastName: user.lastName || '',
+      email: user.email!,
+      verificationUrl,
+      fromEmail: this.config.fromEmail,
+      unsubscribeUrl,
+    };
+
+    return this.sendEmail(
+      user.email!,
+      '📧 Verify your email address - Wonderful Books',
+      'verification',
+      templateData,
+      'email_verification',
       user.id
     );
   }

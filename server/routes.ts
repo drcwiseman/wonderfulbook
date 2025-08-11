@@ -11,6 +11,7 @@ import { sql, eq, desc, and } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 
@@ -398,8 +399,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Record successful free trial start
       await antiAbuseService.recordFreeTrialStart(user, userIP, deviceFingerprint);
       
-      // TODO: Send verification email
-      console.log('Email verification token:', user.emailVerificationToken);
+      // Send verification email
+      try {
+        const { emailService } = await import('./emailService');
+        const emailSent = await emailService.sendEmailVerification(user);
+        if (emailSent) {
+          console.log('✅ Verification email sent to:', user.email);
+        } else {
+          console.error('❌ Failed to send verification email to:', user.email);
+        }
+      } catch (emailError) {
+        console.error('Error sending verification email:', emailError);
+        // Don't fail registration if email fails - user can still verify later
+      }
       
       res.status(201).json({ 
         message: "Registration successful! Your 7-day free trial has started. Please check your email to verify your account.",
@@ -637,6 +649,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Email verification error:', error);
       res.status(500).json({ message: "Verification failed" });
+    }
+  });
+
+  // Resend verification email
+  app.post('/api/auth/resend-verification', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email address is required" });
+      }
+      
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if email exists
+        return res.json({ message: "If an account with that email exists and is unverified, we've sent a verification email." });
+      }
+      
+      if (user.emailVerified) {
+        return res.json({ message: "This email address is already verified." });
+      }
+      
+      // Send verification email
+      try {
+        const { emailService } = await import('./emailService');
+        const emailSent = await emailService.sendEmailVerification(user);
+        if (emailSent) {
+          console.log('✅ Verification email resent to:', user.email);
+        } else {
+          console.error('❌ Failed to resend verification email to:', user.email);
+        }
+      } catch (emailError) {
+        console.error('Error resending verification email:', emailError);
+      }
+      
+      res.json({ message: "If an account with that email exists and is unverified, we've sent a verification email." });
+    } catch (error: any) {
+      console.error('Resend verification error:', error);
+      res.status(500).json({ message: "Failed to resend verification email" });
     }
   });
 
@@ -2909,6 +2960,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin email management routes
+  
+  // Admin test verification email
+  app.post('/api/super-admin/test-verification-email', requireSuperAdmin, async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email address is required" });
+      }
+      
+      console.log('📧 Testing email verification - sending email_verification to', email);
+      
+      // Use a simpler approach - directly send the email with template data
+      const { emailService } = await import('./emailService');
+      
+      // Get the email service config for from email
+      const fromEmail = process.env.SMTP_USER || 'books@thekingdommail.info';
+      
+      const templateData = {
+        firstName: 'Test',
+        lastName: 'User',
+        email: email,
+        verificationUrl: `${process.env.NODE_ENV === 'production' 
+          ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+          : 'http://localhost:5000'}/api/auth/verify-email/test-token-${Date.now()}`,
+        fromEmail: fromEmail,
+        unsubscribeUrl: 'https://wonderfulbooks.com/unsubscribe?test=true'
+      };
+      
+      // Send email directly using the sendEmail method
+      const emailSent = await emailService.sendEmail(
+        email,
+        '[TEST] 📧 Verify your email address - Wonderful Books',
+        'verification',
+        templateData,
+        'email_verification',
+        'test-user-' + Date.now()
+      );
+      
+      if (emailSent) {
+        console.log('📧 Email sent successfully to', email, 'Subject: [TEST] 📧 Verify your email address - Wonderful Books');
+        res.json({ 
+          message: "Test verification email sent successfully",
+          details: {
+            recipient: email,
+            templateType: "email_verification",
+            sentAt: new Date().toISOString()
+          }
+        });
+      } else {
+        res.status(500).json({ message: "Failed to send test verification email" });
+      }
+    } catch (error: any) {
+      console.error('Test verification email error:', error);
+      res.status(500).json({ message: "Failed to send test verification email - check SMTP configuration" });
+    }
+  });
   
   // Email scheduler status
   app.get('/api/admin/email-scheduler/status', requireAdmin, async (req: any, res) => {
