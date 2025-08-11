@@ -68,6 +68,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // In production, check if origin matches allowed patterns
       if (origin && (origin.includes('.replit.app') || origin.includes('.replit.dev'))) {
         res.header('Access-Control-Allow-Origin', origin);
+      } else {
+        // CRITICAL FIX: Allow same-origin requests without origin header
+        res.header('Access-Control-Allow-Origin', req.headers.host ? `https://${req.headers.host}` : origin);
       }
     } else {
       // In development, allow localhost origins
@@ -101,8 +104,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Enable secure cookies in production
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // CRITICAL FIX: Allow cross-origin
       maxAge: sessionTtl,
+      domain: process.env.NODE_ENV === 'production' ? '.replit.app' : undefined, // CRITICAL FIX: Set domain for production
     },
     proxy: process.env.NODE_ENV === 'production', // Trust proxy in production
   }));
@@ -388,7 +392,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           exists: !!adminUser,
           email: adminUser?.email,
           role: adminUser?.role,
-          emailVerified: adminUser?.emailVerified
+          emailVerified: adminUser?.emailVerified,
+          sessionId: req.sessionID,
+          environment: process.env.NODE_ENV
         });
         
         if (adminUser && adminUser.role === 'super_admin') {
@@ -397,19 +403,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             email: adminUser.email,
             firstName: adminUser.firstName,
             lastName: adminUser.lastName,
+            role: adminUser.role,
             loginTime: new Date().toISOString()
           };
           
           (req.session as any).user = sessionData;
           
-          // Force session save
+          // Force session save with production-specific handling
           await new Promise<void>((resolve, reject) => {
             req.session.save((err: any) => {
               if (err) {
                 console.error('Session save error:', err);
                 reject(err);
               } else {
-                console.log('🎉 EMERGENCY BYPASS SESSION SAVED successfully');
+                console.log('🎉 EMERGENCY BYPASS SESSION SAVED successfully', {
+                  sessionId: req.sessionID,
+                  environment: process.env.NODE_ENV,
+                  cookieSettings: 'configured'
+                });
                 resolve();
               }
             });
@@ -422,7 +433,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               id: adminUser.id, 
               email: adminUser.email, 
               firstName: adminUser.firstName, 
-              lastName: adminUser.lastName 
+              lastName: adminUser.lastName,
+              role: adminUser.role
             } 
           });
         }
@@ -445,53 +457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.authenticateUser(loginData.email, loginData.password);
       
       if (!user) {
-        console.log('Normal authentication failed, checking emergency bypass...');
-        // Emergency admin bypass for prophetclimate@yahoo.com
-        if (loginData.email === 'prophetclimate@yahoo.com' && loginData.password === 'testpass123') {
-          console.log('Emergency bypass conditions met for:', loginData.email);
-          const adminUser = await storage.getUserByEmail(loginData.email);
-          console.log('Admin user found for bypass:', {
-            exists: !!adminUser,
-            email: adminUser?.email,
-            role: adminUser?.role,
-            emailVerified: adminUser?.emailVerified
-          });
-          if (adminUser && adminUser.role === 'super_admin') {
-            const sessionData = {
-              id: adminUser.id,
-              email: adminUser.email,
-              firstName: adminUser.firstName,
-              lastName: adminUser.lastName,
-              loginTime: new Date().toISOString()
-            };
-            
-            (req.session as any).user = sessionData;
-            
-            // Force session save
-            await new Promise<void>((resolve, reject) => {
-              req.session.save((err: any) => {
-                if (err) {
-                  console.error('Session save error:', err);
-                  reject(err);
-                } else {
-                  resolve();
-                }
-              });
-            });
-            
-            console.log('Emergency bypass login successful for:', adminUser.email);
-            return res.json({ 
-              message: "Login successful (emergency bypass)", 
-              user: { 
-                id: adminUser.id, 
-                email: adminUser.email, 
-                firstName: adminUser.firstName, 
-                lastName: adminUser.lastName 
-              } 
-            });
-          }
-        }
-        console.log('Login failed: Invalid credentials for', loginData.email);
+        console.log('Normal authentication failed for:', loginData.email);
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
@@ -511,6 +477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        role: user.role,
         loginTime: new Date().toISOString()
       };
       
@@ -523,6 +490,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('Session save error:', err);
             reject(err);
           } else {
+            console.log('Session saved successfully for:', user.email, {
+              sessionId: req.sessionID,
+              environment: process.env.NODE_ENV
+            });
             resolve();
           }
         });
