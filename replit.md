@@ -136,6 +136,34 @@ The current deployment at https://workspace.drcwiseman.replit.app is serving an 
 
 **Status:** ✅ COMPLETE - New build system implemented and tested
 
+## Critical Bug Fix: Free Trial Access (Aug 11, 2025)
+**🚨 URGENT FIX APPLIED - FREE TRIAL USERS BLOCKED**
+
+Fixed critical subscription checking logic that was preventing free trial users from accessing content:
+
+**Issue Identified:**
+- `ProtectedRoute` component was blocking ALL users with `tier: "free"` 
+- Free trial users couldn't access books/content despite having `status: "active"`
+- "Subscription Required" error shown to valid free trial users
+
+**Fix Applied:**
+- Updated subscription logic in `client/src/components/ProtectedRoute.tsx`
+- Now correctly allows access for users in valid free trials
+- Checks both subscription status AND trial end date
+- Users with active free trials can now access all content
+
+**Logic Update:**
+```typescript
+// OLD (BROKEN): Blocked all free tier users
+if (userSubscription === "free" || subscriptionStatus !== "active")
+
+// NEW (FIXED): Allow active free trials + paid subscriptions  
+const hasActiveSubscription = subscriptionStatus === "active" && (userSubscription === "basic" || userSubscription === "premium");
+const isInFreeTrial = userSubscription === "free" && subscriptionStatus === "active" && freeTrialEndedAt && new Date(freeTrialEndedAt) > new Date();
+```
+
+**Status:** ⚠️ REQUIRES DEPLOYMENT - Fix ready but needs redeployment to live site
+
 ## New Build & Deploy System (Aug 11, 2025)
 **🚀 COMPREHENSIVE SOLUTION IMPLEMENTED**
 

@@ -43,8 +43,16 @@ export default function ProtectedRoute({
     if (requireSubscription && user) {
       const userSubscription = (user as any).subscriptionTier;
       const subscriptionStatus = (user as any).subscriptionStatus;
+      const freeTrialEndedAt = (user as any).freeTrialEndedAt;
       
-      if (userSubscription === "free" || subscriptionStatus !== "active") {
+      // Allow access if user has an active subscription OR is in valid free trial
+      const hasActiveSubscription = subscriptionStatus === "active" && (userSubscription === "basic" || userSubscription === "premium");
+      const isInFreeTrial = userSubscription === "free" && 
+                           subscriptionStatus === "active" && 
+                           freeTrialEndedAt && 
+                           new Date(freeTrialEndedAt) > new Date();
+      
+      if (!hasActiveSubscription && !isInFreeTrial) {
         toast({
           title: "Subscription Required",
           description: "You need an active subscription to access this content.",
