@@ -33,6 +33,12 @@ export const loginRateLimit = rateLimit({
 
 // Captcha verification middleware (Cloudflare Turnstile)
 export const verifyCaptcha = async (req: Request, res: Response, next: NextFunction) => {
+  // Skip captcha completely in development mode
+  if (process.env.NODE_ENV === "development") {
+    console.log("⚠️  Captcha verification skipped in development mode");
+    return next();
+  }
+
   const { captchaToken } = req.body;
   
   if (!captchaToken) {
@@ -40,12 +46,6 @@ export const verifyCaptcha = async (req: Request, res: Response, next: NextFunct
       ok: false, 
       error: "Captcha verification required" 
     });
-  }
-
-  // Skip captcha in development if no secret provided
-  if (process.env.NODE_ENV === "development" && !process.env.TURNSTILE_SECRET) {
-    console.log("⚠️  Captcha verification skipped in development mode");
-    return next();
   }
 
   try {

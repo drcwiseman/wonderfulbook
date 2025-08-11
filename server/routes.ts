@@ -95,10 +95,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Production environment detection and configuration
   const isProduction = process.env.NODE_ENV === 'production';
   
-  // Trust proxy configuration for production deployment
-  if (isProduction) {
-    app.set("trust proxy", 1);
-  }
+  // Trust proxy configuration for rate limiting and proxy detection
+  app.set("trust proxy", 1);
   
   // CORS configuration
   app.use((req, res, next) => {

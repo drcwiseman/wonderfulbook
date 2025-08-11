@@ -362,13 +362,13 @@ export const newRegisterSchema = z.object({
   email: z.string().email("Invalid email format"),
   phone: z.string().min(7, "Phone must be at least 7 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  captchaToken: z.string().min(1, "Captcha verification required")
+  captchaToken: z.string().optional()
 });
 
 export const newLoginSchema = z.object({
   email: z.string().email("Invalid email format"),
   password: z.string().min(1, "Password is required"),
-  captchaToken: z.string().min(1, "Captcha verification required")
+  captchaToken: z.string().optional()
 });
 
 export const adminResetPasswordSchema = z.object({
