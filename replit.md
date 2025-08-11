@@ -92,6 +92,13 @@ Preferred communication style: Simple, everyday language.
   - **Early Route Registration**: Health check routes registered immediately in routes.ts for instant availability
   - **Deployment Readiness**: All health endpoints responding properly for deployment service verification
 
+- **Password Reset Production Route Fix**: ✅ Fixed "Not found" error for password reset URLs (August 11, 2025 - 2:50 PM)
+  - **Root Cause**: Production server was looking for React build files in `server/public/` but they were created in `dist/public/`
+  - **Critical Fix**: Created production build script that copies React app to correct server directory for SPA routing
+  - **Solution Applied**: Build script now ensures React app files are in `server/public/` for proper fallback routing
+  - **SPA Routing Fixed**: All client-side routes now work correctly in production including `/auth/reset-password`
+  - **Deployment Ready**: Password reset links from emails will now work correctly on production site
+
 - **Email URL Domain Fix**: ✅ Fixed password reset URL generation (August 11, 2025 - 2:33 PM)
   - **Root Cause**: Email URLs were using environment-based domain construction that might not match actual deployment domain
   - **Solution**: Added PRODUCTION_URL environment variable support with fallback to replit.app domain
