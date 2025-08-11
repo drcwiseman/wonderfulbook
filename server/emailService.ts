@@ -404,10 +404,12 @@ class EmailService {
     const preferences = await this.getEmailPreferences(user.id, user.email!);
     const unsubscribeUrl = this.generateUnsubscribeUrl(preferences.unsubscribeToken);
     
+    // Use production domain with fallback to replit.app domain
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.app`
+      ? (process.env.PRODUCTION_URL || `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.app`)
       : 'http://localhost:5000';
     
+    console.log(`📧 Email verification URL generated: ${baseUrl}/api/auth/verify-email/${user.emailVerificationToken?.substring(0, 10)}...`);
     const verificationUrl = `${baseUrl}/api/auth/verify-email/${user.emailVerificationToken}`;
 
     const templateData: VerificationData = {
@@ -441,10 +443,12 @@ class EmailService {
     const preferences = await this.getEmailPreferences(user.id, user.email!);
     const unsubscribeUrl = this.generateUnsubscribeUrl(preferences.unsubscribeToken);
     
+    // Use production domain with fallback to replit.app domain
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.app`
+      ? (process.env.PRODUCTION_URL || `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.replit.app`)
       : 'http://localhost:5000';
     
+    console.log(`📧 Password reset URL generated: ${baseUrl}/auth/reset-password?token=${user.passwordResetToken.substring(0, 10)}...`);
     const resetUrl = `${baseUrl}/auth/reset-password?token=${user.passwordResetToken}`;
 
     const templateData: PasswordResetData = {

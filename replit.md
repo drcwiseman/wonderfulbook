@@ -92,6 +92,12 @@ Preferred communication style: Simple, everyday language.
   - **Early Route Registration**: Health check routes registered immediately in routes.ts for instant availability
   - **Deployment Readiness**: All health endpoints responding properly for deployment service verification
 
+- **Email URL Domain Fix**: ✅ Fixed password reset URL generation (August 11, 2025 - 2:33 PM)
+  - **Root Cause**: Email URLs were using environment-based domain construction that might not match actual deployment domain
+  - **Solution**: Added PRODUCTION_URL environment variable support with fallback to replit.app domain
+  - **Enhanced Logging**: Password reset and email verification URL generation now logged for debugging
+  - **Production Ready**: Email URLs will use correct production domain when PRODUCTION_URL is set
+
 ## System Architecture
 
 ### Frontend Architecture
