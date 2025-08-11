@@ -139,13 +139,13 @@ class SystemSettingsManager {
       },
       email: {
         fromName: process.env.SMTP_FROM_NAME || process.env.EMAIL_FROM_NAME || "Wonderful Books",
-        fromEmail: process.env.EMAIL_FROM || process.env.SMTP_USER || "books@thekingdomclub.org",
-        smtpHost: process.env.SMTP_HOST || "mail.thekingdomclub.org",
+        fromEmail: process.env.EMAIL_FROM || process.env.SMTP_USER || "books@thekingdommail.info",
+        smtpHost: process.env.SMTP_HOST || "mail.thekingdommail.info",
         smtpPort: parseInt(process.env.SMTP_PORT || "465"),
         smtpSecure: parseInt(process.env.SMTP_PORT || "465") === 465 || process.env.SMTP_SECURE === 'true',
-        smtpUser: process.env.SMTP_USER || "books@thekingdomclub.org",
-        smtpPassword: process.env.SMTP_PASS || "",
-        replyToEmail: process.env.SMTP_REPLY_TO || process.env.EMAIL_FROM || process.env.SMTP_USER || "books@thekingdomclub.org",
+        smtpUser: process.env.SMTP_USER || "books@thekingdommail.info",
+        smtpPassword: process.env.SMTP_PASSWORD || process.env.SMTP_PASS || "",
+        replyToEmail: process.env.SMTP_REPLY_TO || process.env.EMAIL_FROM || process.env.SMTP_USER || "books@thekingdommail.info",
         enableAuth: process.env.SMTP_ENABLE_AUTH !== 'false',
         connectionTimeout: parseInt(process.env.SMTP_CONNECTION_TIMEOUT || "60000"), // 60 seconds
         greetingTimeout: parseInt(process.env.SMTP_GREETING_TIMEOUT || "30000"), // 30 seconds
