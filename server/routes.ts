@@ -1343,7 +1343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const emailConfig = settings.email;
       
       // Create transporter with current settings
-      const transporter = nodemailer.createTransporter({
+      const transporter = nodemailer.createTransport({
         host: emailConfig.smtpHost,
         port: emailConfig.smtpPort,
         secure: emailConfig.smtpSecure, // SSL for port 465
