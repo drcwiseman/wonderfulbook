@@ -108,9 +108,24 @@ export default function BookDetail() {
   const canAccessFullContent = () => {
     if (!book || !user) return false;
     
+    // Allow access for free tier books
     if (book.requiredTier === "free") return true;
+    
+    // Allow access for premium subscribers
     if ((user as any).subscriptionTier === "premium") return true;
+    
+    // Allow access for basic subscribers to basic books
     if ((user as any).subscriptionTier === "basic" && book.requiredTier !== "premium") return true;
+    
+    // Allow access for active free trial users regardless of book tier
+    const subscriptionStatus = (user as any).subscriptionStatus;
+    const freeTrialEndedAt = (user as any).freeTrialEndedAt;
+    const isInFreeTrial = (user as any).subscriptionTier === "free" && 
+                         subscriptionStatus === "active" && 
+                         freeTrialEndedAt && 
+                         new Date(freeTrialEndedAt) > new Date();
+    
+    if (isInFreeTrial) return true;
     
     return false;
   };

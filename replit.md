@@ -162,7 +162,19 @@ const hasActiveSubscription = subscriptionStatus === "active" && (userSubscripti
 const isInFreeTrial = userSubscription === "free" && subscriptionStatus === "active" && freeTrialEndedAt && new Date(freeTrialEndedAt) > new Date();
 ```
 
-**Status:** ⚠️ REQUIRES DEPLOYMENT - Fix ready but needs redeployment to live site
+**Status:** ⚠️ REQUIRES DEPLOYMENT - COMPREHENSIVE FIX READY
+
+**All Three Subscription Checks Fixed:**
+1. ✅ `ProtectedRoute` component in `/client/src/components/ProtectedRoute.tsx`
+2. ✅ `canAccessBook()` function in `/client/src/pages/book-detail.tsx`
+3. ✅ `canAccessFullContent()` function in `/client/src/pages/book-detail-enhanced.tsx`
+
+**What Was Fixed:**
+- All three functions now check for active free trial status: `subscriptionTier === "free" && subscriptionStatus === "active" && freeTrialEndedAt > now`
+- Free trial users can now access all content during their 7-day trial period
+- Subscription checks properly distinguish between expired trials and active trials
+
+**Must Deploy Now:** The live site is still running old code that blocks free trial users
 
 ## New Build & Deploy System (Aug 11, 2025)
 **🚀 COMPREHENSIVE SOLUTION IMPLEMENTED**
