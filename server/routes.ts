@@ -1492,19 +1492,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/super-admin/test-email', requireSuperAdmin, async (req: any, res) => {
     try {
-      // In a real implementation, you would test the email configuration
-      // For now, just simulate success
-      console.log('Testing email configuration...');
+      const { email, templateType = 'trial_reminder', testData } = req.body;
       
-      // Simulate email test
-      setTimeout(() => {
-        console.log('Email test completed successfully');
-      }, 1000);
+      if (!email) {
+        return res.status(400).json({ message: 'Email address is required' });
+      }
       
-      res.json({ message: 'Test email sent successfully' });
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: 'Invalid email address format' });
+      }
+      
+      console.log(`📧 Testing email configuration - sending ${templateType} to ${email}`);
+      
+      // Use the email service to send a test email
+      const emailService = (req as any).emailService;
+      if (!emailService) {
+        return res.status(500).json({ message: 'Email service not available' });
+      }
+      
+      // Prepare test data with defaults
+      const defaultTestData = {
+        firstName: testData?.firstName || 'Test',
+        lastName: testData?.lastName || 'User',
+        email: email,
+        daysLeft: 3,
+        trialEndDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+        upgradeUrl: `${req.protocol}://${req.get('host')}/pricing`,
+        unsubscribeUrl: `${req.protocol}://${req.get('host')}/unsubscribe`,
+        planName: 'Premium Plan',
+        planPrice: '£9.99/month',
+        billingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+        accountUrl: `${req.protocol}://${req.get('host')}/account`,
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+        reactivateUrl: `${req.protocol}://${req.get('host')}/pricing`
+      };
+      
+      // Send test email
+      const success = await emailService.sendEmail(
+        email,
+        `[TEST] Wonderful Books - ${templateType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`,
+        templateType,
+        defaultTestData,
+        'admin_test'
+      );
+      
+      if (success) {
+        console.log(`📧 Test email sent successfully to ${email}`);
+        res.json({ 
+          message: 'Test email sent successfully',
+          details: {
+            recipient: email,
+            templateType,
+            sentAt: new Date().toISOString()
+          }
+        });
+      } else {
+        console.error(`📧 Failed to send test email to ${email}`);
+        res.status(500).json({ message: 'Failed to send test email - check SMTP configuration' });
+      }
     } catch (error) {
       console.error('Error testing email:', error);
-      res.status(500).json({ message: 'Failed to send test email' });
+      res.status(500).json({ 
+        message: 'Failed to send test email',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 

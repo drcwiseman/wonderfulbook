@@ -19,6 +19,10 @@ export default function AdminEmailManagement() {
     lastName: 'Doe',
     email: 'preview@example.com'
   });
+  const [testEmailData, setTestEmailData] = useState({
+    email: '',
+    templateType: 'trial_reminder'
+  });
 
   // Email scheduler status
   const { data: schedulerStatus, isLoading: statusLoading } = useQuery({
@@ -67,6 +71,57 @@ export default function AdminEmailManagement() {
     triggerReminder.mutate(selectedDays);
   };
 
+  // Test email mutation
+  const testEmail = useMutation({
+    mutationFn: async (data: { email: string; templateType: string; testData?: any }) => {
+      const response = await fetch('/api/super-admin/test-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send test email');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: 'Test Email Sent',
+        description: `Successfully sent test email to ${data.details.recipient}`,
+      });
+      setTestEmailData({ email: '', templateType: 'trial_reminder' });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Test Email Failed',
+        description: error.message || 'Failed to send test email',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleSendTestEmail = () => {
+    if (!testEmailData.email) {
+      toast({
+        title: 'Email Required',
+        description: 'Please enter an email address to send the test email to',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    testEmail.mutate({
+      email: testEmailData.email,
+      templateType: testEmailData.templateType,
+      testData: previewData
+    });
+  };
+
   const openEmailPreview = (templateType: string) => {
     const params = new URLSearchParams({
       firstName: previewData.firstName,
@@ -106,6 +161,7 @@ export default function AdminEmailManagement() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+          <TabsTrigger value="test">Test Emails</TabsTrigger>
           <TabsTrigger value="logs">Email Logs</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
         </TabsList>
@@ -240,6 +296,83 @@ export default function AdminEmailManagement() {
                   <div>• 3-day reminders: Daily at 10:00 AM UK time</div>
                   <div>• 1-day reminders: Daily at 2:00 PM UK time</div>
                   <div>• Cleanup: Weekly on Sunday at 3:00 AM UK time</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="test">
+          <Card>
+            <CardHeader>
+              <CardTitle>Test Email Configuration</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+                <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                  📧 Send Test Email to Any Address
+                </h4>
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  Test your SMTP configuration by sending a sample email to any email address. 
+                  This helps verify that your email system is working correctly.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="test-email">Recipient Email Address</Label>
+                  <Input
+                    id="test-email"
+                    type="email"
+                    placeholder="test@example.com"
+                    value={testEmailData.email}
+                    onChange={(e) => setTestEmailData({...testEmailData, email: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="test-template">Email Template</Label>
+                  <select
+                    id="test-template"
+                    value={testEmailData.templateType}
+                    onChange={(e) => setTestEmailData({...testEmailData, templateType: e.target.value})}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  >
+                    <option value="trial_reminder">Trial Reminder</option>
+                    <option value="conversion_success">Conversion Success</option>
+                    <option value="cancellation">Cancellation Notice</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={handleSendTestEmail}
+                  disabled={testEmail.isPending || !testEmailData.email}
+                  className="flex items-center gap-2"
+                >
+                  {testEmail.isPending ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  Send Test Email
+                </Button>
+                {testEmail.isPending && (
+                  <div className="text-sm text-muted-foreground">
+                    Sending test email...
+                  </div>
+                )}
+              </div>
+              
+              <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg">
+                <h4 className="font-medium text-yellow-900 dark:text-yellow-100 mb-2">
+                  ⚠️ Test Email Notes
+                </h4>
+                <div className="text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
+                  <div>• Test emails are marked with [TEST] in the subject line</div>
+                  <div>• Test data will be used for personalization fields</div>
+                  <div>• Check spam/junk folders if emails don't arrive</div>
+                  <div>• All test emails are logged in the Email Logs tab</div>
                 </div>
               </div>
             </CardContent>
