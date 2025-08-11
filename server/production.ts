@@ -3,7 +3,11 @@ import path from "path";
 import fs from "fs";
 
 export function setupProductionServing(app: Express) {
-  const publicPath = path.resolve(import.meta.dirname, "public");
+  // Handle both running from root and from server directory
+  const isInServerDir = process.cwd().endsWith('server');
+  const publicPath = isInServerDir 
+    ? path.resolve(process.cwd(), "public")
+    : path.resolve(process.cwd(), "server", "public");
   const indexPath = path.resolve(publicPath, "index.html");
 
   if (!fs.existsSync(publicPath)) {
