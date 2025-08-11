@@ -1308,19 +1308,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/super-admin/test-email', requireSuperAdmin, async (req: any, res) => {
     try {
-      // In a real implementation, you would test the email configuration
-      // For now, just simulate success
+      const { email } = req.body;
+      
+      // Get target email - use provided email or fallback to admin email
+      const targetEmail = email || req.user?.email || process.env.EMAIL_FROM || 'admin@wonderfulbooks.com';
+      
       console.log('Testing email configuration...');
+      console.log(`Target email: ${targetEmail}`);
       
-      // Simulate email test
-      setTimeout(() => {
+      // Use the actual email service to send test email
+      const testEmailResult = await emailService.sendEmail(
+        targetEmail,
+        '[Test] Email Configuration Test',
+        `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #ea580c;">Email Configuration Test</h2>
+            <p>This is a test email to verify your email configuration is working correctly.</p>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+              <strong>Test Details:</strong><br>
+              • Sent at: ${new Date().toISOString()}<br>
+              • Target: ${targetEmail}<br>
+              • From: ${process.env.EMAIL_FROM || 'Wonderful Books'}<br>
+              • SMTP Host: ${process.env.SMTP_HOST}<br>
+            </div>
+            <p>If you're receiving this email, your SMTP configuration is working properly!</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #666; font-size: 12px;">
+              This is an automated test email from Wonderful Books admin panel.
+            </p>
+          </div>
+        `,
+        `Email Configuration Test
+
+This is a test email to verify your email configuration is working correctly.
+
+Test Details:
+• Sent at: ${new Date().toISOString()}
+• Target: ${targetEmail}
+• From: ${process.env.EMAIL_FROM || 'Wonderful Books'}
+• SMTP Host: ${process.env.SMTP_HOST}
+
+If you're receiving this email, your SMTP configuration is working properly!
+
+This is an automated test email from Wonderful Books admin panel.`
+      );
+      
+      if (testEmailResult.success) {
         console.log('Email test completed successfully');
-      }, 1000);
-      
-      res.json({ message: 'Test email sent successfully' });
+        res.json({ 
+          message: 'Test email sent successfully',
+          targetEmail,
+          messageId: testEmailResult.messageId
+        });
+      } else {
+        console.error('Email test failed:', testEmailResult.error);
+        res.status(500).json({ 
+          message: 'Failed to send test email',
+          error: testEmailResult.error
+        });
+      }
     } catch (error) {
       console.error('Error testing email:', error);
-      res.status(500).json({ message: 'Failed to send test email' });
+      res.status(500).json({ 
+        message: 'Failed to send test email',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
