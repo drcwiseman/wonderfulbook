@@ -549,7 +549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (file.mimetype.startsWith('image/')) {
         cb(null, true);
       } else {
-        cb(new Error('Only image files allowed'), false);
+        cb(new Error('Only image files allowed'));
       }
     }
   });
@@ -2116,7 +2116,7 @@ Wonderful Books - Premium Digital Reading Platform`
 
       if (tier === 'free') {
         // Handle free tier - no Stripe subscription needed
-        await storage.updateUserSubscription(userId, 'free', 'active');
+        await storage.updateUserSubscription(userId, 'free');
         return res.json({ message: "Free trial activated" });
       }
 
@@ -2164,7 +2164,7 @@ Wonderful Books - Premium Digital Reading Platform`
       });
 
       await storage.updateUserStripeInfo(userId, customer.id, subscription.id);
-      await storage.updateUserSubscription(userId, tier, 'pending');
+      await storage.updateUserSubscription(userId, tier);
 
       const latestInvoice = subscription.latest_invoice as any;
       const paymentIntent = latestInvoice?.payment_intent as any;
@@ -2206,7 +2206,7 @@ Wonderful Books - Premium Digital Reading Platform`
           const status = subscription.status === 'active' ? 'active' : 'inactive';
           const tier = subscription.items.data[0]?.price?.unit_amount === 599 ? 'basic' : 'premium';
           
-          await storage.updateUserSubscription(user.id, tier, status);
+          await storage.updateUserSubscription(user.id, tier);
 
           // Send conversion success email for new active subscriptions
           if (subscription.status === 'active' && event.type === 'customer.subscription.created') {
@@ -2233,7 +2233,7 @@ Wonderful Books - Premium Digital Reading Platform`
           if (!cancelledUser) break;
 
           // Update subscription status to cancelled
-          await storage.updateUserSubscription(cancelledUser.id, 'free', 'cancelled');
+          await storage.updateUserSubscription(cancelledUser.id, 'free');
 
           // Send cancellation confirmation email
           try {
