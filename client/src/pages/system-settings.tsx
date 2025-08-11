@@ -26,7 +26,9 @@ import {
   Wrench,
   Globe,
   Key,
-  Bell
+  Bell,
+  Send,
+  TestTube
 } from "lucide-react";
 import Header from "@/components/Header";
 import PageHeader from "@/components/PageHeader";
@@ -98,6 +100,10 @@ export default function SystemSettings() {
   const [activeTab, setActiveTab] = useState("general");
   const [localSettings, setLocalSettings] = useState<SystemSettings | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Email testing state
+  const [testEmail, setTestEmail] = useState("");
+  const [testEmailTemplate, setTestEmailTemplate] = useState("trial_reminder");
 
   // Fetch current system settings
   const { data: settings, isLoading } = useQuery<SystemSettings>({
@@ -139,15 +145,23 @@ export default function SystemSettings() {
 
   // Test email configuration mutation
   const testEmailMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/super-admin/test-email");
+    mutationFn: async ({ email, templateType }: { email: string; templateType: string }) => {
+      const response = await apiRequest("POST", "/api/super-admin/test-email", {
+        email,
+        templateType,
+        testData: {
+          firstName: "Test",
+          lastName: "User"
+        }
+      });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Email Test Successful",
-        description: "Test email sent successfully.",
+        description: `Test email sent successfully to ${data.details?.recipient || testEmail}`,
       });
+      setTestEmail(""); // Clear the input after successful send
     },
     onError: (error: any) => {
       toast({
@@ -838,14 +852,83 @@ export default function SystemSettings() {
                     </div>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    onClick={() => testEmailMutation.mutate()}
-                    disabled={testEmailMutation.isPending}
-                  >
-                    <Mail className="h-4 w-4 mr-2" />
-                    Test Email Configuration
-                  </Button>
+                  <Separator />
+                  
+                  <div className="space-y-4">
+                    <h4 className="font-semibold flex items-center space-x-2">
+                      <TestTube className="h-4 w-4" />
+                      <span>Email Testing</span>
+                    </h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Test your email configuration by sending a test email to any address with different templates.
+                    </p>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="testEmail">Test Email Address</Label>
+                        <Input
+                          id="testEmail"
+                          type="email"
+                          value={testEmail}
+                          onChange={(e) => setTestEmail(e.target.value)}
+                          placeholder="Enter email address to test..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="testEmailTemplate">Email Template</Label>
+                        <Select value={testEmailTemplate} onValueChange={setTestEmailTemplate}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select template" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="trial_reminder">Trial Reminder</SelectItem>
+                            <SelectItem value="conversion_success">Conversion Success</SelectItem>
+                            <SelectItem value="cancellation">Cancellation Notice</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={() => {
+                          if (!testEmail) {
+                            toast({
+                              title: "Email Required",
+                              description: "Please enter an email address to send the test to.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          testEmailMutation.mutate({ email: testEmail, templateType: testEmailTemplate });
+                        }}
+                        disabled={testEmailMutation.isPending || !testEmail}
+                        className="flex-1"
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        {testEmailMutation.isPending ? "Sending..." : "Send Test Email"}
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setTestEmail(displaySettings?.email?.fromEmail || "");
+                        }}
+                        disabled={!displaySettings?.email?.fromEmail}
+                      >
+                        Use From Email
+                      </Button>
+                    </div>
+                    
+                    <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                      <p><strong>Templates Available:</strong></p>
+                      <ul className="mt-1 space-y-1">
+                        <li>• <strong>Trial Reminder:</strong> Reminds users about their trial ending</li>
+                        <li>• <strong>Conversion Success:</strong> Welcomes users who upgraded to premium</li>
+                        <li>• <strong>Cancellation:</strong> Confirms subscription cancellation</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
