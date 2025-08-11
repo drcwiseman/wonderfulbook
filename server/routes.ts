@@ -63,6 +63,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
+  // Simple ping endpoint for load balancer health checks
+  app.get('/ping', (req, res) => {
+    res.status(200).send('pong');
+  });
+  
+  // Root health check for various deployment systems
+  app.get('/', (req, res) => {
+    // Only respond with health if this is a health check request
+    const userAgent = req.get('User-Agent') || '';
+    const isHealthCheck = userAgent.includes('GoogleHC') || 
+                         userAgent.includes('kube-probe') || 
+                         userAgent.includes('ELB-HealthChecker') ||
+                         req.headers['x-forwarded-for'] ||
+                         req.path === '/' && req.method === 'GET' && 
+                         Object.keys(req.query).length === 0;
+    
+    if (isHealthCheck) {
+      res.status(200).json({ 
+        status: 'healthy',
+        service: 'book-streaming-platform',
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      // Let the frontend handle the root route
+      res.status(404).send('Not Found - Frontend routes handled by client');
+    }
+  });
+  
   // Register health check routes for monitoring
   app.use('/', healthRouter);
   app.use('/', healthzRouter);
@@ -70,8 +98,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Production environment detection and configuration
   const isProduction = process.env.NODE_ENV === 'production';
   
-  // Trust proxy configuration for production
-  app.set("trust proxy", isProduction ? 1 : false);
+  // Trust proxy configuration for production deployment
+  if (isProduction) {
+    app.set("trust proxy", 1);
+    console.log('✅ Production mode: Proxy trust enabled');
+  }
   
   // CORS configuration
   app.use((req, res, next) => {

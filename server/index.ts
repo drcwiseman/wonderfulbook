@@ -80,6 +80,13 @@ app.use((req, res, next) => {
     }, async () => {
       log(`serving on port ${port}`);
       
+      // Production deployment readiness confirmation
+      if (process.env.NODE_ENV === 'production') {
+        console.log('🚀 PRODUCTION DEPLOYMENT READY');
+        console.log(`✅ Server listening on 0.0.0.0:${port}`);
+        console.log('✅ Health endpoints available at /health, /ping, /healthz');
+      }
+      
       // Now perform heavy initialization after server is listening
       console.log('Server listening, starting background initialization...');
       
@@ -112,6 +119,18 @@ app.use((req, res, next) => {
       
       console.log('🚀 All background services initialized');
     });
+    
+    // Graceful shutdown handling for production deployments
+    const gracefulShutdown = (signal: string) => {
+      console.log(`Received ${signal}. Graceful shutdown...`);
+      server.close(() => {
+        console.log('HTTP server closed.');
+        process.exit(0);
+      });
+    };
+    
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     
   } catch (error) {
     console.error('Server initialization failed:', error);
