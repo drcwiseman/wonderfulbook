@@ -104,9 +104,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Enable secure cookies in production
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // CRITICAL FIX: Allow cross-origin
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', // PRODUCTION FIX: Use strict for same-origin
       maxAge: sessionTtl,
-      domain: process.env.NODE_ENV === 'production' ? '.replit.app' : undefined, // CRITICAL FIX: Set domain for production
+      // Remove domain restriction for production - let browser handle same-origin
     },
     proxy: process.env.NODE_ENV === 'production', // Trust proxy in production
   }));

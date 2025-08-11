@@ -11,8 +11,8 @@ export function useAuth() {
       if (error?.message?.includes('Rate limited')) return false;
       return failureCount < 1;
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes - even more aggressive
-    gcTime: 30 * 60 * 1000, // 30 minutes cache time
+    staleTime: 30 * 1000, // 30 seconds - faster auth updates
+    gcTime: 5 * 60 * 1000, // 5 minutes cache time
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchInterval: false,
