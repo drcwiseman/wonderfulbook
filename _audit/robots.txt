@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and sensitive areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/verify-email
+Disallow: /auth/reset-password
+
+# Allow book discovery
+Allow: /books/
+Allow: /subscribe/
+Allow: /login
+
+# Sitemap location
+Sitemap: https://workspace.drcwiseman.replit.app/sitemap.xml

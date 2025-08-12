@@ -1,0 +1,4 @@
+/ -> 000 ()
+/auth/reset-password?token=test -> 000 ()
+/verify-email?token=test -> 000 ()
+/api/health -> 000 ()

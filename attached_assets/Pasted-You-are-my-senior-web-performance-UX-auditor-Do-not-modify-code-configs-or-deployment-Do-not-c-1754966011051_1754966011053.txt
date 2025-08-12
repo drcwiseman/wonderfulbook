@@ -1,0 +1,115 @@
+You are my senior web performance & UX auditor.
+Do not modify code, configs, or deployment. Do not commit or push anything.
+Only run read-only checks against the live site and produce reports and recommendations.
+
+Target: https://workspace.drcwiseman.replit.app
+Stack context: React (Vite) SPA + Node/Express backend (Replit).
+Goal: Mobile + desktop compatibility, performance, accessibility, SEO — audit only.
+
+Deliverables (put files in a non-tracked folder like ./_audit, do not commit)
+Lighthouse reports (mobile & desktop) for /, /login, /app (or reader page): HTML + JSON.
+
+Accessibility reports via axe-core CLI for the same pages (JSON).
+
+Network & headers check: a markdown table showing Cache-Control, Content-Type, Content-Encoding, Vary, ETag for:
+
+/
+
+/assets/* (pick 2–3 hashed files)
+
+/auth/reset-password?token=test
+
+/api/health (if exists)
+
+Responsive snapshots: screenshots at widths 360, 768, 1024, 1440 for /, /login, reader page. Note any layout breaks, overflow, tiny tap targets.
+
+Route smoke test: status + content-type for /, /auth/reset-password?token=test, /verify-email?token=test, /api/health.
+
+SEO checklist for /: presence/quality of <title>, <meta name="description">, canonical, robots.txt, sitemap.xml, OG/Twitter tags.
+
+Prioritized recommendations in findings.md: High / Medium / Low with exact copy-paste snippets (but do not apply them).
+
+Executive summary (one page) with before/after expected impact if fixes are adopted (no changes now).
+
+Tools & Commands (read-only)
+bash
+Copy
+Edit
+# Create local audit folder (untracked)
+mkdir -p _audit
+
+# 1) Lighthouse (mobile & desktop)
+npx lighthouse https://workspace.drcwiseman.replit.app --preset=mobile  --output html --output json --output-path=_audit/lh-home-mobile
+npx lighthouse https://workspace.drcwiseman.replit.app --preset=desktop --output html --output json --output-path=_audit/lh-home-desktop
+
+# Repeat for /login and reader page (replace PATH):
+npx lighthouse https://workspace.drcwiseman.replit.app/login --preset=mobile  --output html --output json --output-path=_audit/lh-login-mobile
+npx lighthouse https://workspace.drcwiseman.replit.app/login --preset=desktop --output html --output json --output-path=_audit/lh-login-desktop
+# Reader page (if route is client-only, open the URL directly as the app shell):
+npx lighthouse "https://workspace.drcwiseman.replit.app/app" --preset=mobile  --output html --output json --output-path=_audit/lh-app-mobile
+npx lighthouse "https://workspace.drcwiseman.replit.app/app" --preset=desktop --output html --output json --output-path=_audit/lh-app-desktop
+
+# 2) Accessibility (axe-core CLI)
+npx @axe-core/cli https://workspace.drcwiseman.replit.app        --save _audit/axe-home.json
+npx @axe-core/cli https://workspace.drcwiseman.replit.app/login   --save _audit/axe-login.json
+npx @axe-core/cli https://workspace.drcwiseman.replit.app/app     --save _audit/axe-app.json
+
+# 3) Headers & caching
+{
+  echo "| URL | Status | Cache-Control | Content-Type | Content-Encoding | Vary | ETag |";
+  echo "|-----|--------|---------------|--------------|-------------------|------|------|";
+  for u in "/" "/auth/reset-password?token=test" "/api/health"; do
+    curl -sI "https://workspace.drcwiseman.replit.app$u" \
+      | awk -v u="$u" '
+        BEGIN{status="";cc="";ct="";ce="";vary="";etag=""}
+        /^HTTP/{status=$2}
+        tolower($1)=="cache-control:"{cc=$0; sub(/^[^:]*: */,"",cc)}
+        tolower($1)=="content-type:"{ct=$0; sub(/^[^:]*: */,"",ct)}
+        tolower($1)=="content-encoding:"{ce=$0; sub(/^[^:]*: */,"",ce)}
+        tolower($1)=="vary:"{vary=$0; sub(/^[^:]*: */,"",vary)}
+        tolower($1)=="etag:"{etag=$0; sub(/^[^:]*: */,"",etag)}
+        END{printf("| %s | %s | %s | %s | %s | %s | %s |\n", u, status, cc, ct, ce, vary, etag)}
+      ';
+  done
+} > _audit/headers.md
+
+# 4) Responsive screenshots (using Pageres)
+npx pageres https://workspace.drcwiseman.replit.app 360x800 768x1024 1024x768 1440x900 --filename='_audit/home-<%= size %>'
+npx pageres https://workspace.drcwiseman.replit.app/login 360x800 768x1024 1024x768 1440x900 --filename='_audit/login-<%= size %>'
+npx pageres https://workspace.drcwiseman.replit.app/app   360x800 768x1024 1024x768 1440x900 --filename='_audit/app-<%= size %>'
+
+# 5) Route smoke test (statuses)
+for path in "/" "/auth/reset-password?token=test" "/verify-email?token=test" "/api/health"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://workspace.drcwiseman.replit.app$path")
+  type=$(curl -sI "https://workspace.drcwiseman.replit.app$path" | awk 'tolower($1)=="content-type:"{print $2}')
+  echo "$path -> $code ($type)"
+done | tee _audit/smoke.txt
+Analysis & Reporting
+Create _audit/findings.md with:
+
+Scores: Lighthouse (each page, mobile/desktop).
+
+Key issues by category (Performance, Accessibility, SEO, Best Practices).
+
+Mobile/desktop layout notes from screenshots (overflow, CLS, tap targets, font sizes).
+
+Headers/caching summary (is index.html no-store? are assets long-cached? gzip/br).
+
+Routing: whether SPA routes like /auth/reset-password?token=test and /verify-email?token=test return the app (200 + text/html) or 404.
+
+Prioritized recommendations:
+
+High (critical, user-visible or blocking issues)
+
+Medium
+
+Low
+
+For each item, provide exact code/config snippets and file paths where a fix would go — but do not apply them.
+
+Constraints
+No code changes (no edits, no PRs, no commits, no deploy).
+
+Store artifacts only in ./_audit/; do not add to git.
+
+Deliver the reports and findings as a ZIP (or list the file paths) and a one-page executive summary.

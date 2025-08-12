@@ -1,0 +1,28 @@
+=== AUDIT SUMMARY ===
+Generated: Tue Aug 12 02:37:16 AM UTC 2025
+
+Files in this audit:
+-  ( bytes)
+- a11y-home.json (0 bytes)
+- asset-paths.txt (0 bytes)
+- audit-log.txt (58 bytes)
+- bundle-sizes.txt (210 bytes)
+- executive-summary.md (2693 bytes)
+- findings.md (6118 bytes)
+- headers.md (275 bytes)
+- health-headers.txt (0 bytes)
+- home-headers.txt (0 bytes)
+- homepage.html (0 bytes)
+- lh-home-mobile.json (450502 bytes)
+- local-api-headers.txt (238 bytes)
+- local-api-health.txt (1088 bytes)
+- local-headers.txt (1431 bytes)
+- local-homepage.html (4679 bytes)
+- local-seo.txt (1892 bytes)
+- login-headers.txt (0 bytes)
+- main-headers.txt (0 bytes)
+- README.md (87 bytes)
+- robots.txt (307 bytes)
+- sitemap.xml (817 bytes)
+- site-response.txt (0 bytes)
+- smoke.txt (111 bytes)
