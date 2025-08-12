@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X, AlertTriangle, Star, BarChart3, Settings, Library, UserCheck, Plus, Home, Shield, Loader2 } from 'lucide-react';
+import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Trash2, AlertTriangle, Star, BarChart3, Settings, Library, UserCheck, Plus, Home, Shield, Loader2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RichTextEditor } from '@/components/RichTextEditor';
@@ -20,8 +20,7 @@ import { ImageUploader } from '@/components/ImageUploader';
 import { PDFUploader } from '@/components/PDFUploader';
 import { CategoryManager } from '@/components/CategoryManager';
 import { UserManagement } from '@/components/UserManagement';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { EditItemDialog } from '@/components/shared/EditItemDialog';
+
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
@@ -37,54 +36,18 @@ const uploadSchema = z.object({
   isFeatured: z.boolean().optional(),
 });
 
-const editBookSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  author: z.string().min(1, "Author is required"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  categories: z.array(z.string()).min(1, "At least one category is required"),
-  tier: z.enum(["free", "basic", "premium"]),
-  rating: z.number().min(1).max(5),
-  coverImage: z.string().optional(),
-  isVisible: z.boolean().default(true),
-  isFeatured: z.boolean().default(false),
-});
-
 type UploadForm = z.infer<typeof uploadSchema>;
-type EditBookForm = z.infer<typeof editBookSchema>;
 
 export default function AdminPanel() {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
-  const [editingBook, setEditingBook] = useState<any>(null);
-  
-  // Production debugging: Track editingBook state changes
-  useEffect(() => {
-    console.log('🔧 PRODUCTION DEBUG: editingBook state changed to:', editingBook?.title || 'null');
-    console.log('🔧 PRODUCTION DEBUG: Dialog should be open:', !!editingBook);
-    
-    if (editingBook) {
-      // Pre-populate edit form when editing book is set
-      console.log('🔧 PRODUCTION DEBUG: Pre-populating edit form with book data');
-      editForm.reset({
-        title: editingBook.title || '',
-        author: editingBook.author || '',
-        coverImage: editingBook.coverImage || '',
-        categories: editingBook.categories || [],
-        tier: editingBook.tier || editingBook.requiredTier || 'free',
-        rating: editingBook.rating || 0,
-        isVisible: editingBook.isVisible !== undefined ? editingBook.isVisible : true,
-        isFeatured: editingBook.isFeatured || false
-      });
-      setEditDescription(editingBook.description || '');
-      console.log('🔧 PRODUCTION DEBUG: Edit form populated successfully');
-    }
-  }, [editingBook]);
+
   
 
   const [description, setDescription] = useState("");
-  const [editDescription, setEditDescription] = useState("");
+
   const [pdfFile, setPdfFile] = useState("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [bookToDelete, setBookToDelete] = useState<any>(null);
@@ -103,20 +66,7 @@ export default function AdminPanel() {
     },
   });
 
-  const editForm = useForm<EditBookForm>({
-    resolver: zodResolver(editBookSchema),
-    defaultValues: {
-      title: "",
-      author: "",
-      description: "",
-      categories: [],
-      tier: "free",
-      rating: 4,
-      coverImage: "",
-      isVisible: true,
-      isFeatured: false,
-    },
-  });
+
 
   // Sync pdfFile with form fileUrl
   useEffect(() => {
@@ -242,99 +192,7 @@ export default function AdminPanel() {
     },
   });
 
-  // Update book mutation
-  const updateBookMutation = useMutation({
-    mutationFn: async (data: EditBookForm & { id: string }) => {
-      console.log('Update mutation called with data:', data);
-      const { id, ...bookData } = data;
-      console.log('Making PATCH request to:', `/api/admin/books/${id}`, 'with data:', bookData);
-      try {
-        const result = await apiRequest("PATCH", `/api/admin/books/${id}`, bookData);
-        console.log('Update successful:', result);
-        return result;
-      } catch (error) {
-        console.error('Update error in mutation:', error);
-        throw error;
-      }
-    },
-    onSuccess: (data) => {
-      console.log('Update mutation onSuccess called with data:', data);
-      toast({
-        title: "Success",
-        description: "Book updated successfully!",
-      });
-      setEditingBook(null);
-      editForm.reset();
-      setEditDescription("");
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
-    },
-    onError: (error: any) => {
-      console.error('Update mutation onError called with error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response,
-        status: error.status,
-        stack: error.stack
-      });
-      toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update book",
-        variant: "destructive",
-      });
-    },
-  });
 
-  // Handle edit form submission
-  const onEditSubmit = () => {
-    if (!editingBook || !editDescription || editDescription.length < 10) {
-      toast({
-        title: "Validation Error",
-        description: "Description must be at least 10 characters long",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const formData = editForm.getValues();
-    const updateData: any = {
-      ...formData,
-      description: editDescription,
-    };
-    
-    // Map coverImage to coverImageUrl for database compatibility
-    if (formData.coverImage) {
-      updateData.coverImageUrl = formData.coverImage;
-      delete updateData.coverImage;
-    }
-    
-    updateBookMutation.mutate({
-      id: editingBook.id,
-      ...updateData,
-    });
-  };
-
-  // Initialize edit form when editing book changes
-  useEffect(() => {
-    if (editingBook) {
-      console.log('Initializing edit form with book:', editingBook);
-      const formData = {
-        title: editingBook.title || "",
-        author: editingBook.author || "",
-        description: editingBook.description || "",
-        categories: editingBook.categories || [],
-        tier: editingBook.tier || editingBook.requiredTier || "free",
-        rating: editingBook.rating || 4,
-        coverImage: editingBook.coverImage || editingBook.coverImageUrl || "",
-        isVisible: editingBook.isVisible !== false,
-        isFeatured: editingBook.isFeatured || false,
-      };
-      console.log('Setting form data:', formData);
-      editForm.reset(formData);
-      setEditDescription(editingBook.description || "");
-      console.log('Form initialized successfully');
-    }
-  }, [editingBook, editForm]);
 
   const onSubmit = (data: UploadForm) => {
     createBookMutation.mutate(data);
@@ -729,49 +587,7 @@ export default function AdminPanel() {
                                 </div>
                               </div>
                               
-                              <div className="flex items-center space-x-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    console.log('🔧 PRODUCTION DEBUG: Edit button clicked');
-                                    console.log('🔧 PRODUCTION DEBUG: Book title:', book?.title);
-                                    console.log('🔧 PRODUCTION DEBUG: Book ID:', book?.id);
-                                    console.log('🔧 PRODUCTION DEBUG: Full book object:', JSON.stringify(book, null, 2));
-                                    console.log('🔧 PRODUCTION DEBUG: Current editingBook state before:', editingBook);
-                                    
-                                    try {
-                                      setEditingBook(book);
-                                      console.log('🔧 PRODUCTION DEBUG: setEditingBook called successfully');
-                                      
-                                      // Additional debugging for production
-                                      setTimeout(() => {
-                                        console.log('🔧 PRODUCTION DEBUG: EditingBook state after 100ms:', editingBook);
-                                        console.log('🔧 PRODUCTION DEBUG: Dialog should be open:', !!book);
-                                        
-                                        // Check if dialog elements exist in DOM
-                                        const dialogElements = document.querySelectorAll('[role="dialog"]');
-                                        console.log('🔧 PRODUCTION DEBUG: Dialog elements in DOM:', dialogElements.length);
-                                        
-                                        const dialogOverlay = document.querySelector('[data-radix-dialog-overlay]');
-                                        console.log('🔧 PRODUCTION DEBUG: Dialog overlay exists:', !!dialogOverlay);
-                                        
-                                        if (dialogOverlay) {
-                                          console.log('🔧 PRODUCTION DEBUG: Dialog overlay styles:', window.getComputedStyle(dialogOverlay).display);
-                                        }
-                                      }, 100);
-                                      
-                                    } catch (error) {
-                                      console.error('🔧 PRODUCTION DEBUG: Error setting editingBook:', error);
-                                      console.error('🔧 PRODUCTION DEBUG: Error stack:', (error as Error)?.stack);
-                                    }
-                                  }}
-                                  data-testid={`button-edit-${book.id}`}
-                                >
-                                  <Edit3 className="w-4 h-4" />
-                                </Button>
+                              <div className="flex items-center justify-end">
                                 <Button
                                   variant="destructive"
                                   size="sm"
@@ -908,204 +724,7 @@ export default function AdminPanel() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Book Dialog - Using native Dialog component */}
-      <Dialog open={!!editingBook} onOpenChange={(open) => {
-        console.log('🔧 PRODUCTION DEBUG: Dialog onOpenChange called');
-        console.log('🔧 PRODUCTION DEBUG: Dialog open state:', open);
-        console.log('🔧 PRODUCTION DEBUG: Current editingBook:', editingBook?.title);
-        
-        if (!open) {
-          console.log('🔧 PRODUCTION DEBUG: Closing edit dialog for:', editingBook?.title);
-          setEditingBook(null);
-          editForm.reset();
-          setEditDescription("");
-        }
-      }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto z-50" style={{ zIndex: 9999 }}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Edit3 className="h-5 w-5 text-orange-600" />
-              Edit Book: {editingBook?.title}
-            </DialogTitle>
-            <DialogDescription>
-              Update book details and settings
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="edit-title">Title</Label>
-              <Input
-                id="edit-title"
-                {...editForm.register("title")}
-                placeholder="Enter book title"
-              />
-              {editForm.formState.errors.title && (
-                <p className="text-sm text-red-500">{editForm.formState.errors.title.message as string}</p>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-author">Author</Label>
-              <Input
-                id="edit-author"
-                {...editForm.register("author")}
-                placeholder="Enter author name"
-              />
-              {editForm.formState.errors.author && (
-                <p className="text-sm text-red-500">{editForm.formState.errors.author.message as string}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Image Upload */}
-          <ImageUploader
-            value={editForm.watch("coverImage") || ""}
-            onChange={(imageUrl) => editForm.setValue("coverImage", imageUrl)}
-            label="Cover Image"
-          />
-
-          {/* Rich Text Description */}
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <RichTextEditor
-              content={editDescription}
-              onChange={setEditDescription}
-              placeholder="Enter book description with rich formatting..."
-            />
-            <div className="flex justify-between text-sm text-gray-500">
-              <span>Rich text formatting available</span>
-              <span>{editDescription.length}/5000 characters</span>
-            </div>
-            {editDescription.length < 10 && editDescription.length > 0 && (
-              <p className="text-sm text-red-500">Description must be at least 10 characters</p>
-            )}
-            {editDescription.length > 5000 && (
-              <p className="text-sm text-red-500">Description cannot exceed 5000 characters</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Categories (Select multiple)</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-4 border rounded-md">
-              {(categories as any[]).map((category: any) => (
-                <div key={category.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`edit-category-${category.id}`}
-                    checked={editForm.watch("categories")?.includes(category.id) || false}
-                    onCheckedChange={(checked) => {
-                      const currentCategories = editForm.watch("categories") || [];
-                      if (checked) {
-                        editForm.setValue("categories", [...currentCategories, category.id]);
-                      } else {
-                        editForm.setValue("categories", currentCategories.filter((id: string) => id !== category.id));
-                      }
-                    }}
-                  />
-                  <Label htmlFor={`edit-category-${category.id}`} className="text-sm font-normal">
-                    {category.name}
-                  </Label>
-                </div>
-              ))}
-            </div>
-            {editForm.formState.errors.categories && (
-              <p className="text-sm text-red-500">{editForm.formState.errors.categories.message as string}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="edit-tier">Subscription Tier</Label>
-              <Select onValueChange={(value) => editForm.setValue("tier", value as any)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select tier" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="free">Free Trial</SelectItem>
-                  <SelectItem value="basic">Basic (£5.99)</SelectItem>
-                  <SelectItem value="premium">Premium (£9.99)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-rating">Rating (1-5)</Label>
-              <Input
-                id="edit-rating"
-                type="number"
-                min="1"
-                max="5"
-                {...editForm.register("rating", { valueAsNumber: true })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="edit-visible"
-                checked={editForm.watch("isVisible")}
-                onCheckedChange={(checked) => editForm.setValue("isVisible", checked as boolean)}
-              />
-              <Label htmlFor="edit-visible">Book is visible to users</Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="edit-featured"
-                checked={editForm.watch("isFeatured")}
-                onCheckedChange={(checked) => editForm.setValue("isFeatured", checked as boolean)}
-              />
-              <Label htmlFor="edit-featured">Feature this book</Label>
-            </div>
-          </div>
-        </div>
-          </div>
-          
-          <DialogFooter className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                console.log('Cancel clicked');
-                setEditingBook(null);
-                editForm.reset();
-                setEditDescription("");
-              }}
-              disabled={updateBookMutation.isPending}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Cancel
-            </Button>
-            
-            <Button
-              type="button"
-              onClick={() => {
-                console.log('Save clicked for book:', editingBook?.title);
-                console.log('Form values:', editForm.getValues());
-                console.log('Description:', editDescription);
-                onEditSubmit();
-              }}
-              disabled={updateBookMutation.isPending}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
-            >
-              {updateBookMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
         </div>
       </div>
     </>
