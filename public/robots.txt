@@ -13,4 +13,4 @@ Allow: /subscribe/
 Allow: /login
 
 # Sitemap location
-Sitemap: https://workspace.drcwiseman.replit.app/sitemap.xml
+Sitemap: https://wonderfulbooks.com/sitemap.xml
