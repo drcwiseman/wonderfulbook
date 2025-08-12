@@ -21,6 +21,7 @@ import { PDFUploader } from '@/components/PDFUploader';
 import { CategoryManager } from '@/components/CategoryManager';
 import { UserManagement } from '@/components/UserManagement';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { EditItemDialog } from '@/components/shared/EditItemDialog';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
 import PageHeader from '@/components/PageHeader';
@@ -215,6 +216,69 @@ export default function AdminPanel() {
       });
     },
   });
+
+  // Update book mutation
+  const updateBookMutation = useMutation({
+    mutationFn: async (data: EditBookForm & { id: string }) => {
+      const { id, ...bookData } = data;
+      return apiRequest("PATCH", `/api/admin/books/${id}`, bookData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Book updated successfully!",
+      });
+      setEditingBook(null);
+      editForm.reset();
+      setEditDescription("");
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update book",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle edit form submission
+  const onEditSubmit = () => {
+    if (!editingBook || !editDescription || editDescription.length < 10) {
+      toast({
+        title: "Validation Error",
+        description: "Description must be at least 10 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const formData = editForm.getValues();
+    updateBookMutation.mutate({
+      id: editingBook.id,
+      ...formData,
+      description: editDescription,
+    });
+  };
+
+  // Initialize edit form when editing book changes
+  useEffect(() => {
+    if (editingBook) {
+      editForm.reset({
+        title: editingBook.title || "",
+        author: editingBook.author || "",
+        description: editingBook.description || "",
+        categories: editingBook.categories || [],
+        tier: editingBook.tier || editingBook.requiredTier || "free",
+        rating: editingBook.rating || 4,
+        coverImage: editingBook.coverImage || "",
+        isVisible: editingBook.isVisible !== false,
+        isFeatured: editingBook.isFeatured || false,
+      });
+      setEditDescription(editingBook.description || "");
+    }
+  }, [editingBook, editForm]);
 
   const onSubmit = (data: UploadForm) => {
     createBookMutation.mutate(data);
@@ -711,6 +775,151 @@ export default function AdminPanel() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Book Dialog */}
+      <EditItemDialog
+        isOpen={!!editingBook}
+        onClose={() => {
+          setEditingBook(null);
+          editForm.reset();
+          setEditDescription("");
+        }}
+        onSave={onEditSubmit}
+        title="Edit Book"
+        description="Update book details and settings"
+        isSaving={updateBookMutation.isPending}
+        maxWidth="2xl"
+      >
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                {...editForm.register("title")}
+                placeholder="Enter book title"
+              />
+              {editForm.formState.errors.title && (
+                <p className="text-sm text-red-500">{editForm.formState.errors.title.message as string}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-author">Author</Label>
+              <Input
+                id="edit-author"
+                {...editForm.register("author")}
+                placeholder="Enter author name"
+              />
+              {editForm.formState.errors.author && (
+                <p className="text-sm text-red-500">{editForm.formState.errors.author.message as string}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Image Upload */}
+          <ImageUploader
+            value={editForm.watch("coverImage") || ""}
+            onChange={(imageUrl) => editForm.setValue("coverImage", imageUrl)}
+            label="Cover Image"
+          />
+
+          {/* Rich Text Description */}
+          <div className="space-y-2">
+            <Label>Description</Label>
+            <RichTextEditor
+              content={editDescription}
+              onChange={setEditDescription}
+              placeholder="Enter book description with rich formatting..."
+            />
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Rich text formatting available</span>
+              <span>{editDescription.length}/5000 characters</span>
+            </div>
+            {editDescription.length < 10 && editDescription.length > 0 && (
+              <p className="text-sm text-red-500">Description must be at least 10 characters</p>
+            )}
+            {editDescription.length > 5000 && (
+              <p className="text-sm text-red-500">Description cannot exceed 5000 characters</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Categories (Select multiple)</Label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-4 border rounded-md">
+              {(categories as any[]).map((category: any) => (
+                <div key={category.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`edit-category-${category.id}`}
+                    checked={editForm.watch("categories")?.includes(category.id) || false}
+                    onCheckedChange={(checked) => {
+                      const currentCategories = editForm.watch("categories") || [];
+                      if (checked) {
+                        editForm.setValue("categories", [...currentCategories, category.id]);
+                      } else {
+                        editForm.setValue("categories", currentCategories.filter((id: string) => id !== category.id));
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`edit-category-${category.id}`} className="text-sm font-normal">
+                    {category.name}
+                  </Label>
+                </div>
+              ))}
+            </div>
+            {editForm.formState.errors.categories && (
+              <p className="text-sm text-red-500">{editForm.formState.errors.categories.message as string}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="edit-tier">Subscription Tier</Label>
+              <Select onValueChange={(value) => editForm.setValue("tier", value as any)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select tier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free Trial</SelectItem>
+                  <SelectItem value="basic">Basic (£5.99)</SelectItem>
+                  <SelectItem value="premium">Premium (£9.99)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-rating">Rating (1-5)</Label>
+              <Input
+                id="edit-rating"
+                type="number"
+                min="1"
+                max="5"
+                {...editForm.register("rating", { valueAsNumber: true })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="edit-visible"
+                checked={editForm.watch("isVisible")}
+                onCheckedChange={(checked) => editForm.setValue("isVisible", checked as boolean)}
+              />
+              <Label htmlFor="edit-visible">Book is visible to users</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="edit-featured"
+                checked={editForm.watch("isFeatured")}
+                onCheckedChange={(checked) => editForm.setValue("isFeatured", checked as boolean)}
+              />
+              <Label htmlFor="edit-featured">Feature this book</Label>
+            </div>
+          </div>
+        </div>
+      </EditItemDialog>
         </div>
       </div>
     </>
