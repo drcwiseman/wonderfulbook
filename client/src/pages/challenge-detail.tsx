@@ -34,7 +34,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
+import AccessibleContent, { SpeakableText } from "@/components/AccessibleContent";
 
 const updateProgressSchema = z.object({
   progress: z.number().min(0),
@@ -240,7 +240,7 @@ export default function ChallengeDetailPage() {
 
   if (isLoading || challengeLoading || !challenge) {
     return (
-      
+      <AccessibleContent>
         <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
           <Header />
           <div className="max-w-6xl mx-auto px-4 py-8">
@@ -250,7 +250,7 @@ export default function ChallengeDetailPage() {
           </div>
           <Footer />
         </div>
-      
+      </AccessibleContent>
     );
   }
 
@@ -263,7 +263,7 @@ export default function ChallengeDetailPage() {
     : challenge.participants.slice(0, 6);
 
   return (
-    
+    <AccessibleContent>
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
         <Header />
         
@@ -287,10 +287,10 @@ export default function ChallengeDetailPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {challenge.title}
+                        <SpeakableText>{challenge.title}</SpeakableText>
                       </CardTitle>
                       <CardDescription className="mt-2 text-base">
-                        {challenge.description}
+                        <SpeakableText>{challenge.description}</SpeakableText>
                       </CardDescription>
                     </div>
                     <Badge className={getDifficultyColor(challenge.difficulty || 'medium')}>
@@ -302,42 +302,42 @@ export default function ChallengeDetailPage() {
                     <div className="text-center">
                       <Target className="h-6 w-6 text-orange-500 mx-auto mb-1" />
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {challenge.targetValue}
+                        <SpeakableText>{challenge.targetValue}</SpeakableText>
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {formatChallengeType(challenge.type)}
+                        <SpeakableText>{formatChallengeType(challenge.type)}</SpeakableText>
                       </div>
                     </div>
                     
                     <div className="text-center">
                       <Users className="h-6 w-6 text-blue-500 mx-auto mb-1" />
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {challenge.participantCount || 0}
+                        <SpeakableText>{challenge.participantCount || 0}</SpeakableText>
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Participants
+                        <SpeakableText>Participants</SpeakableText>
                       </div>
                     </div>
                     
                     <div className="text-center">
                       <Calendar className="h-6 w-6 text-green-500 mx-auto mb-1" />
                       <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                        
+                        <SpeakableText>
                           {Math.ceil((new Date(challenge.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
-                        
+                        </SpeakableText>
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Remaining
+                        <SpeakableText>Remaining</SpeakableText>
                       </div>
                     </div>
                     
                     <div className="text-center">
                       <Trophy className="h-6 w-6 text-yellow-500 mx-auto mb-1" />
                       <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {isActive(challenge) ? 'Active' : 'Upcoming'}
+                        <SpeakableText>{isActive(challenge) ? 'Active' : 'Upcoming'}</SpeakableText>
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Status
+                        <SpeakableText>Status</SpeakableText>
                       </div>
                     </div>
                   </div>
@@ -350,18 +350,18 @@ export default function ChallengeDetailPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <TrendingUp className="h-5 w-5 text-orange-500" />
-                      Your Progress
+                      <SpeakableText>Your Progress</SpeakableText>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold">
-                        
+                        <SpeakableText>
                           {participation.progress} / {challenge.targetValue} {formatChallengeType(challenge.type)}
-                        
+                        </SpeakableText>
                       </span>
                       <span className="text-2xl font-bold text-orange-500">
-                        {Math.round(progressPercentage)}%
+                        <SpeakableText>{Math.round(progressPercentage)}%</SpeakableText>
                       </span>
                     </div>
                     
@@ -370,7 +370,7 @@ export default function ChallengeDetailPage() {
                     {participation.notes && (
                       <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <p className="text-sm text-gray-700 dark:text-gray-300">
-                          "{participation.notes}"
+                          <SpeakableText>"{participation.notes}"</SpeakableText>
                         </p>
                       </div>
                     )}
@@ -378,9 +378,9 @@ export default function ChallengeDetailPage() {
                     {participation.isCompleted && (
                       <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                         <Medal className="h-5 w-5" />
-                        
+                        <SpeakableText>
                           <span className="font-semibold">Challenge Completed!</span>
-                        
+                        </SpeakableText>
                       </div>
                     )}
                     
@@ -464,10 +464,10 @@ export default function ChallengeDetailPage() {
                 <Card>
                   <CardContent className="pt-6 text-center">
                     <h3 className="text-lg font-semibold mb-2">
-                      Join this challenge and start your reading journey!
+                      <SpeakableText>Join this challenge and start your reading journey!</SpeakableText>
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      Track your progress, compete with others, and achieve your reading goals.
+                      <SpeakableText>Track your progress, compete with others, and achieve your reading goals.</SpeakableText>
                     </p>
                     <Button 
                       onClick={() => joinMutation.mutate()}
@@ -485,7 +485,7 @@ export default function ChallengeDetailPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5 text-blue-500" />
-                    Discussion ({challenge.comments?.length || 0})
+                    <SpeakableText>Discussion ({challenge.comments?.length || 0})</SpeakableText>
                   </CardTitle>
                 </CardHeader>
                 
@@ -544,24 +544,24 @@ export default function ChallengeDetailPage() {
                                 </span>
                               </div>
                               <p className="text-gray-700 dark:text-gray-300">
-                                {comment.content}
+                                <SpeakableText>{comment.content}</SpeakableText>
                               </p>
                             </div>
                             <div className="flex items-center gap-1 text-sm text-gray-500">
                               <Heart className="h-4 w-4" />
-                              {comment.likes || 0}
+                              <SpeakableText>{comment.likes || 0}</SpeakableText>
                             </div>
                           </div>
                         </div>
                       ))
                     ) : (
                       <p className="text-center text-gray-500 py-8">
-                        
+                        <SpeakableText>
                           {participation 
                             ? "No comments yet. Be the first to share your thoughts!" 
                             : "Join the challenge to participate in the discussion"
                           }
-                        
+                        </SpeakableText>
                       </p>
                     )}
                   </div>
@@ -576,21 +576,21 @@ export default function ChallengeDetailPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-green-500" />
-                    Challenge Info
+                    <SpeakableText>Challenge Info</SpeakableText>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <span className="font-semibold text-gray-900 dark:text-white">Start Date:</span>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {new Date(challenge.startDate).toLocaleDateString()}
+                      <SpeakableText>{new Date(challenge.startDate).toLocaleDateString()}</SpeakableText>
                     </p>
                   </div>
                   
                   <div>
                     <span className="font-semibold text-gray-900 dark:text-white">End Date:</span>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {new Date(challenge.endDate).toLocaleDateString()}
+                      <SpeakableText>{new Date(challenge.endDate).toLocaleDateString()}</SpeakableText>
                     </p>
                   </div>
                   
@@ -598,7 +598,7 @@ export default function ChallengeDetailPage() {
                     <div>
                       <span className="font-semibold text-gray-900 dark:text-white">Prize:</span>
                       <p className="text-gray-600 dark:text-gray-400">
-                        {challenge.prize}
+                        <SpeakableText>{challenge.prize}</SpeakableText>
                       </p>
                     </div>
                   )}
@@ -623,7 +623,7 @@ export default function ChallengeDetailPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-yellow-500" />
-                    Leaderboard
+                    <SpeakableText>Leaderboard</SpeakableText>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -646,15 +646,15 @@ export default function ChallengeDetailPage() {
                             )}
                           </div>
                           <span className="text-sm">
-                            
+                            <SpeakableText>
                               {participant.userId === user?.id ? 'You' : `User #${participant.userId.slice(-6)}`}
-                            
+                            </SpeakableText>
                           </span>
                         </div>
                         <div className="text-sm font-semibold">
-                          
+                          <SpeakableText>
                             {participant.progress}/{challenge.targetValue}
-                          
+                          </SpeakableText>
                         </div>
                       </div>
                     ))}
@@ -678,7 +678,7 @@ export default function ChallengeDetailPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5 text-blue-500" />
-                    Recent Activity
+                    <SpeakableText>Recent Activity</SpeakableText>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -687,16 +687,16 @@ export default function ChallengeDetailPage() {
                       challenge.activities.slice(0, 5).map((activity: any) => (
                         <div key={activity.id} className="text-sm">
                           <p className="text-gray-700 dark:text-gray-300">
-                            {activity.message}
+                            <SpeakableText>{activity.message}</SpeakableText>
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            {new Date(activity.createdAt).toLocaleDateString()}
+                            <SpeakableText>{new Date(activity.createdAt).toLocaleDateString()}</SpeakableText>
                           </p>
                         </div>
                       ))
                     ) : (
                       <p className="text-sm text-gray-500">
-                        No recent activity
+                        <SpeakableText>No recent activity</SpeakableText>
                       </p>
                     )}
                   </div>
@@ -708,6 +708,6 @@ export default function ChallengeDetailPage() {
         
         <Footer />
       </div>
-    
+    </AccessibleContent>
   );
 }

@@ -33,7 +33,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
+import AccessibleContent, { SpeakableText } from "@/components/AccessibleContent";
 import PageHeader from "@/components/PageHeader";
 
 // Challenge creation form schema
@@ -168,7 +168,7 @@ export default function ChallengesPage() {
 
   if (isLoading || challengesLoading) {
     return (
-      
+      <AccessibleContent>
         <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
           <Header />
           <div className="max-w-6xl mx-auto px-4 py-8">
@@ -178,7 +178,7 @@ export default function ChallengesPage() {
           </div>
           <Footer />
         </div>
-      
+      </AccessibleContent>
     );
   }
 
@@ -204,7 +204,7 @@ export default function ChallengesPage() {
             </div>
           }
         />
-        
+        <AccessibleContent>
           <div className="container mx-auto px-4 py-8">
             <div className="flex justify-end mb-8">
               <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -399,10 +399,10 @@ export default function ChallengesPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-lg font-bold text-gray-900 dark:text-white line-clamp-2">
-                        {challenge.title}
+                        <SpeakableText>{challenge.title}</SpeakableText>
                       </CardTitle>
                       <CardDescription className="mt-2 line-clamp-2">
-                        {challenge.description}
+                        <SpeakableText>{challenge.description}</SpeakableText>
                       </CardDescription>
                     </div>
                     <Badge className={getDifficultyColor(challenge.difficulty || 'medium')}>
@@ -417,17 +417,17 @@ export default function ChallengesPage() {
                     <div className="flex items-center gap-2">
                       <Target className="h-4 w-4 text-orange-500" />
                       <span className="text-sm">
-                        
+                        <SpeakableText>
                           {challenge.targetValue} {formatChallengeType(challenge.type)}
-                        
+                        </SpeakableText>
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-blue-500" />
                       <span className="text-sm">
-                        
+                        <SpeakableText>
                           {challenge.participantCount || 0} joined
-                        
+                        </SpeakableText>
                       </span>
                     </div>
                   </div>
@@ -435,9 +435,9 @@ export default function ChallengesPage() {
                   {/* Dates */}
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <Calendar className="h-4 w-4" />
-                    
+                    <SpeakableText>
                       {new Date(challenge.startDate).toLocaleDateString()} - {new Date(challenge.endDate).toLocaleDateString()}
-                    
+                    </SpeakableText>
                   </div>
                   
                   {/* Status */}
@@ -476,10 +476,10 @@ export default function ChallengesPage() {
             <div className="text-center py-16">
               <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                No Challenges Yet
+                <SpeakableText>No Challenges Yet</SpeakableText>
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Be the first to create a reading challenge and inspire others!
+                <SpeakableText>Be the first to create a reading challenge and inspire others!</SpeakableText>
               </p>
               <Button 
                 onClick={() => setIsCreateOpen(true)}
@@ -491,7 +491,7 @@ export default function ChallengesPage() {
             </div>
           )}
           </div>
-        
+        </AccessibleContent>
       </div>
     </>
   );
