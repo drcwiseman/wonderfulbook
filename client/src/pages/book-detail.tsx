@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Star, Bookmark, Book, ArrowLeft, Home, Library } from "lucide-react";
+import { Star, Bookmark, Book, ArrowLeft, Home, Library, BookOpen } from "lucide-react";
 import type { Book as BookType, ReadingProgress, Bookmark as BookmarkType } from "@shared/schema";
 import { SEOHead, getBookSEO } from "@/components/SEOHead";
 import PageHeader from "@/components/PageHeader";
 import Header from "@/components/Header";
+import SocialShareButtons from "@/components/SocialShareButtons";
 
 export default function BookDetailOld() {
   const [, params] = useRoute("/book/:id");
@@ -309,7 +310,18 @@ export default function BookDetailOld() {
                     <span className="ml-2 text-gray-600 text-sm">{book.rating}</span>
                   </div>
 
-                  <Badge variant="secondary" className="mb-4">{book.category}</Badge>
+                  <Badge variant="secondary" className="mb-4">Fiction</Badge>
+
+                  {/* Social Share Section */}
+                  <SocialShareButtons
+                    bookTitle={book.title}
+                    bookAuthor={book.author}
+                    bookDescription={book.description || ''}
+                    bookUrl={window.location.href}
+                    bookCover={book.coverImageUrl || ''}
+                    className="mb-4"
+                    compact={true}
+                  />
                   
                   <Button 
                     onClick={() => setLocation(`/reader/${params?.id}`)}
