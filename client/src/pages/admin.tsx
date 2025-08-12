@@ -255,7 +255,7 @@ export default function AdminPanel() {
     }
 
     const formData = editForm.getValues();
-    const updateData = {
+    const updateData: any = {
       ...formData,
       description: editDescription,
     };
