@@ -13,4 +13,4 @@ Allow: /subscribe/
 Allow: /login
 
 # Sitemap location
-Sitemap: https://wonderfulbooks.com/sitemap.xml
+Sitemap: https://mywonderfulbooks.com/sitemap.xml
