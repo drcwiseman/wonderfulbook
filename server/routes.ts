@@ -1936,7 +1936,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const bookId = req.params.id;
       const { categories, ...updates } = req.body;
-      const book = await storage.updateBook(bookId, updates, categories);
+      
+      // Transform categories: extract IDs if full objects are passed
+      let categoryIds: string[] | undefined = undefined;
+      if (categories !== undefined) {
+        if (Array.isArray(categories)) {
+          categoryIds = categories.map(cat => 
+            typeof cat === 'string' ? cat : cat.id || cat
+          );
+        } else {
+          categoryIds = [];
+        }
+      }
+      
+      const book = await storage.updateBook(bookId, updates, categoryIds);
       res.json(book);
     } catch (error) {
       console.error("Error updating book:", error);
