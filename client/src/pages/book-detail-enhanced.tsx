@@ -44,6 +44,56 @@ interface ReviewWithUser extends BookReview {
   };
 }
 
+// Update document head with book-specific meta tags for social sharing
+const updateBookMetaTags = (book: any) => {
+  const getFullImageUrl = (imageUrl: string) => {
+    if (!imageUrl) return 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630';
+    if (imageUrl.startsWith('http')) return imageUrl;
+    if (imageUrl.startsWith('/uploads/')) return `${window.location.origin}${imageUrl}`;
+    return imageUrl;
+  };
+
+  const title = `${book.title}${book.author ? ` by ${book.author}` : ''} - Wonderful Books`;
+  const description = book.description || `Transform your reading experience with "${book.title}"${book.author ? ` by ${book.author}` : ''}! Stream instantly on Wonderful Books - the premium digital library with thousands of books, advanced reading features, and seamless device syncing. Start your 7-day free trial today!`;
+  const imageUrl = getFullImageUrl(book.coverImageUrl || '');
+
+  // Update existing meta tags or create new ones
+  const updateMetaTag = (property: string, content: string, isProperty = true) => {
+    const selector = isProperty ? `meta[property="${property}"]` : `meta[name="${property}"]`;
+    let tag = document.querySelector(selector);
+    if (tag) {
+      tag.setAttribute('content', content);
+    } else {
+      tag = document.createElement('meta');
+      if (isProperty) {
+        tag.setAttribute('property', property);
+      } else {
+        tag.setAttribute('name', property);
+      }
+      tag.setAttribute('content', content);
+      document.head.appendChild(tag);
+    }
+  };
+
+  // Update page title
+  document.title = title;
+  
+  // Update meta description
+  updateMetaTag('description', description, false);
+  
+  // Update Open Graph tags
+  updateMetaTag('og:title', book.title);
+  updateMetaTag('og:description', description);
+  updateMetaTag('og:image', imageUrl);
+  updateMetaTag('og:url', window.location.href);
+  updateMetaTag('og:type', 'book');
+  
+  // Update Twitter tags
+  updateMetaTag('twitter:title', book.title);
+  updateMetaTag('twitter:description', description);
+  updateMetaTag('twitter:image', imageUrl);
+};
+
 export default function BookDetail() {
   const [match1, params1] = useRoute("/book/:id");
   const [match2, params2] = useRoute("/book-detail/:id");
@@ -100,6 +150,13 @@ export default function BookDetail() {
     queryKey: ["/api/books", params?.id, "reviews"],
     enabled: !!params?.id,
   });
+
+  // Update meta tags when book data is available
+  useEffect(() => {
+    if (book && !bookLoading) {
+      updateBookMetaTags(book);
+    }
+  }, [book, bookLoading]);
 
   const hasActiveSubscription = () => {
     if (!user) return false;

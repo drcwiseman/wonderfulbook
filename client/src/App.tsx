@@ -1,5 +1,5 @@
 import React from "react";
-// Force deployment refresh - August 12, 2025 - Social Sharing Fixed and Ready
+// Force deployment refresh - August 12, 2025 - Social Sharing with Book Images FIXED
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";

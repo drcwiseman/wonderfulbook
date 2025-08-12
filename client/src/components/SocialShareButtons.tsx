@@ -73,18 +73,24 @@ Definitely worth it for book lovers 👌`
   const shareDescription = bookDescription || `Transform your reading experience with "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''}! Stream instantly on Wonderful Books - the premium digital library with thousands of books, advanced reading features, and seamless device syncing. Start your 7-day free trial today!`;
 
   // Create Open Graph meta tags for image sharing
+  const getFullImageUrl = (imageUrl: string) => {
+    if (!imageUrl) return 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630';
+    if (imageUrl.startsWith('http')) return imageUrl;
+    if (imageUrl.startsWith('/uploads/')) return `${window.location.origin}${imageUrl}`;
+    return imageUrl;
+  };
   const createMetaTags = () => {
     return {
       'og:title': bookTitle,
       'og:description': shareDescription,
-      'og:image': bookCover || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630",
+      'og:image': getFullImageUrl(bookCover),
       'og:url': bookUrl,
       'og:type': 'book',
       'og:site_name': 'Wonderful Books',
       'twitter:card': 'summary_large_image',
       'twitter:title': bookTitle,
       'twitter:description': shareDescription,
-      'twitter:image': bookCover || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630"
+      'twitter:image': getFullImageUrl(bookCover)
     };
   };
 
@@ -110,7 +116,8 @@ Definitely worth it for book lovers 👌`
     const encodedUrl = encodeURIComponent(bookUrl);
     const encodedTitle = encodeURIComponent(shareTexts[platform as keyof typeof shareTexts]);
     const encodedDescription = encodeURIComponent(shareDescription);
-    const encodedImage = encodeURIComponent(bookCover || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630");
+    const fullImageUrl = getFullImageUrl(bookCover);
+    const encodedImage = encodeURIComponent(fullImageUrl);
     
     let shareUrl = '';
 
