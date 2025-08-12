@@ -48,9 +48,9 @@ export function ImageUploader({ value, onChange, label = "Image", className = ""
 
     try {
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('file', file);
 
-      const response = await fetch('/api/admin/upload-image', {
+      const response = await fetch('/api/objects/upload', {
         method: 'POST',
         body: formData,
         credentials: 'include', // Include cookies for authentication
@@ -62,7 +62,7 @@ export function ImageUploader({ value, onChange, label = "Image", className = ""
       }
 
       const result = await response.json();
-      const imageUrl = result.imageUrl;
+      const imageUrl = result.objectPath || result.imageUrl;
 
       setPreview(imageUrl);
       onChange(imageUrl);
