@@ -765,7 +765,7 @@ export default function AdminPanel() {
                                       
                                     } catch (error) {
                                       console.error('🔧 PRODUCTION DEBUG: Error setting editingBook:', error);
-                                      console.error('🔧 PRODUCTION DEBUG: Error stack:', error.stack);
+                                      console.error('🔧 PRODUCTION DEBUG: Error stack:', (error as Error)?.stack);
                                     }
                                   }}
                                   data-testid={`button-edit-${book.id}`}

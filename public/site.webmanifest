@@ -1,25 +1,20 @@
 {
-  "name": "Wonderful Books - Premium Digital Book Streaming",
-  "short_name": "Wonderful Books",
-  "description": "Stream premium books online with secure PDF access across personal development, business, faith, and mindset categories",
+  "name": "Digital Book Streaming Platform",
+  "short_name": "BookStream",
+  "description": "A comprehensive digital book streaming platform with secure access to professional and personal development books",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ea580c",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/android-chrome-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/android-chrome-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
     }
   ],
-  "theme_color": "#ea580c",
-  "background_color": "#ffffff",
-  "display": "standalone",
-  "orientation": "portrait",
-  "scope": "/",
-  "start_url": "/",
-  "categories": ["books", "education", "productivity", "lifestyle"],
-  "lang": "en-US"
+  "categories": ["education", "books", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
 }
