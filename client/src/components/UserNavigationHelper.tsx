@@ -40,7 +40,7 @@ export function UserNavigationHelper({
   const quickActions = [
     { 
       label: 'Need Help?', 
-      action: () => window.location.href = 'mailto:support@wonderfulbooks.com',
+      action: () => window.location.href = 'mailto:admin@thekingdommail.info',
       icon: HelpCircle,
       color: 'text-gray-600'
     },
