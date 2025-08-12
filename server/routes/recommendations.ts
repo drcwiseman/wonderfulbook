@@ -1,5 +1,5 @@
 import express from 'express';
-import { isAuthenticated, requireRole, requireAdmin } from '../middleware/auth.js';
+import { isAuthenticated, requireAdmin } from '../middleware/auth.js';
 import { recommendationEngine } from '../bookRecommendationEngine.js';
 import { emailScheduler } from '../emailScheduler.js';
 import { db } from '../db.js';
