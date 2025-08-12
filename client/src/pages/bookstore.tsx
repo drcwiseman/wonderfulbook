@@ -303,6 +303,12 @@ function BookCard({ book, layout }: BookCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleBookClick = () => {
+    // Always go to book detail page first to show description and details
+    window.location.href = `/book/${book.id}`;
+  };
+
+  const handleReadClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (book.hasAccess) {
       window.location.href = `/reader/${book.id}`;
     } else {
@@ -312,11 +318,6 @@ function BookCard({ book, layout }: BookCardProps) {
         variant: "destructive",
       });
     }
-  };
-
-  const handleReadClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    handleBookClick();
   };
 
   if (layout === 'list') {
