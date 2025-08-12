@@ -5,12 +5,16 @@ export const securityHeaders = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
+      manifestSrc: ["'self'"],
       scriptSrc: [
         "'self'",
         "'unsafe-inline'", // Required for Vite dev mode
         "'unsafe-eval'", // Required for Vite dev mode
         "https://js.stripe.com",
-        "https://cdn.jsdelivr.net" // For PDF.js CDN fallback
+        "https://cdn.jsdelivr.net", // For PDF.js CDN fallback
+        "https://replit.com", // For Replit dev banner
+        "https://*.replit.com", // For Replit services
+        "https://*.replit.dev" // For development domains
       ],
       styleSrc: [
         "'self'",
@@ -32,7 +36,11 @@ export const securityHeaders = helmet({
         "'self'",
         "https://api.stripe.com",
         "wss://localhost:*", // For Vite HMR
-        "ws://localhost:*"   // For Vite HMR
+        "ws://localhost:*",   // For Vite HMR
+        "https://*.replit.com", // For Replit services
+        "https://*.replit.dev", // For development domains
+        "wss://*.replit.dev", // For WebSocket connections
+        "ws://*.replit.dev"   // For WebSocket connections
       ],
       frameSrc: [
         "'self'",

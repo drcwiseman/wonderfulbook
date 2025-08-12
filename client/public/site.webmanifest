@@ -1,0 +1,20 @@
+{
+  "name": "Digital Book Streaming Platform",
+  "short_name": "BookStream",
+  "description": "A comprehensive digital book streaming platform with secure access to professional and personal development books",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ea580c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["education", "books", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}
