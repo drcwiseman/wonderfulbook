@@ -412,7 +412,7 @@ export const emailLogs = pgTable("email_logs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id),
   email: varchar("email").notNull(),
-  emailType: varchar("email_type").notNull(), // trial_reminder, conversion_success, cancellation, etc.
+  emailType: varchar("email_type").notNull(), // trial_reminder, conversion_success, cancellation, book_recommendation, etc.
   subject: text("subject").notNull(),
   status: varchar("status").notNull(), // sent, failed, queued
   errorMessage: text("error_message"),
@@ -470,6 +470,66 @@ export type BookReview = typeof bookReviews.$inferSelect;
 export type InsertBookReview = z.infer<typeof insertBookReviewSchema>;
 export type ReviewHelpfulVote = typeof reviewHelpfulVotes.$inferSelect;
 export type InsertReviewHelpfulVote = typeof reviewHelpfulVotes.$inferInsert;
+
+// User reading preferences and behavior tracking
+export const userReadingPreferences = pgTable("user_reading_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  favoriteGenres: text("favorite_genres").array().default([]), // business, self-help, finance, etc.
+  preferredAuthors: text("preferred_authors").array().default([]),
+  readingGoalsPerMonth: integer("reading_goals_per_month").default(2),
+  preferredBookLength: varchar("preferred_book_length").default("medium"), // short, medium, long
+  lastReadingActivity: timestamp("last_reading_activity"),
+  totalBooksCompleted: integer("total_books_completed").default(0),
+  averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default("0.00"),
+  emailPreferences: jsonb("email_preferences").default({
+    weeklyRecommendations: true,
+    newBookAlerts: true,
+    personalizedDeals: true,
+    readingReminders: true
+  }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique("unique_user_preferences").on(table.userId),
+]);
+
+// Book recommendation tracking
+export const bookRecommendations = pgTable("book_recommendations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  recommendationType: varchar("recommendation_type").notNull(), // collaborative, content_based, trending, personalized
+  score: decimal("score", { precision: 3, scale: 2 }).notNull(), // Recommendation confidence score
+  reason: text("reason"), // Why this book was recommended
+  emailSent: boolean("email_sent").default(false),
+  emailSentAt: timestamp("email_sent_at"),
+  clicked: boolean("clicked").default(false),
+  clickedAt: timestamp("clicked_at"),
+  borrowed: boolean("borrowed").default(false),
+  borrowedAt: timestamp("borrowed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schemas for new tables
+export const insertUserReadingPreferencesSchema = createInsertSchema(userReadingPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBookRecommendationSchema = createInsertSchema(bookRecommendations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Types for new tables
+export type UserReadingPreferences = typeof userReadingPreferences.$inferSelect;
+export type InsertUserReadingPreferences = z.infer<typeof insertUserReadingPreferencesSchema>;
+export type BookRecommendation = typeof bookRecommendations.$inferSelect;
+export type InsertBookRecommendation = z.infer<typeof insertBookRecommendationSchema>;
 
 // ===== FEEDBACK SYSTEM =====
 
