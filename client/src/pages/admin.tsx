@@ -255,10 +255,20 @@ export default function AdminPanel() {
     }
 
     const formData = editForm.getValues();
-    updateBookMutation.mutate({
-      id: editingBook.id,
+    const updateData = {
       ...formData,
       description: editDescription,
+    };
+    
+    // Map coverImage to coverImageUrl for database compatibility
+    if (formData.coverImage) {
+      updateData.coverImageUrl = formData.coverImage;
+      delete updateData.coverImage;
+    }
+    
+    updateBookMutation.mutate({
+      id: editingBook.id,
+      ...updateData,
     });
   };
 
@@ -272,7 +282,7 @@ export default function AdminPanel() {
         categories: editingBook.categories || [],
         tier: editingBook.tier || editingBook.requiredTier || "free",
         rating: editingBook.rating || 4,
-        coverImage: editingBook.coverImage || "",
+        coverImage: editingBook.coverImage || editingBook.coverImageUrl || "",
         isVisible: editingBook.isVisible !== false,
         isFeatured: editingBook.isFeatured || false,
       });
