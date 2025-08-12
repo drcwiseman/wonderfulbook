@@ -1,8 +1,14 @@
 import * as cron from 'node-cron';
 import { emailService } from './emailService.js';
 import { db } from './db.js';
-import { eq, and, lt, gte, isNotNull } from 'drizzle-orm';
-import { users, emailLogs } from '../shared/schema.js';
+import { eq, and, lt, gte, isNotNull, sql } from 'drizzle-orm';
+import { users, emailLogs, userReadingPreferences } from '../shared/schema.js';
+import { recommendationEngine } from './bookRecommendationEngine.js';
+import { 
+  generateBookRecommendationEmail, 
+  generateBookRecommendationTextEmail,
+  generateBookRecommendationSubject 
+} from './emailTemplates/bookRecommendations.js';
 
 class EmailScheduler {
   private isInitialized = false;
@@ -33,6 +39,9 @@ class EmailScheduler {
       // Schedule trial reminder campaigns
       this.scheduleTrialReminders();
 
+      // Schedule book recommendation emails
+      this.scheduleBookRecommendations();
+
       // Schedule cleanup jobs  
       this.scheduleCleanupJobs();
 
@@ -45,6 +54,21 @@ class EmailScheduler {
     } catch (error) {
       console.error('Email scheduler init failed:', error);
     }
+  }
+
+  /**
+   * Schedule book recommendation emails
+   */
+  private scheduleBookRecommendations(): void {
+    // Send weekly book recommendations on Mondays at 9:00 AM
+    const weeklyRecommendations = cron.schedule('0 9 * * 1', async () => {
+      console.log('📚 Running weekly book recommendation campaign...');
+      await this.sendBookRecommendations();
+    }, {
+      timezone: 'Europe/London'
+    });
+
+    this.scheduledJobs.set('book_recommendations_weekly', weeklyRecommendations);
   }
 
   /**
@@ -290,6 +314,141 @@ class EmailScheduler {
     } catch (error) {
       console.error('Error sending cancellation email:', error);
       return false;
+    }
+  }
+
+  /**
+   * Send book recommendation emails to eligible users
+   */
+  async sendBookRecommendations(): Promise<void> {
+    try {
+      console.log('📚 Starting book recommendation email campaign...');
+      
+      // Get users eligible for recommendations
+      const eligibleUsers = await recommendationEngine.getUsersForRecommendationEmails();
+      
+      if (eligibleUsers.length === 0) {
+        console.log('📚 No eligible users found for book recommendations');
+        return;
+      }
+
+      console.log(`📚 Processing ${eligibleUsers.length} users for book recommendations`);
+      
+      let emailsSent = 0;
+      let emailsFailed = 0;
+
+      for (const userId of eligibleUsers) {
+        try {
+          // Get user details
+          const user = await db
+            .select({
+              id: users.id,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              email: users.email,
+              subscriptionTier: users.subscriptionTier
+            })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+
+          if (user.length === 0) continue;
+
+          const userDetails = user[0];
+
+          // Generate personalized recommendations
+          const recommendations = await recommendationEngine.generateRecommendations(userId, 5);
+          
+          if (recommendations.length === 0) {
+            console.log(`📚 No recommendations available for user ${userDetails.email}`);
+            continue;
+          }
+
+          // Get user reading preferences for email data
+          const preferences = await db
+            .select()
+            .from(userReadingPreferences)
+            .where(eq(userReadingPreferences.userId, userId))
+            .limit(1);
+
+          const readingGoals = preferences[0]?.readingGoalsPerMonth || 2;
+          const totalBooksRead = preferences[0]?.totalBooksCompleted || 0;
+
+          // Generate unsubscribe URL
+          const unsubscribeUrl = `${process.env.NODE_ENV === 'production' ? 'https://wonderful-books.replit.app' : 'http://localhost:5000'}/unsubscribe?token=placeholder`;
+
+          // Prepare email data
+          const emailData = {
+            user: userDetails,
+            recommendations,
+            totalBooksRead,
+            readingGoals,
+            unsubscribeUrl
+          };
+
+          // Generate email content
+          const htmlContent = generateBookRecommendationEmail(emailData);
+          const textContent = generateBookRecommendationTextEmail(emailData);
+          const subject = generateBookRecommendationSubject(emailData);
+
+          // Send email
+          const emailResult = await emailService.sendEmail({
+            to: userDetails.email,
+            subject,
+            text: textContent,
+            html: htmlContent
+          });
+
+          if (emailResult.success) {
+            emailsSent++;
+            
+            // Save recommendations and mark as emailed
+            await recommendationEngine.saveRecommendations(userId, recommendations);
+            await recommendationEngine.markRecommendationsEmailed(
+              userId, 
+              recommendations.map(r => r.id)
+            );
+
+            // Log the email
+            await db.insert(emailLogs).values({
+              userId,
+              email: userDetails.email,
+              emailType: 'book_recommendation',
+              subject,
+              status: 'sent',
+              sentAt: new Date()
+            });
+
+            console.log(`📚 Book recommendations sent to ${userDetails.email}`);
+          } else {
+            emailsFailed++;
+            
+            // Log the failure
+            await db.insert(emailLogs).values({
+              userId,
+              email: userDetails.email,
+              emailType: 'book_recommendation',
+              subject,
+              status: 'failed',
+              errorMessage: emailResult.error || 'Unknown error'
+            });
+
+            console.error(`📚 Failed to send recommendations to ${userDetails.email}:`, emailResult.error);
+          }
+
+          // Add small delay to avoid overwhelming SMTP server
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+        } catch (userError) {
+          emailsFailed++;
+          console.error(`📚 Error processing user ${userId}:`, userError);
+        }
+      }
+
+      console.log(`📚 Book recommendation campaign completed: ${emailsSent} sent, ${emailsFailed} failed`);
+
+    } catch (error) {
+      console.error('📚 Book recommendation campaign failed:', error);
     }
   }
 

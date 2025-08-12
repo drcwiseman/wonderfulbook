@@ -16,16 +16,16 @@ export interface BookRecommendationWithDetails {
   id: string;
   title: string;
   author: string;
-  description: string;
-  coverImageUrl: string;
-  rating: string;
-  totalRatings: number;
-  requiredTier: string;
+  description: string | null;
+  coverImageUrl: string | null;
+  rating: string | null;
+  totalRatings: number | null;
+  requiredTier: string | null;
   recommendationType: string;
   score: string;
   reason: string;
-  pageCount?: number;
-  publishedYear?: number;
+  pageCount?: number | null;
+  publishedYear?: number | null;
 }
 
 export interface RecommendationResult {
@@ -115,7 +115,7 @@ export class BookRecommendationEngine {
     if (preferences.length === 0) {
       // Create default preferences based on reading history
       const history = await this.getUserReadingHistory(userId);
-      const favoriteAuthors = [...new Set(history.map(h => h.author))].slice(0, 3);
+      const favoriteAuthors = Array.from(new Set(history.map(h => h.author))).slice(0, 3);
       
       await db.insert(userReadingPreferences).values({
         userId,
@@ -224,7 +224,7 @@ export class BookRecommendationEngine {
     }
 
     // Get favorite authors
-    const favoriteAuthors = [...new Set(likedBooks.map(b => b.author))];
+    const favoriteAuthors = Array.from(new Set(likedBooks.map(b => b.author)));
     
     // Recommend books by favorite authors that user hasn't read
     const recommendations = await db
@@ -256,7 +256,7 @@ export class BookRecommendationEngine {
     return recommendations.map(rec => ({
       ...rec,
       recommendationType: 'content_based',
-      score: (parseFloat(rec.rating) * 20).toString(),
+      score: (parseFloat(rec.rating || '0') * 20).toString(),
       reason: `You enjoyed other books by ${rec.author}. This book has ${rec.rating}/5 stars from ${rec.totalRatings} readers`
     }));
   }
@@ -301,7 +301,7 @@ export class BookRecommendationEngine {
     return recommendations.map(rec => ({
       ...rec,
       recommendationType: 'trending',
-      score: ((rec.recentLoans * 10) + (parseFloat(rec.rating) * 10)).toString(),
+      score: ((rec.recentLoans * 10) + (parseFloat(rec.rating || '0') * 10)).toString(),
       reason: `Trending now! ${rec.recentLoans} readers chose this book in the last 30 days. Average rating: ${rec.rating}/5`
     }));
   }
@@ -343,7 +343,7 @@ export class BookRecommendationEngine {
     return recommendations.map(rec => ({
       ...rec,
       recommendationType: 'personalized',
-      score: (parseFloat(rec.rating) * 20).toString(),
+      score: (parseFloat(rec.rating || '0') * 20).toString(),
       reason: `Based on your reading preferences. You seem to enjoy books by ${rec.author}`
     }));
   }
@@ -385,17 +385,16 @@ export class BookRecommendationEngine {
    */
   async getUsersForRecommendationEmails(): Promise<string[]> {
     // Get active users who haven't received recommendations in the last 7 days
-    const users = await db
+    const results = await db
       .select({ userId: users.id })
       .from(users)
       .leftJoin(userReadingPreferences, eq(userReadingPreferences.userId, users.id))
       .where(and(
         eq(users.isActive, true),
-        isNotNull(users.email),
-        sql`(${userReadingPreferences.emailPreferences}->>'weeklyRecommendations')::boolean = true OR ${userReadingPreferences.emailPreferences} IS NULL`
+        isNotNull(users.email)
       ));
 
-    return users.map(u => u.userId);
+    return results.map((u: { userId: string }) => u.userId);
   }
 
   /**

@@ -3,6 +3,8 @@
 ## Overview
 A comprehensive digital book streaming platform designed to offer an immersive reading experience with advanced administrative capabilities. The platform aims to provide a robust environment for digital book streaming, featuring advanced email system configuration and management. It leverages modern web technologies to deliver a multi-tier subscription system (Free, Basic, Premium), advanced email campaign management, PDF book streaming and reading, user analytics, and robust security. The business vision is to capture a significant share of the digital book market by offering a superior user experience and powerful administrative tools, enabling a rich content ecosystem for readers and publishers alike.
 
+**Latest Enhancement (August 2025):** Implemented a comprehensive dynamic book recommendation email system using private SMTP. This system provides personalized book suggestions through collaborative filtering, content-based recommendations, trending analysis, and user preference matching. The system automatically sends weekly recommendation emails on Mondays at 9:00 AM, significantly enhancing user engagement and retention through data-driven book discovery.
+
 ## User Preferences
 - Follow modern full-stack JavaScript patterns
 - Prioritize frontend functionality with minimal backend
@@ -22,6 +24,7 @@ The platform is built with a clear separation of concerns, employing a React wit
   - **Deployment Strategy:** A comprehensive build system orchestrates the full production build, copying the React frontend to `server/public/` and compiling the backend. `server/production.ts` provides history fallback support for client-side routing.
 - **Shared Components:** A `shared/` directory contains common schemas and types for consistent data structures across frontend and backend.
 - **Admin Dashboard:** Utilizes EJS templates for administrative tools, including email system configuration and management, user analytics, and overall platform control.
+- **Dynamic Book Recommendations:** Advanced recommendation engine using collaborative filtering, content-based analysis, and user behavior tracking. Includes personalized weekly email campaigns, user reading preferences management, and comprehensive recommendation analytics. Features automated email scheduling with beautiful HTML templates and tracking capabilities.
 - **Security:** Comprehensive security measures and anti-abuse systems are integrated throughout the platform.
 - **Health Monitoring:** Implemented with immediate health check responses, production-optimized logging, and error recovery for schedulers.
 

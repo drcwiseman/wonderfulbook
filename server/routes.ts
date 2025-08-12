@@ -21,6 +21,7 @@ import { antiAbuseService } from "./antiAbuseService.js";
 import { AuditService } from "./auditService.js";
 import { healthRouter } from "./health/routes.js";
 import { healthzRouter } from "./routes/healthz.js";
+import { recommendationsRouter } from "./routes/recommendations.js";
 import { securityHeaders, additionalSecurityHeaders } from "./middleware/securityHeaders.js";
 import { reportsAuth } from "./middleware/reportsAuth.js";
 import { systemSettingsManager } from "./systemSettingsManager.js";
@@ -90,6 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register health check routes for monitoring
   app.use('/', healthRouter);
   app.use('/', healthzRouter);
+  app.use('/', recommendationsRouter);
   
   // Production environment detection and configuration
   const isProduction = process.env.NODE_ENV === 'production';
