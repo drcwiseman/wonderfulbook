@@ -702,12 +702,21 @@ export default function AdminPanel() {
                                 }}
                               />
                               
-                              {book.coverImage && (
+                              {book.coverImage ? (
                                 <img 
                                   src={book.coverImage} 
-                                  alt={book.title}
+                                  alt={`Cover of ${book.title}`}
                                   className="w-12 h-16 object-cover rounded"
+                                  onError={(e) => {
+                                    console.log('🔧 PRODUCTION DEBUG: Image failed to load:', book.coverImage);
+                                    // Fallback to placeholder
+                                    (e.target as HTMLImageElement).src = `/api/placeholder/48/64`;
+                                  }}
                                 />
+                              ) : (
+                                <div className="w-12 h-16 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                                  <span className="text-xs text-gray-500">No Image</span>
+                                </div>
                               )}
                               
                               <div className="flex-1">

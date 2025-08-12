@@ -161,8 +161,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(validateAPIRoute);
   app.use(deviceFingerprint);
   
-  // Serve uploaded files
-  app.use('/uploads', express.static('./uploads'));
+  // Serve uploaded files - Enhanced for production stability
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), {
+    maxAge: '1d', // Cache for 1 day
+    etag: true,
+    setHeaders: (res, path) => {
+      // Set proper CORS headers for images
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    }
+  }));
 
   // Placeholder image endpoint for missing book covers
   app.get("/api/placeholder/:width/:height", (req, res) => {
@@ -1741,11 +1749,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin routes
+  // Admin routes - Enhanced with property mapping for frontend compatibility
   app.get('/api/admin/books', requireAdmin, async (req: any, res) => {
     try {
       const books = await storage.getAllBooks();
-      res.json(books);
+      
+      // Map database properties to frontend expected properties for admin interface
+      const mappedBooks = books.map(book => ({
+        ...book,
+        coverImage: book.coverImageUrl, // Map coverImageUrl to coverImage for admin frontend
+        tier: book.requiredTier || 'free' // Map requiredTier to tier for consistency
+      }));
+      
+      res.json(mappedBooks);
     } catch (error) {
       console.error("Error fetching books for admin:", error);
       res.status(500).json({ message: "Failed to fetch books" });
