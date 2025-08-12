@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X, AlertTriangle, Star, BarChart3, Settings, Library, UserCheck, Plus, Home, Shield } from 'lucide-react';
+import { Upload, Book, Users, TrendingUp, DollarSign, Eye, EyeOff, Edit3, Trash2, Save, X, AlertTriangle, Star, BarChart3, Settings, Library, UserCheck, Plus, Home, Shield, Loader2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RichTextEditor } from '@/components/RichTextEditor';
@@ -862,27 +862,27 @@ export default function AdminPanel() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Book Dialog */}
-      {editingBook && (
-        <EditItemDialog
-          isOpen={true}
-          onClose={() => {
-            console.log('Closing edit dialog for:', editingBook?.title);
-            setEditingBook(null);
-            editForm.reset();
-            setEditDescription("");
-          }}
-          onSave={() => {
-            console.log('Save clicked for book:', editingBook?.title);
-            console.log('Form values:', editForm.getValues());
-            console.log('Description:', editDescription);
-            onEditSubmit();
-          }}
-          title="Edit Book"
-          description="Update book details and settings"
-          isSaving={updateBookMutation.isPending}
-          maxWidth="2xl"
-        >
+      {/* Edit Book Dialog - Using native Dialog component */}
+      <Dialog open={!!editingBook} onOpenChange={(open) => {
+        if (!open) {
+          console.log('Closing edit dialog for:', editingBook?.title);
+          setEditingBook(null);
+          editForm.reset();
+          setEditDescription("");
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit3 className="h-5 w-5 text-orange-600" />
+              Edit Book: {editingBook?.title}
+            </DialogTitle>
+            <DialogDescription>
+              Update book details and settings
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -1012,8 +1012,50 @@ export default function AdminPanel() {
             </div>
           </div>
         </div>
-        </EditItemDialog>
-      )}
+          </div>
+          
+          <DialogFooter className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                console.log('Cancel clicked');
+                setEditingBook(null);
+                editForm.reset();
+                setEditDescription("");
+              }}
+              disabled={updateBookMutation.isPending}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            
+            <Button
+              type="button"
+              onClick={() => {
+                console.log('Save clicked for book:', editingBook?.title);
+                console.log('Form values:', editForm.getValues());
+                console.log('Description:', editDescription);
+                onEditSubmit();
+              }}
+              disabled={updateBookMutation.isPending}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              {updateBookMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
         </div>
       </div>
     </>
