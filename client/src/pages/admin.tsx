@@ -687,7 +687,11 @@ export default function AdminPanel() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setEditingBook(book)}
+                                  onClick={() => {
+                                    console.log('Edit button clicked for book:', book);
+                                    setEditingBook(book);
+                                  }}
+                                  data-testid={`button-edit-${book.id}`}
                                 >
                                   <Edit3 className="w-4 h-4" />
                                 </Button>
@@ -698,6 +702,7 @@ export default function AdminPanel() {
                                     setBookToDelete(book);
                                     setDeleteConfirmOpen(true);
                                   }}
+                                  data-testid={`button-delete-${book.id}`}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
