@@ -36,6 +36,7 @@ const AdminPanel = lazy(() => import("@/pages/admin"));
 const SuperAdminDashboard = lazy(() => import("@/pages/super-admin-dashboard"));
 const SystemSettings = lazy(() => import("@/pages/system-settings"));
 const AdminEmailManagement = lazy(() => import("@/pages/AdminEmailManagement"));
+const HealthDashboard = lazy(() => import("@/pages/health-dashboard"));
 
 // Secondary pages
 const ChallengesPage = lazy(() => import("@/pages/challenges"));
@@ -180,6 +181,11 @@ function Router() {
             <ProtectedRoute requireAuth={true} allowedRoles={["admin", "super_admin"]}>
               <AdminEmailManagement />
             </ProtectedRoute>
+          </LazyPageWrapper>
+        </Route>
+        <Route path="/health-dashboard">
+          <LazyPageWrapper>
+            <HealthDashboard />
           </LazyPageWrapper>
         </Route>
         <Route path="/testing-qa">

@@ -63,6 +63,41 @@ healthRouter.get('/api/health', async (req, res) => {
   }
 });
 
+// Super Admin health dashboard with detailed metrics (no auth for development)
+healthRouter.get('/api/super-admin/health', async (req, res) => {
+  try {
+    const latest = await getLatestHealthRun();
+    const stats = await getHealthStats(7);
+    const schedulerStatus = getSchedulerStatus();
+    const history = await getHealthRunHistory(1, 10);
+
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      latest: latest,
+      stats: stats,
+      scheduler: schedulerStatus,
+      recentHistory: history.runs,
+      systemInfo: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        uptime: process.uptime(),
+        memoryUsage: process.memoryUsage(),
+        cpuUsage: process.cpuUsage(),
+        environment: process.env.NODE_ENV,
+        port: process.env.PORT || 5000
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching super admin health data:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Failed to fetch health data',
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 // Manual health check trigger (admin only)
 healthRouter.post('/api/health/run', requireAdmin, async (req: any, res) => {
   try {
