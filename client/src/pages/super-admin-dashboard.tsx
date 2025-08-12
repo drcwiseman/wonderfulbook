@@ -482,7 +482,7 @@ export default function SuperAdminDashboard() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Health Dashboard</span>
-                    <Button variant="outline" size="sm" onClick={() => window.open('/admin/health', '_blank')}>
+                    <Button variant="outline" size="sm" onClick={() => window.open('/health-dashboard', '_blank')}>
                       View Dashboard
                     </Button>
                   </div>

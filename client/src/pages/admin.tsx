@@ -339,6 +339,46 @@ export default function AdminPanel() {
           }
         />
         <div className="container mx-auto px-4 py-8">
+          {/* Quick Navigation for Super Admin */}
+          {(user as any)?.role === "super_admin" && (
+            <Card className="bg-gradient-to-r from-red-50 to-red-100 border-red-200 mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-700">
+                  <Shield className="h-5 w-5" />
+                  Super Admin Access
+                </CardTitle>
+                <CardDescription>Advanced system management and monitoring tools</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="border-red-200 hover:bg-red-50"
+                    onClick={() => window.open('/super-admin', '_blank')}
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Super Admin Dashboard
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="border-red-200 hover:bg-red-50"
+                    onClick={() => window.open('/health-dashboard', '_blank')}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Health Dashboard
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="border-red-200 hover:bg-red-50"
+                    onClick={() => window.open('/system-settings', '_blank')}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    System Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
