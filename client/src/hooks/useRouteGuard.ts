@@ -38,8 +38,16 @@ export function useRouteGuard(options: RouteGuardOptions = {}) {
     if (requireSubscription && user && isAuthenticated) {
       const userSubscription = (user as any).subscriptionTier;
       const subscriptionStatus = (user as any).subscriptionStatus;
+      const freeTrialEndedAt = (user as any).freeTrialEndedAt;
       
-      if (userSubscription === "free" || subscriptionStatus !== "active") {
+      // Allow access if user has an active subscription OR is in valid free trial
+      const hasActiveSubscription = subscriptionStatus === "active" && (userSubscription === "basic" || userSubscription === "premium");
+      const isInFreeTrial = userSubscription === "free" && 
+                           subscriptionStatus === "active" && 
+                           freeTrialEndedAt && 
+                           new Date(freeTrialEndedAt) > new Date();
+      
+      if (!hasActiveSubscription && !isInFreeTrial) {
         shouldRedirect = true;
         redirectTarget = "/subscribe";
       }
@@ -75,7 +83,19 @@ export function useRouteGuard(options: RouteGuardOptions = {}) {
   return {
     isAuthorized: !isLoading && (
       (!requireAuth || isAuthenticated) &&
-      (!requireSubscription || (user && (user as any).subscriptionStatus === "active")) &&
+      (!requireSubscription || (user && (() => {
+        const userSubscription = (user as any).subscriptionTier;
+        const subscriptionStatus = (user as any).subscriptionStatus;
+        const freeTrialEndedAt = (user as any).freeTrialEndedAt;
+        
+        const hasActiveSubscription = subscriptionStatus === "active" && (userSubscription === "basic" || userSubscription === "premium");
+        const isInFreeTrial = userSubscription === "free" && 
+                             subscriptionStatus === "active" && 
+                             freeTrialEndedAt && 
+                             new Date(freeTrialEndedAt) > new Date();
+        
+        return hasActiveSubscription || isInFreeTrial;
+      })())) &&
       (allowedRoles.length === 0 || (user && allowedRoles.includes((user as any).role || "user")))
     ),
     isLoading,

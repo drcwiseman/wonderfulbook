@@ -164,10 +164,11 @@ const isInFreeTrial = userSubscription === "free" && subscriptionStatus === "act
 
 **Status:** ⚠️ REQUIRES DEPLOYMENT - COMPREHENSIVE FIX READY
 
-**All Three Subscription Checks Fixed:**
+**All Four Subscription Checks Fixed:**
 1. ✅ `ProtectedRoute` component in `/client/src/components/ProtectedRoute.tsx`
-2. ✅ `canAccessBook()` function in `/client/src/pages/book-detail.tsx`
-3. ✅ `canAccessFullContent()` function in `/client/src/pages/book-detail-enhanced.tsx`
+2. ✅ `useRouteGuard` hook in `/client/src/hooks/useRouteGuard.ts` 
+3. ✅ `canAccessBook()` function in `/client/src/pages/book-detail.tsx`
+4. ✅ `canAccessFullContent()` function in `/client/src/pages/book-detail-enhanced.tsx`
 
 **What Was Fixed:**
 - All three functions now check for active free trial status: `subscriptionTier === "free" && subscriptionStatus === "active" && freeTrialEndedAt > now`
