@@ -21,7 +21,7 @@ export function SEOHead({
   keywords = "online books, PDF streaming, personal development books, business books, spiritual books, mindset books, digital library, book subscription, secure reading, professional development",
   ogTitle,
   ogDescription,
-  ogImage = "/og-image.jpg",
+  ogImage = "/og-image.svg",
   ogUrl,
   twitterTitle,
   twitterDescription,
@@ -173,5 +173,5 @@ export const getBookSEO = (book: any) => ({
   keywords: `${book.title}, ${book.author}, ${book.category}, online reading, PDF streaming, ${book.title.split(' ').slice(0, 3).join(', ')}`,
   ogTitle: `${book.title} by ${book.author}`,
   ogDescription: `Read "${book.title}" online. ${book.description?.replace(/<[^>]*>/g, '').substring(0, 160)}...`,
-  ogImage: book.coverImageUrl || '/og-book-default.jpg'
+  ogImage: book.coverImageUrl || '/og-book-default.svg'
 });

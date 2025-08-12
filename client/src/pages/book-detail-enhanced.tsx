@@ -47,10 +47,11 @@ interface ReviewWithUser extends BookReview {
 // Update document head with book-specific meta tags for social sharing
 const updateBookMetaTags = (book: any) => {
   const getFullImageUrl = (imageUrl: string) => {
-    if (!imageUrl) return 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630';
+    if (!imageUrl) return `${window.location.origin}/og-book-default.svg`;
     if (imageUrl.startsWith('http')) return imageUrl;
     if (imageUrl.startsWith('/uploads/')) return `${window.location.origin}${imageUrl}`;
-    return imageUrl;
+    if (imageUrl.startsWith('/')) return `${window.location.origin}${imageUrl}`;
+    return `${window.location.origin}/og-book-default.svg`;
   };
 
   const title = `${book.title}${book.author ? ` by ${book.author}` : ''} - Wonderful Books`;
