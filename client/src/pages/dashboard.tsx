@@ -14,7 +14,9 @@ import {
   Bookmark,
   TrendingUp,
   Home,
-  BarChart3
+  BarChart3,
+  ArrowLeft,
+  User
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +25,7 @@ import { useLocation } from "wouter";
 import { useEffect } from "react";
 import Header from "@/components/Header";
 import PageHeader from "@/components/PageHeader";
+import UserNavigationHelper from "@/components/UserNavigationHelper";
 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -382,6 +385,7 @@ export default function Dashboard() {
         </div>
         </div>
       </div>
+      <UserNavigationHelper currentPage="Dashboard" />
     </>
   );
 }

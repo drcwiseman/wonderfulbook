@@ -23,12 +23,15 @@ import {
   Award,
   Heart,
   Home,
-  Library as LibraryIcon
+  Library as LibraryIcon,
+  ArrowLeft,
+  BarChart3
 } from "lucide-react";
 import { Book } from "@shared/schema";
 import Header from "@/components/Header";
 import PageHeader from "@/components/PageHeader";
 import BookCoverImage from "@/components/BookCoverImage";
+import UserNavigationHelper from "@/components/UserNavigationHelper";
 
 interface LibraryBook extends Book {
   readingProgress?: {
@@ -386,6 +389,7 @@ export default function Library() {
           </Tabs>
         </div>
       </div>
+      <UserNavigationHelper currentPage="My Library" />
     </>
   );
 }

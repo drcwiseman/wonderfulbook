@@ -10,10 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { User, Lock, Mail, Crown, BarChart3, Shield, Eye, EyeOff, Home, Settings } from "lucide-react";
+import { User, Lock, Mail, Crown, BarChart3, Shield, Eye, EyeOff, Home, Settings, ArrowLeft } from "lucide-react";
 import { ProfilePhotoUploader } from "@/components/ProfilePhotoUploader";
 import Header from "@/components/Header";
 import PageHeader from "@/components/PageHeader";
+import UserNavigationHelper from "@/components/UserNavigationHelper";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -477,6 +478,7 @@ export default function Profile() {
           </Tabs>
         </div>
       </div>
+      <UserNavigationHelper currentPage="Profile Settings" />
     </>
   );
 }

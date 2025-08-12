@@ -19,10 +19,14 @@ import {
   Award,
   Clock,
   Download,
-  Plus
+  Plus,
+  Home,
+  ArrowLeft,
+  BarChart3
 } from "lucide-react";
 import { Book } from "@shared/schema";
 import { SEOHead, seoConfigs } from "@/components/SEOHead";
+import PageHeader from "@/components/PageHeader";
 
 interface BookWithAccess extends Book {
   hasAccess: boolean;
@@ -136,18 +140,41 @@ export default function BookStore() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-orange-50/30 pt-20">
+    <>
       <SEOHead {...seoConfigs.bookstore} />
-      {/* Hero Section */}
-      <section className="relative py-16 px-6">
+      <div className="min-h-screen bg-gradient-to-b from-white to-orange-50/30 pt-20">
+        <PageHeader 
+          title="Book Store"
+          subtitle={`Discover transformational books curated for your personal growth journey`}
+          breadcrumbs={[
+            { label: "Home", href: "/", icon: Home },
+            { label: "Book Store", icon: BookOpen }
+          ]}
+          backButtonLabel="Back to Home"
+          backButtonHref="/"
+          actions={
+            <div className="flex items-center space-x-4">
+              {isAuthenticated && (
+                <Button 
+                  onClick={() => window.location.href = '/dashboard'} 
+                  variant="outline" 
+                  className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  My Dashboard
+                </Button>
+              )}
+              <div className="text-sm text-gray-600">
+                {books.length} books available
+              </div>
+            </div>
+          }
+        />
+
+      {/* Search and Filters Section */}
+      <section className="relative py-8 px-6">
         <div className="container mx-auto max-w-7xl">
-          <div className="text-center mb-12">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
-              Book Store
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-              Discover transformational books curated for your personal growth journey
-            </p>
+          <div className="text-center mb-8">
             
             {/* Search and Filters */}
             <div className="flex flex-col md:flex-row gap-4 max-w-4xl mx-auto mb-8">

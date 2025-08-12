@@ -9,6 +9,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Home, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
+import UserNavigationHelper from "@/components/UserNavigationHelper";
 
 export default function ReaderPage() {
   const { bookId } = useParams();
@@ -115,6 +116,7 @@ export default function ReaderPage() {
         onPageChange={handlePageChange}
         bookmarks={Array.isArray(bookmarks) ? bookmarks : []}
       />
+      <UserNavigationHelper currentPage="Book Reader" />
     </main>
   );
 }
