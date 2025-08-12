@@ -202,3 +202,62 @@ const isInFreeTrial = userSubscription === "free" && subscriptionStatus === "act
 - `server/production.ts` - React Router compatible Express serving
 
 **Status:** Ready for deployment with comprehensive build system
+
+## Enhanced Book-Specific Text-to-Speech System (Aug 12, 2025)
+**🔊 ADVANCED TTS IMPLEMENTATION - BOOK-FOCUSED USER CONTROL**
+
+Implemented comprehensive book-specific Text-to-Speech functionality that gives users granular control over reading experience:
+
+**🎯 Book-Specific TTS Features:**
+- **Individual book settings** - Each book remembers its own TTS preferences
+- **Smart text extraction** - Automatically extracts page text from PDF for high-quality reading
+- **Text selection reading** - Users can select specific text passages to read aloud
+- **Sentence-by-sentence control** - Skip forward/backward through individual sentences
+- **Reading progress tracking** - Visual progress bar showing current sentence and percentage
+- **Voice customization** - Per-book voice selection, speed, pitch, and volume controls
+
+**🎛️ User Control Options:**
+- **Enable/Disable toggle** - Simple on/off switch for TTS per book
+- **Reading modes:**
+  - Read selected text (highlight and read)
+  - Read current page (entire page content)
+  - Auto-read new pages (optional)
+- **Playback controls** - Play, pause, skip sentences, stop
+- **Voice settings** - Choose from available system voices with language preferences
+- **Speed control** - Adjustable reading speed from 0.5x to 2.0x
+- **Volume control** - Per-book volume settings
+- **Text highlighting** - Optional visual highlighting of currently spoken text
+
+**🔧 Technical Implementation:**
+- Created `useBookTTS` hook for book-specific TTS management
+- Built `BookTTSControls` component with compact, accessible UI
+- Integrated into `PremiumPDFReader` with automatic text extraction
+- Settings persist per book using localStorage with book ID
+- Sentence segmentation for precise reading control
+- Error handling and fallback voice selection
+
+**📍 Integration Points:**
+- **Book Reader** - Fixed position controls in bottom-left corner
+- **PDF Text Extraction** - Automatic extraction on page changes
+- **Text Selection** - Real-time detection of user text selections
+- **Settings Panel** - Collapsible advanced controls
+- **Legacy TTS Coexistence** - Works alongside existing site-wide accessibility TTS
+
+**🎨 User Experience:**
+- Compact card interface that stays out of the way
+- Quick enable/disable without losing settings
+- One-click reading of selections or full pages
+- Visual feedback for reading progress
+- Responsive design for mobile and desktop
+- Keyboard shortcuts still available for power users
+
+**Benefits Over Site-Wide TTS:**
+- ✅ Book-specific preferences and settings
+- ✅ Higher quality text extraction from PDFs
+- ✅ Precise sentence-level control
+- ✅ Better reading progress visualization
+- ✅ User choice between global and book-specific TTS
+- ✅ Persistent settings per book
+- ✅ Enhanced mobile reading experience
+
+**Status:** ✅ COMPLETE - Production-ready book-specific TTS system implemented

@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAccessibility } from '@/hooks/useAccessibility';
 import { useCopyProtection } from '@/hooks/useCopyProtection';
 import AccessibilityPanel from '@/components/AccessibilityPanel';
+import BookTTSControls from '@/components/BookTTSControls';
 import { useLocation } from 'wouter';
 
 // Configure PDF.js worker using the bundled version from node_modules
@@ -41,8 +42,11 @@ export function PremiumPDFReader({
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
+  const [currentPageText, setCurrentPageText] = useState('');
+  const [selectedText, setSelectedText] = useState('');
   
   const containerRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -385,6 +389,38 @@ export function PremiumPDFReader({
       speakText(`Currently on page ${pageNumber} of ${numPages} in ${bookTitle}.`);
     }
   }
+
+  // Extract page text for TTS when page changes
+  useEffect(() => {
+    const extractPageText = () => {
+      // Wait a bit for the page to render
+      setTimeout(() => {
+        const textLayer = document.querySelector('.react-pdf__Page__textContent');
+        if (textLayer) {
+          const text = textLayer.textContent || '';
+          const cleanText = text.replace(/\s+/g, ' ').trim();
+          setCurrentPageText(cleanText);
+        }
+      }, 500);
+    };
+
+    extractPageText();
+  }, [pageNumber]);
+
+  // Handle text selection
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (selection && selection.toString().trim()) {
+        setSelectedText(selection.toString().trim());
+      } else {
+        setSelectedText('');
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, []);
 
   // Auto-read when page changes if enabled
   useEffect(() => {
@@ -832,6 +868,15 @@ export function PremiumPDFReader({
         </div>
       )}
 
+      {/* Book-specific TTS Controls */}
+      <div className="fixed bottom-4 left-4 z-30 max-w-sm">
+        <BookTTSControls
+          bookId={bookId}
+          currentPageText={currentPageText}
+          selectedText={selectedText}
+        />
+      </div>
+
       {/* Accessibility Panel */}
       <AccessibilityPanel
         isOpen={showAccessibility}
@@ -842,11 +887,12 @@ export function PremiumPDFReader({
       {settings.textToSpeech && (
         <div className="fixed bottom-4 right-4 z-30">
           <div className={`text-xs p-2 rounded ${isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-600'} max-w-xs`}>
-            <div className="font-medium mb-1">Keyboard Shortcuts:</div>
+            <div className="font-medium mb-1">Legacy TTS Shortcuts:</div>
             <div>Ctrl+R - Read page</div>
             <div>Ctrl+I - Page info</div>
             <div>Ctrl+S - Stop reading</div>
             <div>Ctrl+A - Accessibility</div>
+            <div className="text-orange-500 mt-1">Use Book Reader controls for enhanced TTS</div>
           </div>
         </div>
       )}
