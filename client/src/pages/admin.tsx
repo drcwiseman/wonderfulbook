@@ -222,10 +222,20 @@ export default function AdminPanel() {
   // Update book mutation
   const updateBookMutation = useMutation({
     mutationFn: async (data: EditBookForm & { id: string }) => {
+      console.log('Update mutation called with data:', data);
       const { id, ...bookData } = data;
-      return apiRequest("PATCH", `/api/admin/books/${id}`, bookData);
+      console.log('Making PATCH request to:', `/api/admin/books/${id}`, 'with data:', bookData);
+      try {
+        const result = await apiRequest("PATCH", `/api/admin/books/${id}`, bookData);
+        console.log('Update successful:', result);
+        return result;
+      } catch (error) {
+        console.error('Update error in mutation:', error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Update mutation onSuccess called with data:', data);
       toast({
         title: "Success",
         description: "Book updated successfully!",
@@ -237,6 +247,13 @@ export default function AdminPanel() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
     },
     onError: (error: any) => {
+      console.error('Update mutation onError called with error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response,
+        status: error.status,
+        stack: error.stack
+      });
       toast({
         title: "Update Failed",
         description: error.message || "Failed to update book",
@@ -277,7 +294,8 @@ export default function AdminPanel() {
   // Initialize edit form when editing book changes
   useEffect(() => {
     if (editingBook) {
-      editForm.reset({
+      console.log('Initializing edit form with book:', editingBook);
+      const formData = {
         title: editingBook.title || "",
         author: editingBook.author || "",
         description: editingBook.description || "",
@@ -287,8 +305,11 @@ export default function AdminPanel() {
         coverImage: editingBook.coverImage || editingBook.coverImageUrl || "",
         isVisible: editingBook.isVisible !== false,
         isFeatured: editingBook.isFeatured || false,
-      });
+      };
+      console.log('Setting form data:', formData);
+      editForm.reset(formData);
       setEditDescription(editingBook.description || "");
+      console.log('Form initialized successfully');
     }
   }, [editingBook, editForm]);
 
@@ -691,8 +712,15 @@ export default function AdminPanel() {
                                   size="sm"
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    console.log('Edit button clicked for:', book?.title);
-                                    setEditingBook(book);
+                                    e.stopPropagation();
+                                    console.log('Edit button clicked for:', book?.title, 'Book ID:', book?.id);
+                                    console.log('Full book object:', book);
+                                    try {
+                                      setEditingBook(book);
+                                      console.log('EditingBook state set successfully');
+                                    } catch (error) {
+                                      console.error('Error setting editingBook:', error);
+                                    }
                                   }}
                                   data-testid={`button-edit-${book.id}`}
                                 >
@@ -839,11 +867,17 @@ export default function AdminPanel() {
         <EditItemDialog
           isOpen={true}
           onClose={() => {
+            console.log('Closing edit dialog for:', editingBook?.title);
             setEditingBook(null);
             editForm.reset();
             setEditDescription("");
           }}
-          onSave={onEditSubmit}
+          onSave={() => {
+            console.log('Save clicked for book:', editingBook?.title);
+            console.log('Form values:', editForm.getValues());
+            console.log('Description:', editDescription);
+            onEditSubmit();
+          }}
           title="Edit Book"
           description="Update book details and settings"
           isSaving={updateBookMutation.isPending}
