@@ -58,6 +58,8 @@ export default function AdminPanel() {
   const queryClient = useQueryClient();
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const [editingBook, setEditingBook] = useState<any>(null);
+  
+
   const [description, setDescription] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [pdfFile, setPdfFile] = useState("");
@@ -687,8 +689,9 @@ export default function AdminPanel() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => {
-                                    console.log('Edit button clicked for book:', book);
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    console.log('Edit button clicked for:', book?.title);
                                     setEditingBook(book);
                                   }}
                                   data-testid={`button-edit-${book.id}`}
@@ -832,19 +835,20 @@ export default function AdminPanel() {
       </AlertDialog>
 
       {/* Edit Book Dialog */}
-      <EditItemDialog
-        isOpen={!!editingBook}
-        onClose={() => {
-          setEditingBook(null);
-          editForm.reset();
-          setEditDescription("");
-        }}
-        onSave={onEditSubmit}
-        title="Edit Book"
-        description="Update book details and settings"
-        isSaving={updateBookMutation.isPending}
-        maxWidth="2xl"
-      >
+      {editingBook && (
+        <EditItemDialog
+          isOpen={true}
+          onClose={() => {
+            setEditingBook(null);
+            editForm.reset();
+            setEditDescription("");
+          }}
+          onSave={onEditSubmit}
+          title="Edit Book"
+          description="Update book details and settings"
+          isSaving={updateBookMutation.isPending}
+          maxWidth="2xl"
+        >
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -974,9 +978,8 @@ export default function AdminPanel() {
             </div>
           </div>
         </div>
-      </EditItemDialog>
-        </div>
-      </div>
+        </EditItemDialog>
+      )}
     </>
   );
 }

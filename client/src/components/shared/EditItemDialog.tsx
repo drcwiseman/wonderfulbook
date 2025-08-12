@@ -47,6 +47,8 @@ export function EditItemDialog({
     '2xl': 'max-w-2xl'
   };
 
+
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-y-auto`}>
