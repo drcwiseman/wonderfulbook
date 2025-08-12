@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { BookOpen, Users, TrendingUp, CheckCircle, ArrowRight, PlayCircle, Award, Shield, Clock, Zap, Star, Crown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { OrganizationStructuredData } from "@/components/BookStructuredData";
 
 // Book Showcase Component for Landing
 function BookShowcaseForLanding() {

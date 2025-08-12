@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BookStructuredData from "@/components/BookStructuredData";
 import AccessibleContent from "@/components/AccessibleContent";
 import SimpleBookPreview from "@/components/SimpleBookPreview";
 import SocialShareButtons from "@/components/SocialShareButtons";
@@ -236,6 +237,7 @@ export default function BookDetail() {
   return (
     <>
       <SEOHead {...getBookSEO(book)} />
+      <BookStructuredData book={book} />
       <div className="min-h-screen bg-white">
         <Header />
         

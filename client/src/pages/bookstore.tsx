@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Book } from "@shared/schema";
 import { SEOHead, seoConfigs } from "@/components/SEOHead";
+import { BookCollectionStructuredData } from "@/components/BookStructuredData";
 import PageHeader from "@/components/PageHeader";
 import UserNavigationHelper from "@/components/UserNavigationHelper";
 
@@ -138,6 +139,11 @@ export default function Bookstore() {
   return (
     <>
       <SEOHead {...seoConfigs.bookstore} />
+      <BookCollectionStructuredData 
+        books={filteredBooks}
+        collectionName="Wonderful Books Digital Bookstore"
+        collectionUrl="https://mywonderfulbooks.com/bookstore"
+      />
       <div className="min-h-screen bg-gradient-to-b from-white to-orange-50/30 pt-20">
         <PageHeader 
           title="Book Store"
