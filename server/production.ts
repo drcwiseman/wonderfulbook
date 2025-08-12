@@ -9,6 +9,13 @@ export function setupProductionServing(app: Express) {
     ? path.resolve(process.cwd(), "public")
     : path.resolve(process.cwd(), "server", "public");
   const indexPath = path.resolve(publicPath, "index.html");
+  
+  // CRITICAL FIX: Setup uploads directory for production
+  const uploadsPath = isInServerDir
+    ? path.resolve(process.cwd(), "..", "uploads")
+    : path.resolve(process.cwd(), "uploads");
+  
+  console.log(`Uploads path resolved to: ${uploadsPath}`);
 
   if (!fs.existsSync(publicPath)) {
     throw new Error(
@@ -23,6 +30,21 @@ export function setupProductionServing(app: Express) {
   }
 
   console.log(`Serving static files from: ${publicPath}`);
+  
+  // PRODUCTION FIX: Serve uploads directory with proper caching and CORS
+  app.use('/uploads', express.static(uploadsPath, {
+    maxAge: '1d', // Cache uploaded images for 1 day
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+      // Set proper CORS headers for images in production
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours
+    }
+  }));
+  
+  console.log(`✅ Production uploads served from: ${uploadsPath}`);
 
   // Enhanced caching strategy for different asset types
   app.use('/assets', express.static(path.join(publicPath, 'assets'), {

@@ -969,7 +969,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Book routes
+  // Book routes - CRITICAL FIX: Ensure consistent property mapping for frontend
   app.get('/api/books', async (req, res) => {
     try {
       const { category, search, featured } = req.query;
@@ -985,7 +985,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         books = await storage.getAllBooks();
       }
       
-      res.json(books);
+      // PRODUCTION FIX: Ensure coverImageUrl is properly accessible for frontend compatibility
+      // Books already have coverImageUrl property from database schema
+      const mappedBooks = books.map(book => ({
+        ...book,
+        // Ensure coverImageUrl is accessible for frontend components like FeaturedBooks
+        coverImageUrl: book.coverImageUrl
+      }));
+      
+      res.json(mappedBooks);
     } catch (error) {
       console.error("Error fetching books:", error);
       res.status(500).json({ message: "Failed to fetch books" });
@@ -1023,7 +1031,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!book) {
         return res.status(404).json({ message: "Book not found" });
       }
-      res.json(book);
+      
+      // PRODUCTION FIX: Ensure coverImageUrl is properly accessible for individual book details
+      const mappedBook = {
+        ...book,
+        coverImageUrl: book.coverImageUrl
+      };
+      
+      res.json(mappedBook);
     } catch (error) {
       console.error("Error fetching book:", error);
       res.status(500).json({ message: "Failed to fetch book" });
