@@ -51,7 +51,7 @@ export default function FeaturedBooks() {
               <div className="relative rounded-lg overflow-hidden shadow-2xl">
                 <BookCoverImage
                   src={book.coverImageUrl}
-                  alt={book.title}
+                  alt={`${book.title} by ${book.author} - Book cover image for ${book.requiredTier || 'personal development'} book`}
                   className="h-64 md:h-80"
                   width={200}
                   height={320}

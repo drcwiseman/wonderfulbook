@@ -27,7 +27,7 @@ function BookShowcaseForLanding() {
                 {book.coverImageUrl ? (
                   <img
                     src={book.coverImageUrl}
-                    alt={book.title}
+                    alt={`Cover of "${book.title}" by ${book.author} - Available in Wonderful Books library`}
                     className="w-full h-full object-cover"
                   />
                 ) : (

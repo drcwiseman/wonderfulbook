@@ -211,13 +211,13 @@ export default function Profile() {
                   {(user as any)?.profileImageUrl?.startsWith('/api/avatars/') ? (
                     <img
                       src={(user as any)?.profileImageUrl}
-                      alt="Profile Avatar"
+                      alt={`Profile avatar for ${(user as any)?.email} - Custom uploaded image`}
                       className="w-20 h-20 rounded-full border-4 border-orange-500/50 shadow-lg"
                     />
                   ) : (
                     <img
                       src={(user as any)?.profileImageUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"}
-                      alt="Profile"
+                      alt={`Profile photo for ${(user as any)?.email} - ${(user as any)?.profileImageUrl ? 'Custom uploaded image' : 'Default professional profile placeholder'}`}
                       className="w-20 h-20 rounded-full object-cover border-4 border-orange-500/50 shadow-lg"
                     />
                   )}

@@ -132,7 +132,7 @@ export function ImageUploader({ value, onChange, label = "Image", className = ""
           <div className="relative">
             <img 
               src={preview} 
-              alt="Preview" 
+              alt={`Upload preview - Selected ${label.toLowerCase()} image ready for upload`}
               className="max-w-full max-h-48 mx-auto rounded-lg object-cover"
             />
             <Button

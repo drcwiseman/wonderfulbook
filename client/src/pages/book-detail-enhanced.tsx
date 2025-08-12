@@ -257,7 +257,7 @@ export default function BookDetail() {
                 <div className="sticky top-8">
                   <img
                     src={book.coverImageUrl || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=600"}
-                    alt={book.title}
+                    alt={`Cover of "${book.title}" by ${book.author} - ${book.description ? book.description.substring(0, 100) + '...' : 'A comprehensive guide to personal and professional development'}`}
                     className="w-full max-w-sm mx-auto rounded-xl shadow-2xl"
                   />
                   

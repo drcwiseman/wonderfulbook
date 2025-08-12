@@ -460,7 +460,7 @@ function LibraryBookCard({ book, layout }: LibraryBookCardProps) {
         <div className="relative mb-3">
           <BookCoverImage
             src={book.coverImageUrl}
-            alt={book.title}
+            alt={`${book.title} by ${book.author} - ${book.isDownloaded ? 'Downloaded book' : 'Streaming book'} in your personal library${book.readingProgress ? ` (${Math.round(parseFloat(book.readingProgress.progressPercentage))}% complete)` : ''}`}
             className="w-full aspect-[3/4] rounded-lg"
             width={200}
             height={267}

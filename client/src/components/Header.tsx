@@ -228,7 +228,7 @@ export default function Header() {
                 >
                   <img
                     src={(user as any)?.profileImageUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"}
-                    alt="User profile"
+                    alt={`Profile photo of ${(user as any)?.email} - Click to view profile settings and account preferences`}
                     className="w-9 h-9 rounded-full object-cover border-2 border-orange-500/50 shadow-lg"
                   />
                   <div className="hidden lg:block text-white">
@@ -354,7 +354,7 @@ export default function Header() {
                   <div className="flex items-center space-x-3 mb-4">
                     <img
                       src={(user as any)?.profileImageUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"}
-                      alt="User profile"
+                      alt={`Mobile navigation - Profile photo of ${(user as any)?.firstName} ${(user as any)?.lastName} (${(user as any)?.email})`}
                       className="w-12 h-12 rounded-full object-cover border-2 border-orange-500/50"
                     />
                     <div className="text-white">
