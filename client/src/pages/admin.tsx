@@ -59,6 +59,29 @@ export default function AdminPanel() {
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const [editingBook, setEditingBook] = useState<any>(null);
   
+  // Production debugging: Track editingBook state changes
+  useEffect(() => {
+    console.log('🔧 PRODUCTION DEBUG: editingBook state changed to:', editingBook?.title || 'null');
+    console.log('🔧 PRODUCTION DEBUG: Dialog should be open:', !!editingBook);
+    
+    if (editingBook) {
+      // Pre-populate edit form when editing book is set
+      console.log('🔧 PRODUCTION DEBUG: Pre-populating edit form with book data');
+      editForm.reset({
+        title: editingBook.title || '',
+        author: editingBook.author || '',
+        coverImage: editingBook.coverImage || '',
+        categories: editingBook.categories || [],
+        tier: editingBook.tier || editingBook.requiredTier || 'free',
+        rating: editingBook.rating || 0,
+        isVisible: editingBook.isVisible !== undefined ? editingBook.isVisible : true,
+        isFeatured: editingBook.isFeatured || false
+      });
+      setEditDescription(editingBook.description || '');
+      console.log('🔧 PRODUCTION DEBUG: Edit form populated successfully');
+    }
+  }, [editingBook]);
+  
 
   const [description, setDescription] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -713,13 +736,36 @@ export default function AdminPanel() {
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    console.log('Edit button clicked for:', book?.title, 'Book ID:', book?.id);
-                                    console.log('Full book object:', book);
+                                    console.log('🔧 PRODUCTION DEBUG: Edit button clicked');
+                                    console.log('🔧 PRODUCTION DEBUG: Book title:', book?.title);
+                                    console.log('🔧 PRODUCTION DEBUG: Book ID:', book?.id);
+                                    console.log('🔧 PRODUCTION DEBUG: Full book object:', JSON.stringify(book, null, 2));
+                                    console.log('🔧 PRODUCTION DEBUG: Current editingBook state before:', editingBook);
+                                    
                                     try {
                                       setEditingBook(book);
-                                      console.log('EditingBook state set successfully');
+                                      console.log('🔧 PRODUCTION DEBUG: setEditingBook called successfully');
+                                      
+                                      // Additional debugging for production
+                                      setTimeout(() => {
+                                        console.log('🔧 PRODUCTION DEBUG: EditingBook state after 100ms:', editingBook);
+                                        console.log('🔧 PRODUCTION DEBUG: Dialog should be open:', !!book);
+                                        
+                                        // Check if dialog elements exist in DOM
+                                        const dialogElements = document.querySelectorAll('[role="dialog"]');
+                                        console.log('🔧 PRODUCTION DEBUG: Dialog elements in DOM:', dialogElements.length);
+                                        
+                                        const dialogOverlay = document.querySelector('[data-radix-dialog-overlay]');
+                                        console.log('🔧 PRODUCTION DEBUG: Dialog overlay exists:', !!dialogOverlay);
+                                        
+                                        if (dialogOverlay) {
+                                          console.log('🔧 PRODUCTION DEBUG: Dialog overlay styles:', window.getComputedStyle(dialogOverlay).display);
+                                        }
+                                      }, 100);
+                                      
                                     } catch (error) {
-                                      console.error('Error setting editingBook:', error);
+                                      console.error('🔧 PRODUCTION DEBUG: Error setting editingBook:', error);
+                                      console.error('🔧 PRODUCTION DEBUG: Error stack:', error.stack);
                                     }
                                   }}
                                   data-testid={`button-edit-${book.id}`}
@@ -864,14 +910,18 @@ export default function AdminPanel() {
 
       {/* Edit Book Dialog - Using native Dialog component */}
       <Dialog open={!!editingBook} onOpenChange={(open) => {
+        console.log('🔧 PRODUCTION DEBUG: Dialog onOpenChange called');
+        console.log('🔧 PRODUCTION DEBUG: Dialog open state:', open);
+        console.log('🔧 PRODUCTION DEBUG: Current editingBook:', editingBook?.title);
+        
         if (!open) {
-          console.log('Closing edit dialog for:', editingBook?.title);
+          console.log('🔧 PRODUCTION DEBUG: Closing edit dialog for:', editingBook?.title);
           setEditingBook(null);
           editForm.reset();
           setEditDescription("");
         }
       }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto z-50" style={{ zIndex: 9999 }}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit3 className="h-5 w-5 text-orange-600" />
