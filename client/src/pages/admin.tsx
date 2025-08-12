@@ -980,6 +980,7 @@ export default function AdminPanel() {
         </div>
         </EditItemDialog>
       )}
+        </div>
       </div>
     </>
   );
