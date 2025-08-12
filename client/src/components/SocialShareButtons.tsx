@@ -139,24 +139,23 @@ Definitely worth it for book lovers 👌`
         shareUrl = `https://wa.me/?text=${encodeURIComponent(shareTexts.whatsapp + '\n\n' + bookUrl)}`;
         break;
       case 'email':
-        const emailBody = `Hi there! 👋
+        const emailSubject = `📖 Book Recommendation: ${bookTitle}${bookAuthor ? ` by ${bookAuthor}` : ''}`;
+        const emailBody = `Hi there!
 
 I wanted to share this incredible book I'm reading: "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''}
 
-${shareDescription}
+${bookDescription ? bookDescription.replace(/<[^>]*>/g, '').substring(0, 200) + '...' : 'This is an amazing book that I think you\'d really enjoy!'}
 
-🔥 What makes this platform amazing:
-• Stream thousands of books instantly (no downloads!)
-• Advanced reading features like Text-to-Speech
-• Works perfectly on phone, tablet, and computer
-• 7-day free trial to explore everything
+I'm reading it on Wonderful Books - it's like Netflix for books! They have:
+- Thousands of books available instantly
+- No downloads needed, stream on any device  
+- Advanced features like Text-to-Speech
+- 7-day free trial
 
-Check it out here: ${bookUrl}
+Check it out: ${bookUrl}
 
-Trust me, if you love books, you'll love this platform!
-
-Happy reading! 📚✨`;
-        shareUrl = `mailto:?subject=${encodeURIComponent(shareTexts.email)}&body=${encodeURIComponent(emailBody)}`;
+Happy reading!`;
+        shareUrl = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
         break;
     }
 
