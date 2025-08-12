@@ -27,6 +27,7 @@ import {
 import { Book } from "@shared/schema";
 import { SEOHead, seoConfigs } from "@/components/SEOHead";
 import { BookCollectionStructuredData } from "@/components/BookStructuredData";
+import BookCoverImage from "@/components/BookCoverImage";
 import PageHeader from "@/components/PageHeader";
 import UserNavigationHelper from "@/components/UserNavigationHelper";
 
@@ -324,9 +325,14 @@ function BookCard({ book, layout }: BookCardProps) {
         <CardContent className="p-4">
           <div className="flex gap-4">
             <div className="relative w-20 h-28 flex-shrink-0">
-              <div className="w-full h-full bg-gradient-to-b from-orange-100 to-orange-200 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-8 h-8 text-orange-600" />
-              </div>
+              <BookCoverImage
+                src={book.coverImageUrl}
+                alt={`Cover of "${book.title}" by ${book.author} - Available in the Wonderful Books digital library`}
+                className="rounded-lg overflow-hidden"
+                width={80}
+                height={112}
+                fallbackIcon={<BookOpen className="w-8 h-8 text-orange-600" />}
+              />
               {book.tier && book.tier !== 'free' && (
                 <Badge className={`absolute -top-1 -right-1 text-xs px-1 py-0.5 ${getTierColor(book.tier)}`}>
                   {book.tier}
@@ -387,9 +393,14 @@ function BookCard({ book, layout }: BookCardProps) {
     >
       <CardContent className="p-3">
         <div className="relative aspect-[3/4] mb-3">
-          <div className="w-full h-full bg-gradient-to-b from-orange-100 to-orange-200 rounded-lg flex items-center justify-center">
-            <BookOpen className="w-8 h-8 text-orange-600" />
-          </div>
+          <BookCoverImage
+            src={book.coverImageUrl}
+            alt={`Cover of "${book.title}" by ${book.author} - ${book.hasAccess ? 'Available to read now' : 'Subscription required'} in Wonderful Books digital library`}
+            className="rounded-lg overflow-hidden"
+            width={200}
+            height={267}
+            fallbackIcon={<BookOpen className="w-8 h-8 text-orange-600" />}
+          />
           
           {book.tier && book.tier !== 'free' && (
             <Badge className={`absolute -top-1 -right-1 text-xs px-1.5 py-0.5 ${getTierColor(book.tier)}`}>
