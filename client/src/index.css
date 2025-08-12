@@ -91,67 +91,7 @@
   }
 }
 
-/* Accessibility Styles - Note: OpenDyslexic font will be loaded via CSS custom properties */
-
-/* Accessibility font and spacing variables */
-:root {
-  --accessibility-font-size: 16px;
-  --accessibility-line-height: 1.6;
-  --accessibility-letter-spacing: 0px;
-  
-  /* Accessible orange button colors with 4.5:1+ contrast ratio */
-  --orange-accessible: #cc5500; /* Darker orange for better contrast */
-  --orange-accessible-hover: #b34700; /* Even darker for hover */
-  --orange-accessible-text: #ffffff; /* White text maintains 4.8:1 contrast */
-}
-
-/* Apply accessibility settings only when specifically enabled */
-.accessibility-font-size {
-  font-size: var(--accessibility-font-size) !important;
-}
-
-.accessibility-line-height {
-  line-height: var(--accessibility-line-height) !important;
-}
-
-.accessibility-letter-spacing {
-  letter-spacing: var(--accessibility-letter-spacing) !important;
-}
-
-/* High contrast mode */
-.high-contrast {
-  filter: contrast(150%) brightness(110%);
-}
-
-.high-contrast * {
-  text-shadow: none !important;
-  box-shadow: none !important;
-}
-
-.high-contrast a {
-  text-decoration: underline !important;
-}
-
-/* Accessible orange button styles - WCAG AA compliant (4.8:1 contrast ratio) */
-.btn-orange-accessible {
-  background-color: var(--orange-accessible) !important;
-  color: var(--orange-accessible-text) !important;
-  border: none;
-}
-
-.btn-orange-accessible:hover {
-  background-color: var(--orange-accessible-hover) !important;
-  color: var(--orange-accessible-text) !important;
-}
-
-.btn-orange-accessible:focus {
-  background-color: var(--orange-accessible-hover) !important;
-  color: var(--orange-accessible-text) !important;
-  outline: 2px solid var(--orange-accessible);
-  outline-offset: 2px;
-}
-
-/* Legacy orange button override for accessibility compliance */
+/* Standard button styles */
 .bg-orange-600,
 .bg-orange-500,
 .hover\:bg-orange-700:hover,
@@ -218,73 +158,15 @@
   color: #2d3748 !important;
 }
 
-/* Dyslexia-friendly adjustments */
-.dyslexia-friendly,
-.dyslexia-friendly * {
-  font-family: 'Trebuchet MS', 'Lucida Grande', 'Lucida Sans Unicode', 'Verdana', 'Arial', sans-serif !important;
-}
-
-.dyslexia-friendly p,
-.dyslexia-friendly div,
-.dyslexia-friendly span {
-  font-weight: 400;
-  word-spacing: 0.1em;
-  letter-spacing: 0.05em;
-  line-height: 1.8;
-}
-
-.dyslexia-friendly h1,
-.dyslexia-friendly h2,
-.dyslexia-friendly h3,
-.dyslexia-friendly h4,
-.dyslexia-friendly h5,
-.dyslexia-friendly h6 {
-  font-weight: 600;
-  margin-bottom: 0.8em;
-  letter-spacing: 0.03em;
-}
-
-/* Text-to-speech highlighting */
-.tts-highlight {
-  background-color: #ffeb3b !important;
-  color: #000 !important;
-  padding: 2px 4px;
-  border-radius: 3px;
-  animation: pulse-highlight 1s infinite;
-}
-
-@keyframes pulse-highlight {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-/* Enhanced focus indicators */
+/* Standard focus indicators */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid #f97316 !important;
-  outline-offset: 2px !important;
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
   border-radius: 4px;
-}
-
-/* Skip link for keyboard navigation */
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 6px;
-  background: #f97316;
-  color: white;
-  padding: 8px;
-  text-decoration: none;
-  border-radius: 4px;
-  z-index: 1000;
-  font-weight: bold;
-}
-
-.skip-link:focus {
-  top: 6px;
 }
 
 /* Ensure minimum touch targets */
@@ -301,18 +183,6 @@ textarea:focus-visible {
 }
 
 /* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* High contrast support */
 @media (prefers-contrast: high) {
   * {
     border-color: currentColor !important;
@@ -339,7 +209,6 @@ textarea:focus-visible {
   }
 }
 
-/* High contrast for accessibility */
 @media (prefers-contrast: high) {
   :root {
     --primary: 220 14.3% 95.9%;
@@ -437,9 +306,7 @@ textarea:focus-visible {
     min-height: 320px;
   }
   
-  /* High contrast text for mobile visibility */
   @media (max-width: 768px) {
-    .mobile-text-high-contrast {
       color: #000000 !important;
       font-weight: 900 !important;
       text-shadow: 0 0 1px rgba(255, 165, 0, 0.3);
@@ -491,7 +358,7 @@ textarea:focus-visible {
   .mobile-loading {
     @apply min-h-[200px] sm:min-h-[300px] flex items-center justify-center;
   }
-}
+
 
 :root {
   --background: hsl(0, 0%, 100%);

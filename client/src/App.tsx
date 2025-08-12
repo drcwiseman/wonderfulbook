@@ -24,8 +24,7 @@ import SystemSettings from "@/pages/system-settings";
 import AdminEmailManagement from "@/pages/AdminEmailManagement";
 import ChallengesPage from "@/pages/challenges";
 import ChallengeDetailPage from "@/pages/challenge-detail";
-import TestingQA from "@/pages/testing-qa";
-import AccessibilityTestDemo from "@/components/AccessibilityTestDemo";
+
 import RouteProtectionDemo from "@/components/RouteProtectionDemo";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
@@ -39,7 +38,6 @@ import DevicesPage from "@/pages/devices";
 import LoansPage from "@/pages/loans";
 import NotFound from "@/pages/not-found";
 import ScrollToTop from "@/components/ScrollToTop";
-import AccessibilityButton from "@/components/AccessibilityButton";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import FeedbackButton from "@/components/FeedbackButton";
 
@@ -157,12 +155,8 @@ function Router() {
             </ProtectedRoute>
           </PageWrapper>
         </Route>
-        <Route path="/testing-qa">
-          <PageWrapper><TestingQA /></PageWrapper>
-        </Route>
-        <Route path="/accessibility-test">
-          <PageWrapper><AccessibilityTestDemo /></PageWrapper>
-        </Route>
+
+
         <Route path="/route-protection-demo">
           <PageWrapper><RouteProtectionDemo /></PageWrapper>
         </Route>
@@ -206,13 +200,8 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
-          {/* Skip link for keyboard navigation */}
-          <a href="#main-content" className="skip-link">
-            Skip to main content
-          </a>
           <Router />
           <ScrollToTop />
-          <AccessibilityButton />
           <FeedbackButton />
         </TooltipProvider>
       </QueryClientProvider>

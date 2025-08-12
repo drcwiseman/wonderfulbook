@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AccessibleContent from "@/components/AccessibleContent";
+
 import SimpleBookPreview from "@/components/SimpleBookPreview";
 import type { Book as BookType, BookReview } from "@shared/schema";
 import { SEOHead, getBookSEO } from "@/components/SEOHead";
