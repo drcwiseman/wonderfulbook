@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AlertCircle, CheckCircle, Clock, Server, Database, Mail, CreditCard, Globe, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, CheckCircle, Clock, Server, Database, Mail, CreditCard, Globe, Activity, ArrowLeft, Home, Shield } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface HealthItem {
@@ -126,25 +127,69 @@ export default function HealthDashboard() {
   const items = latest?.items || [];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">System Health Dashboard</h1>
-          <p className="text-muted-foreground">
-            Super Admin monitoring console • Last updated: {
-              latest ? formatDistanceToNow(new Date(latest.finishedAt), { addSuffix: true }) : 'Never'
-            }
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation Header */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.history.back()}
+                className="hover:bg-gray-100"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-500">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.location.href = '/'}
+                  className="hover:bg-gray-100"
+                >
+                  <Home className="h-4 w-4 mr-1" />
+                  Home
+                </Button>
+                <span>/</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.location.href = '/super-admin'}
+                  className="hover:bg-gray-100"
+                >
+                  <Shield className="h-4 w-4 mr-1" />
+                  Super Admin
+                </Button>
+                <span>/</span>
+                <span className="text-gray-900">Health Dashboard</span>
+              </div>
+            </div>
+            <Button
+              onClick={() => refetch()}
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Activity className="h-4 w-4" />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+          </div>
         </div>
-        <button
-          onClick={() => refetch()}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
-        >
-          <Activity className="h-4 w-4" />
-          Refresh
-        </button>
       </div>
+
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">System Health Dashboard</h1>
+            <p className="text-muted-foreground">
+              Super Admin monitoring console • Last updated: {
+                latest ? formatDistanceToNow(new Date(latest.finishedAt), { addSuffix: true }) : 'Never'
+              }
+            </p>
+          </div>
+        </div>
 
       {/* Overall Status */}
       <Card>
@@ -266,6 +311,7 @@ export default function HealthDashboard() {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }

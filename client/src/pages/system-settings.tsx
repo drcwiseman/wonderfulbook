@@ -28,7 +28,9 @@ import {
   Key,
   Bell,
   Send,
-  TestTube
+  TestTube,
+  ArrowLeft,
+  Home
 } from "lucide-react";
 import Header from "@/components/Header";
 import PageHeader from "@/components/PageHeader";
@@ -289,17 +291,58 @@ export default function SystemSettings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation Header */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.history.back()}
+                className="hover:bg-gray-100"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-500">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.location.href = '/'}
+                  className="hover:bg-gray-100"
+                >
+                  <Home className="h-4 w-4 mr-1" />
+                  Home
+                </Button>
+                <span>/</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.location.href = '/admin'}
+                  className="hover:bg-gray-100"
+                >
+                  <Shield className="h-4 w-4 mr-1" />
+                  Admin
+                </Button>
+                <span>/</span>
+                <span className="text-gray-900">System Settings</span>
+              </div>
+            </div>
+            <Settings className="h-6 w-6 text-orange-600" />
+          </div>
+        </div>
+      </div>
       
       <div className="container mx-auto px-4 py-8">
-        <PageHeader
-          title="System Settings"
-          breadcrumbs={[
-            { label: "Super Admin", href: "/super-admin" },
-            { label: "System Settings", href: "/system-settings" }
-          ]}
-        />
+        <div className="flex items-center gap-3 mb-8">
+          <Settings className="h-8 w-8 text-orange-600" />
+          <div>
+            <h1 className="text-3xl font-bold">System Settings</h1>
+            <p className="text-muted-foreground">Configure platform settings and system parameters</p>
+          </div>
+        </div>
 
         {/* Save/Discard Changes Bar */}
         {hasUnsavedChanges && (
