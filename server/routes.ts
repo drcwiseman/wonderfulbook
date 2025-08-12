@@ -163,6 +163,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Serve uploaded files
   app.use('/uploads', express.static('./uploads'));
+
+  // Placeholder image endpoint for missing book covers
+  app.get("/api/placeholder/:width/:height", (req, res) => {
+    const { width, height } = req.params;
+    const w = parseInt(width) || 200;
+    const h = parseInt(height) || 280;
+    
+    const svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="coverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#ea580c;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#fb923c;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <rect width="${w}" height="${h}" rx="8" fill="url(#coverGrad)"/>
+      <text x="${w/2}" y="${h/2-10}" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold" opacity="0.8">
+        Book Cover
+      </text>
+      <text x="${w/2}" y="${h/2+10}" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" opacity="0.6">
+        Wonderful Books
+      </text>
+    </svg>`;
+    
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+    res.send(svg);
+  });
   
   // Apply rate limiting to API routes
   app.use('/api/', rateLimit(500, 15 * 60 * 1000)); // 500 requests per 15 minutes

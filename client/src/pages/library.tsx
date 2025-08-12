@@ -28,6 +28,7 @@ import {
 import { Book } from "@shared/schema";
 import Header from "@/components/Header";
 import PageHeader from "@/components/PageHeader";
+import BookCoverImage from "@/components/BookCoverImage";
 
 interface LibraryBook extends Book {
   readingProgress?: {
@@ -453,10 +454,12 @@ function LibraryBookCard({ book, layout }: LibraryBookCardProps) {
     >
       <CardContent className="p-4">
         <div className="relative mb-3">
-          <img
-            src={book.coverImageUrl || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=400"}
+          <BookCoverImage
+            src={book.coverImageUrl}
             alt={book.title}
-            className="w-full aspect-[3/4] object-cover rounded-lg"
+            className="w-full aspect-[3/4] rounded-lg"
+            width={200}
+            height={267}
           />
           
           {isStarted && (

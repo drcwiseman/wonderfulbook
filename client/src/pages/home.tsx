@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Star, Zap, BookOpen, Users, TrendingUp, CheckCircle, ArrowRight, PlayCircle, Award, Shield, Clock } from "lucide-react";
+import BookCoverImage from "@/components/BookCoverImage";
 import FeaturedBooks from "@/components/FeaturedBooks";
 import IntelligentSearch from "@/components/IntelligentSearch";
 import { useQuery } from "@tanstack/react-query";
@@ -28,20 +29,15 @@ function BookShowcaseSection() {
         <Link key={book.id} href="/bookstore">
           <div className="group cursor-pointer">
             <div className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-              <div className="aspect-[3/4] bg-gradient-to-br from-orange-800/20 to-amber-800/20 flex items-center justify-center">
-                {book.coverImageUrl ? (
-                  <img
-                    src={book.coverImageUrl}
-                    alt={book.title}
-                    className="w-full h-full object-cover retina-ready"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
-                    <BookOpen className="w-12 h-12 text-white/80" />
-                  </div>
-                )}
+              <div className="aspect-[3/4]">
+                <BookCoverImage
+                  src={book.coverImageUrl}
+                  alt={book.title}
+                  className="w-full h-full"
+                  width={200}
+                  height={267}
+                  fallbackIcon={<BookOpen className="w-12 h-12 text-white/80" />}
+                />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3">

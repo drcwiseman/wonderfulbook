@@ -2,6 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 import type { Book } from "@shared/schema";
+import BookCoverImage from "@/components/BookCoverImage";
 
 export default function FeaturedBooks() {
   const { data: books, isLoading } = useQuery<Book[]>({
@@ -48,10 +49,12 @@ export default function FeaturedBooks() {
               onClick={() => handleBookClick(book.id)}
             >
               <div className="relative rounded-lg overflow-hidden shadow-2xl">
-                <img
-                  src={book.coverImageUrl || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=400"}
+                <BookCoverImage
+                  src={book.coverImageUrl}
                   alt={book.title}
-                  className="w-full h-64 md:h-80 object-cover"
+                  className="h-64 md:h-80"
+                  width={200}
+                  height={320}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="absolute bottom-4 left-4 right-4">
