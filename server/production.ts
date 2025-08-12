@@ -24,10 +24,37 @@ export function setupProductionServing(app: Express) {
 
   console.log(`Serving static files from: ${publicPath}`);
 
-  // Serve static assets with proper caching headers
-  app.use(express.static(publicPath, {
-    maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
-    index: false // Disable automatic index.html serving for directories
+  // Enhanced caching strategy for different asset types
+  app.use('/assets', express.static(path.join(publicPath, 'assets'), {
+    maxAge: '1y', // Aggressive caching for hashed assets (JS/CSS)
+    etag: true,
+    lastModified: true,
+    immutable: true,
+    setHeaders: (res, path) => {
+      if (path.endsWith('.js') || path.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    }
+  }));
+
+  // Cache images and other media for 30 days
+  app.use('/images', express.static(path.join(publicPath, 'images'), {
+    maxAge: '30d',
+    etag: true,
+    lastModified: true
+  }));
+
+  // Cache SVG icons and social images for 7 days
+  app.use('/', express.static(publicPath, {
+    maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0,
+    index: false, // Disable automatic index.html serving for directories
+    setHeaders: (res, path) => {
+      if (path.endsWith('.svg')) {
+        res.setHeader('Cache-Control', 'public, max-age=604800'); // 7 days
+      } else if (path.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      }
+    }
   }));
 
   // Handle all non-API routes by serving index.html for React Router

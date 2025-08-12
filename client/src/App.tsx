@@ -1,5 +1,5 @@
-import React from "react";
-// Force deployment refresh - August 12, 2025 - Social Sharing with Book Images FIXED
+import React, { Suspense, lazy } from "react";
+// Force deployment refresh - August 12, 2025 - Code Splitting + Performance Optimization
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -8,46 +8,71 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProductionErrorBoundary } from "@/components/ProductionErrorBoundary";
 import { useAuth } from "@/hooks/useAuth";
 import { AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
-import Landing from "@/pages/landing";
-import Home from "@/pages/home";
-import BookStore from "@/pages/bookstore";
-import Library from "@/pages/library";
-import Dashboard from "@/pages/dashboard";
-import BookDetail from "@/pages/book-detail-enhanced";
-import Subscribe from "@/pages/subscribe";
-import PaymentSuccess from "@/pages/PaymentSuccess";
-import ReaderPage from "@/pages/reader";
-import AdminPanel from "@/pages/admin";
-import SuperAdminDashboard from "@/pages/super-admin-dashboard";
-import SystemSettings from "@/pages/system-settings";
-import AdminEmailManagement from "@/pages/AdminEmailManagement";
-import ChallengesPage from "@/pages/challenges";
-import ChallengeDetailPage from "@/pages/challenge-detail";
-import TestingQA from "@/pages/testing-qa";
-import AccessibilityTestDemo from "@/components/AccessibilityTestDemo";
-import RouteProtectionDemo from "@/components/RouteProtectionDemo";
-import Login from "@/pages/auth/login";
-import Register from "@/pages/auth/register";
-import ForgotPassword from "@/pages/auth/forgot-password";
-import ResetPassword from "@/pages/auth/reset-password";
-import EmailVerified from "@/pages/email-verified";
-import Unsubscribe from "@/pages/unsubscribe";
-import Profile from "@/pages/profile";
-import Billing from "@/pages/billing";
-import DevicesPage from "@/pages/devices";
-import LoansPage from "@/pages/loans";
-import NotFound from "@/pages/not-found";
 import ScrollToTop from "@/components/ScrollToTop";
 import AccessibilityButton from "@/components/AccessibilityButton";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import FeedbackButton from "@/components/FeedbackButton";
+
+// Critical pages loaded immediately
+import Landing from "@/pages/landing";
+import Home from "@/pages/home";
+import Login from "@/pages/auth/login";
+import Register from "@/pages/auth/register";
+import NotFound from "@/pages/not-found";
+
+// Heavy pages loaded on-demand (code splitting)
+const BookStore = lazy(() => import("@/pages/bookstore"));
+const Library = lazy(() => import("@/pages/library"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const BookDetail = lazy(() => import("@/pages/book-detail-enhanced"));
+const Subscribe = lazy(() => import("@/pages/subscribe"));
+const PaymentSuccess = lazy(() => import("@/pages/PaymentSuccess"));
+const ReaderPage = lazy(() => import("@/pages/reader"));
+
+// Admin pages (heaviest - only load when needed)
+const AdminPanel = lazy(() => import("@/pages/admin"));
+const SuperAdminDashboard = lazy(() => import("@/pages/super-admin-dashboard"));
+const SystemSettings = lazy(() => import("@/pages/system-settings"));
+const AdminEmailManagement = lazy(() => import("@/pages/AdminEmailManagement"));
+
+// Secondary pages
+const ChallengesPage = lazy(() => import("@/pages/challenges"));
+const ChallengeDetailPage = lazy(() => import("@/pages/challenge-detail"));
+const TestingQA = lazy(() => import("@/pages/testing-qa"));
+const AccessibilityTestDemo = lazy(() => import("@/components/AccessibilityTestDemo"));
+const RouteProtectionDemo = lazy(() => import("@/components/RouteProtectionDemo"));
+const ForgotPassword = lazy(() => import("@/pages/auth/forgot-password"));
+const ResetPassword = lazy(() => import("@/pages/auth/reset-password"));
+const EmailVerified = lazy(() => import("@/pages/email-verified"));
+const Unsubscribe = lazy(() => import("@/pages/unsubscribe"));
+const Profile = lazy(() => import("@/pages/profile"));
+const Billing = lazy(() => import("@/pages/billing"));
+const DevicesPage = lazy(() => import("@/pages/devices"));
+const LoansPage = lazy(() => import("@/pages/loans"));
+
+// Loading component for Suspense fallback
+const LoadingFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="text-center">
+      <Loader2 className="w-8 h-8 animate-spin text-orange-600 mx-auto mb-4" />
+      <p className="text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   const PageWrapper = ({ children }: { children: React.ReactNode }) => (
     <PageTransition>{children}</PageTransition>
+  );
+
+  const LazyPageWrapper = ({ children }: { children: React.ReactNode }) => (
+    <Suspense fallback={<LoadingFallback />}>
+      <PageTransition>{children}</PageTransition>
+    </Suspense>
   );
 
   return (
@@ -59,118 +84,118 @@ function Router() {
           </PageWrapper>
         </Route>
         <Route path="/bookstore">
-          <PageWrapper><BookStore /></PageWrapper>
+          <LazyPageWrapper><BookStore /></LazyPageWrapper>
         </Route>
         <Route path="/library">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true}>
               <Library />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/dashboard">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true}>
               <Dashboard />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/profile">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true}>
               <Profile />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/billing">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true}>
               <Billing />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/devices">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true}>
               <DevicesPage />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/loans">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true}>
               <LoansPage />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/book/:id">
-          <PageWrapper><BookDetail /></PageWrapper>
+          <LazyPageWrapper><BookDetail /></LazyPageWrapper>
         </Route>
         <Route path="/book-detail/:id">
-          <PageWrapper><BookDetail /></PageWrapper>
+          <LazyPageWrapper><BookDetail /></LazyPageWrapper>
         </Route>
         <Route path="/subscribe">
-          <PageWrapper><Subscribe /></PageWrapper>
+          <LazyPageWrapper><Subscribe /></LazyPageWrapper>
         </Route>
         <Route path="/payment-success">
-          <PageWrapper><PaymentSuccess /></PageWrapper>
+          <LazyPageWrapper><PaymentSuccess /></LazyPageWrapper>
         </Route>
         <Route path="/reader/:bookId">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true} requireSubscription={true}>
               <ReaderPage />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/read/:bookId">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true} requireSubscription={true}>
               <ReaderPage />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/admin">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true} allowedRoles={["admin", "super_admin"]}>
               <AdminPanel />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/super-admin">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true} allowedRoles={["super_admin"]}>
               <SuperAdminDashboard />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/system-settings">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true} allowedRoles={["super_admin"]}>
               <SystemSettings />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/admin/email-management">
-          <PageWrapper>
+          <LazyPageWrapper>
             <ProtectedRoute requireAuth={true} allowedRoles={["admin", "super_admin"]}>
               <AdminEmailManagement />
             </ProtectedRoute>
-          </PageWrapper>
+          </LazyPageWrapper>
         </Route>
         <Route path="/testing-qa">
-          <PageWrapper><TestingQA /></PageWrapper>
+          <LazyPageWrapper><TestingQA /></LazyPageWrapper>
         </Route>
         <Route path="/accessibility-test">
-          <PageWrapper><AccessibilityTestDemo /></PageWrapper>
+          <LazyPageWrapper><AccessibilityTestDemo /></LazyPageWrapper>
         </Route>
         <Route path="/route-protection-demo">
-          <PageWrapper><RouteProtectionDemo /></PageWrapper>
+          <LazyPageWrapper><RouteProtectionDemo /></LazyPageWrapper>
         </Route>
         <Route path="/challenges">
-          <PageWrapper><ChallengesPage /></PageWrapper>
+          <LazyPageWrapper><ChallengesPage /></LazyPageWrapper>
         </Route>
         <Route path="/challenges/:id">
-          <PageWrapper><ChallengeDetailPage /></PageWrapper>
+          <LazyPageWrapper><ChallengeDetailPage /></LazyPageWrapper>
         </Route>
         {/* Authentication routes - available whether logged in or not */}
         <Route path="/auth/login">
@@ -180,17 +205,17 @@ function Router() {
           <PageWrapper><Register /></PageWrapper>
         </Route>
         <Route path="/auth/forgot-password">
-          <PageWrapper><ForgotPassword /></PageWrapper>
+          <LazyPageWrapper><ForgotPassword /></LazyPageWrapper>
         </Route>
         <Route path="/auth/reset-password">
-          <PageWrapper><ResetPassword /></PageWrapper>
+          <LazyPageWrapper><ResetPassword /></LazyPageWrapper>
         </Route>
         {/* Email-related routes */}
         <Route path="/email-verified">
-          <PageWrapper><EmailVerified /></PageWrapper>
+          <LazyPageWrapper><EmailVerified /></LazyPageWrapper>
         </Route>
         <Route path="/unsubscribe">
-          <PageWrapper><Unsubscribe /></PageWrapper>
+          <LazyPageWrapper><Unsubscribe /></LazyPageWrapper>
         </Route>
         <Route>
           <PageWrapper><NotFound /></PageWrapper>
