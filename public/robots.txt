@@ -1,52 +1,16 @@
-# Robots.txt for Wonderful Books - Premium Digital Book Streaming Platform
-# Allow search engines to crawl public content while protecting user data
-
 User-agent: *
-
-# Allow crawling of main public pages
 Allow: /
-Allow: /bookstore
-Allow: /subscribe
-Allow: /book/*
-Allow: /auth/login
-Allow: /auth/register
-Allow: /auth/forgot-password
 
-# Disallow crawling of user-specific and sensitive areas
-Disallow: /reader/*
-Disallow: /library
-Disallow: /dashboard
-Disallow: /admin
-Disallow: /api/*
+# Disallow admin and sensitive areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/verify-email
 Disallow: /auth/reset-password
-Disallow: /uploads/*
 
-# Allow crawling of assets
-Allow: /assets/*
-Allow: /images/*
-Allow: /icons/*
-Allow: /*.css$
-Allow: /*.js$
-
-# Crawl delay to be respectful (1 second)
-Crawl-delay: 1
+# Allow book discovery
+Allow: /books/
+Allow: /subscribe/
+Allow: /login
 
 # Sitemap location
-Sitemap: https://wonderful-books.replit.app/sitemap.xml
-
-# Specific rules for major search engines
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 2
-
-User-agent: facebookexternalhit
-Allow: /
-Allow: /book/*
-
-User-agent: Twitterbot
-Allow: /
-Allow: /book/*
+Sitemap: https://workspace.drcwiseman.replit.app/sitemap.xml
