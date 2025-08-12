@@ -38,17 +38,55 @@ export default function SocialShareButtons({
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  // Create share text variants
+  // Create compelling advertising share text variants
   const shareTexts = {
-    default: `Reading "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} on Wonderful Books`,
-    twitter: `Currently reading "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} 📚✨`,
-    facebook: `I'm reading "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} on Wonderful Books. Great digital book streaming platform!`,
-    linkedin: `Reading "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} - highly recommend this digital book platform for book lovers.`,
-    email: `Book Recommendation: ${bookTitle}${bookAuthor ? ` by ${bookAuthor}` : ''}`,
-    whatsapp: `📖 Reading "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} on Wonderful Books! Check it out:`
+    default: `📚 Just discovered "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} on Wonderful Books! Amazing digital book streaming platform.`,
+    twitter: `🔥 Reading "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} and loving it! 📖✨ Unlimited books, no downloads needed. Try the 7-day free trial! #BookLovers #DigitalReading #WonderfulBooks`,
+    facebook: `📖 I'm absolutely loving "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} on Wonderful Books! 
+
+🎯 This digital book streaming platform is a game-changer - thousands of books, instant access, no downloads! Perfect for busy book lovers.
+
+💎 Premium reading experience with features like Text-to-Speech, bookmarks, and seamless syncing across all devices.
+
+🆓 They have a 7-day free trial - definitely worth checking out if you love books!`,
+    linkedin: `📚 Professional development insight: Currently reading "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} on Wonderful Books - a revolutionary digital book streaming platform.
+
+✅ Key benefits I've experienced:
+• Instant access to thousands of books
+• No storage space needed (streaming technology)  
+• Advanced reading features (TTS, bookmarks, sync)
+• Perfect for busy professionals
+
+🎯 For fellow book enthusiasts and professionals looking to maximize reading time, I highly recommend exploring their platform. They offer a 7-day free trial.`,
+    email: `📖 Book Recommendation: ${bookTitle}${bookAuthor ? ` by ${bookAuthor}` : ''}`,
+    whatsapp: `📚 Hey! Just found this amazing book: "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} 
+
+I'm reading it on Wonderful Books - it's like Netflix for books! 🎬➡️📖
+
+✨ No downloads, instant streaming, thousands of books available
+🆓 7-day free trial if you want to check it out!
+
+Definitely worth it for book lovers 👌`
   };
 
-  const shareDescription = bookDescription || `Discover "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''} and thousands of other books on Wonderful Books - the premium digital book streaming platform.`;
+  // Enhanced description with advertising appeal
+  const shareDescription = bookDescription || `Transform your reading experience with "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''}! Stream instantly on Wonderful Books - the premium digital library with thousands of books, advanced reading features, and seamless device syncing. Start your 7-day free trial today!`;
+
+  // Create Open Graph meta tags for image sharing
+  const createMetaTags = () => {
+    return {
+      'og:title': bookTitle,
+      'og:description': shareDescription,
+      'og:image': bookCover || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630",
+      'og:url': bookUrl,
+      'og:type': 'book',
+      'og:site_name': 'Wonderful Books',
+      'twitter:card': 'summary_large_image',
+      'twitter:title': bookTitle,
+      'twitter:description': shareDescription,
+      'twitter:image': bookCover || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630"
+    };
+  };
 
   const handleCopyLink = async () => {
     try {
@@ -72,24 +110,45 @@ export default function SocialShareButtons({
     const encodedUrl = encodeURIComponent(bookUrl);
     const encodedTitle = encodeURIComponent(shareTexts[platform as keyof typeof shareTexts]);
     const encodedDescription = encodeURIComponent(shareDescription);
+    const encodedImage = encodeURIComponent(bookCover || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630");
     
     let shareUrl = '';
 
     switch (platform) {
       case 'twitter':
-        shareUrl = `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`;
+        // Twitter with hashtags and image
+        const twitterHashtags = 'BookLovers,DigitalReading,WonderfulBooks,FreeTrial,BookStreaming';
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}&hashtags=${twitterHashtags}`;
         break;
       case 'facebook':
+        // Facebook with enhanced sharing - image will be auto-detected from og:image meta tag
         shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodeURIComponent(shareTexts.facebook)}`;
         break;
       case 'linkedin':
+        // LinkedIn professional sharing with image
         shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}&title=${encodeURIComponent(bookTitle)}&summary=${encodeURIComponent(shareTexts.linkedin)}`;
         break;
       case 'whatsapp':
-        shareUrl = `https://wa.me/?text=${encodeURIComponent(shareTexts.whatsapp + ' ' + bookUrl)}`;
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(shareTexts.whatsapp + '\n\n' + bookUrl)}`;
         break;
       case 'email':
-        const emailBody = `Hi,\n\nI wanted to share this great book I'm reading: "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''}.\n\n${shareDescription}\n\nCheck it out here: ${bookUrl}\n\nBest regards`;
+        const emailBody = `Hi there! 👋
+
+I wanted to share this incredible book I'm reading: "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''}
+
+${shareDescription}
+
+🔥 What makes this platform amazing:
+• Stream thousands of books instantly (no downloads!)
+• Advanced reading features like Text-to-Speech
+• Works perfectly on phone, tablet, and computer
+• 7-day free trial to explore everything
+
+Check it out here: ${bookUrl}
+
+Trust me, if you love books, you'll love this platform!
+
+Happy reading! 📚✨`;
         shareUrl = `mailto:?subject=${encodeURIComponent(shareTexts.email)}&body=${encodeURIComponent(emailBody)}`;
         break;
     }
@@ -98,9 +157,44 @@ export default function SocialShareButtons({
       window.open(shareUrl, '_blank', 'noopener,noreferrer,width=600,height=400');
     }
 
+    // Show success message with advertising impact
+    toast({
+      title: "📢 Share opened!",
+      description: `Help others discover "${bookTitle}" and grow our reading community!`,
+    });
+
     // Track sharing event
-    console.log(`Book shared on ${platform}:`, bookTitle);
+    console.log(`Book shared on ${platform}:`, { title: bookTitle, image: bookCover, url: bookUrl });
   };
+
+  // Update document meta tags for better social sharing
+  const updateMetaTags = () => {
+    const metaTags = createMetaTags();
+    
+    // Update existing meta tags or create new ones
+    Object.entries(metaTags).forEach(([property, content]) => {
+      let metaTag = document.querySelector(`meta[property="${property}"]`) || 
+                    document.querySelector(`meta[name="${property}"]`);
+      
+      if (metaTag) {
+        metaTag.setAttribute('content', content);
+      } else {
+        metaTag = document.createElement('meta');
+        if (property.startsWith('og:') || property.startsWith('twitter:')) {
+          metaTag.setAttribute('property', property);
+        } else {
+          metaTag.setAttribute('name', property);
+        }
+        metaTag.setAttribute('content', content);
+        document.head.appendChild(metaTag);
+      }
+    });
+  };
+
+  // Update meta tags when component mounts or book data changes
+  React.useEffect(() => {
+    updateMetaTags();
+  }, [bookTitle, bookCover, bookUrl]);
 
   const handleNativeShare = async () => {
     if (navigator.share) {
