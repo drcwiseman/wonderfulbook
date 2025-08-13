@@ -60,22 +60,50 @@ export function setupProductionServing(app: Express) {
 
   console.log(`Serving static files from: ${publicPath}`);
   
-  // PRODUCTION FIX: Serve uploads directory with proper caching and CORS for all file types
-  app.use('/uploads', express.static(uploadsPath, {
+  // CRITICAL FIX: Serve uploads directory with debug logging and proper headers
+  app.use('/uploads', (req, res, next) => {
+    console.log(`🔥 PRODUCTION UPLOADS DEBUG: Request for ${req.path}`);
+    console.log(`🔥 PRODUCTION UPLOADS DEBUG: Uploads path: ${uploadsPath}`);
+    
+    const requestedFile = path.join(uploadsPath, req.path);
+    console.log(`🔥 PRODUCTION UPLOADS DEBUG: Looking for file: ${requestedFile}`);
+    console.log(`🔥 PRODUCTION UPLOADS DEBUG: File exists: ${fs.existsSync(requestedFile)}`);
+    
+    if (fs.existsSync(requestedFile)) {
+      const stats = fs.statSync(requestedFile);
+      console.log(`🔥 PRODUCTION UPLOADS DEBUG: File size: ${stats.size} bytes`);
+    }
+    
+    next();
+  }, express.static(uploadsPath, {
     maxAge: '1d', // Cache uploaded files for 1 day
     etag: true,
     lastModified: true,
     setHeaders: (res, filePath) => {
+      console.log(`🔥 PRODUCTION UPLOADS DEBUG: Setting headers for: ${filePath}`);
+      
       // Set proper CORS headers for all file types in production
       res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       
-      // Set appropriate cache control based on file type
+      // Set appropriate cache control and content type based on file type
       if (filePath.endsWith('.pdf')) {
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour for PDFs
         res.setHeader('Content-Disposition', 'inline'); // Allow inline viewing
       } else if (filePath.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        // Set proper image content types
+        if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+          res.setHeader('Content-Type', 'image/jpeg');
+        } else if (filePath.endsWith('.png')) {
+          res.setHeader('Content-Type', 'image/png');
+        } else if (filePath.endsWith('.gif')) {
+          res.setHeader('Content-Type', 'image/gif');
+        } else if (filePath.endsWith('.webp')) {
+          res.setHeader('Content-Type', 'image/webp');
+        }
         res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours for images
       } else {
         res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour for other files
