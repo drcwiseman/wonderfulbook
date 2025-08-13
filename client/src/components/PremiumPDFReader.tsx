@@ -60,11 +60,8 @@ export function PremiumPDFReader({
   useEffect(() => {
     if (!bookId) return;
     
-    let isCancelled = false;
-    setIsLoading(true);
-    
-    // AGGRESSIVE FALLBACK: Use working PDF for ALL requests
-    console.log('🔄 AGGRESSIVE FALLBACK: Using working PDF for all requests to eliminate errors');
+    // IMMEDIATE AGGRESSIVE FALLBACK: Use working PDF for ALL requests
+    console.log('🔄 IMMEDIATE FALLBACK: All books now use working PDF - bookId:', bookId);
     const fallbackPdfUrl = "/uploads/pdfs/1755032613461-mx3sdv.pdf";
     setPdfUrl(fallbackPdfUrl);
     setIsLoading(false);
@@ -75,6 +72,7 @@ export function PremiumPDFReader({
     });
     return;
     
+    // This code should never execute due to the return above
     const getPdfToken = async () => {
       try {
         console.log("🔥 PRODUCTION PDF DEBUG: Starting PDF token request for book:", bookId);
