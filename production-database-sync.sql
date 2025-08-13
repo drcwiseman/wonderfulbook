@@ -40,3 +40,4 @@ WHERE cover_image_url LIKE '%1755039%' AND cover_image_url LIKE '%.jpg';
 -- UPDATE books SET cover_image_url = '/uploads/1754453446477-kgg86a.png' WHERE title LIKE '%Fear of Change%';
 -- UPDATE books SET cover_image_url = '/uploads/1754453929800-msice.png' WHERE title LIKE '%Fear Of The Unknown%';
 -- UPDATE books SET cover_image_url = '/uploads/1754454150690-j5ycd2.png' WHERE title LIKE '%Lack Of Purpose%';
+psql "$PRODUCTION_DATABASE_URL" < CRITICAL_PDF_FIX.sql
