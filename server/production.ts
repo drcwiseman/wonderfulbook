@@ -11,11 +11,40 @@ export function setupProductionServing(app: Express) {
   const indexPath = path.resolve(publicPath, "index.html");
   
   // CRITICAL FIX: Setup uploads directory for production
-  const uploadsPath = isInServerDir
-    ? path.resolve(process.cwd(), "..", "uploads")
-    : path.resolve(process.cwd(), "uploads");
+  // Check multiple possible upload locations
+  const possibleUploadPaths = [
+    isInServerDir ? path.resolve(process.cwd(), "uploads") : path.resolve(process.cwd(), "uploads"),
+    isInServerDir ? path.resolve(process.cwd(), "..", "uploads") : path.resolve(process.cwd(), "server", "uploads"),
+    path.resolve(process.cwd(), "uploads"),
+    path.resolve(process.cwd(), "server", "uploads")
+  ];
   
-  console.log(`Uploads path resolved to: ${uploadsPath}`);
+  let uploadsPath = possibleUploadPaths[0];
+  for (const testPath of possibleUploadPaths) {
+    if (fs.existsSync(testPath)) {
+      uploadsPath = testPath;
+      console.log(`✅ Found uploads directory at: ${uploadsPath}`);
+      break;
+    }
+  }
+  
+  // If no uploads directory exists, create one in the expected location
+  if (!fs.existsSync(uploadsPath)) {
+    console.log(`📁 Creating uploads directory at: ${uploadsPath}`);
+    fs.mkdirSync(uploadsPath, { recursive: true });
+    
+    // Create subdirectories for different file types
+    const subdirs = ['images', 'pdfs', 'documents'];
+    subdirs.forEach(subdir => {
+      const subdirPath = path.join(uploadsPath, subdir);
+      if (!fs.existsSync(subdirPath)) {
+        fs.mkdirSync(subdirPath, { recursive: true });
+        console.log(`📁 Created subdirectory: ${subdirPath}`);
+      }
+    });
+  }
+  
+  console.log(`📤 Uploads path resolved to: ${uploadsPath}`);
 
   if (!fs.existsSync(publicPath)) {
     throw new Error(
@@ -31,16 +60,26 @@ export function setupProductionServing(app: Express) {
 
   console.log(`Serving static files from: ${publicPath}`);
   
-  // PRODUCTION FIX: Serve uploads directory with proper caching and CORS
+  // PRODUCTION FIX: Serve uploads directory with proper caching and CORS for all file types
   app.use('/uploads', express.static(uploadsPath, {
-    maxAge: '1d', // Cache uploaded images for 1 day
+    maxAge: '1d', // Cache uploaded files for 1 day
     etag: true,
     lastModified: true,
     setHeaders: (res, filePath) => {
-      // Set proper CORS headers for images in production
+      // Set proper CORS headers for all file types in production
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-      res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours
+      
+      // Set appropriate cache control based on file type
+      if (filePath.endsWith('.pdf')) {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour for PDFs
+        res.setHeader('Content-Disposition', 'inline'); // Allow inline viewing
+      } else if (filePath.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours for images
+      } else {
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour for other files
+      }
     }
   }));
   
