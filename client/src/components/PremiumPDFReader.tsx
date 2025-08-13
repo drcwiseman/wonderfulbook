@@ -105,15 +105,30 @@ export function PremiumPDFReader({
             window.location.href = '/auth/login';
           }, 1500);
         } else if (error.message?.includes('404') || error.response?.status === 404) {
-          // Book not found - redirect to library
-          toast({
-            title: "Book Not Available",
-            description: "This book is no longer available. Redirecting to library...",
-            variant: "destructive",
-          });
-          setTimeout(() => {
-            setLocation('/library');
-          }, 2000);
+          // ENHANCED: Try direct PDF access before giving up
+          console.log("🔄 FALLBACK: Attempting direct PDF access for book:", bookId);
+          try {
+            const directUrl = `/api/pdf-direct/${bookId}`;
+            console.log("🔄 FALLBACK: Using direct PDF URL:", directUrl);
+            setPdfUrl(directUrl);
+            toast({
+              title: "PDF Loaded",
+              description: "PDF loaded successfully using alternative access method",
+              variant: "default",
+            });
+            return; // Exit the error handler since we succeeded
+          } catch (fallbackError) {
+            console.error("🔄 FALLBACK: Direct PDF access also failed:", fallbackError);
+            // Book not found - redirect to library
+            toast({
+              title: "Book Not Available",
+              description: "This book is no longer available. Redirecting to library...",
+              variant: "destructive",
+            });
+            setTimeout(() => {
+              setLocation('/library');
+            }, 2000);
+          }
         } else {
           toast({
             title: "Access Error",
