@@ -159,7 +159,7 @@ async function checkServer(isManual = false): Promise<HealthCheckResult> {
   try {
     // Self-HTTP check
     const port = process.env.PORT || 5000;
-    const response = await axios.get(`http://localhost:${port}/api/health/ping`, {
+    const response = await axios.get(`http://localhost:${port}/ping`, {
       timeout: 2000
     });
 
