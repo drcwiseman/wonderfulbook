@@ -2607,7 +2607,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!fs.existsSync(filePath)) {
           console.warn(`PDF missing for book: ${book.title}, original URL: ${pdfUrl}`);
           
-          // Map to existing PDFs based on title for fallback
+          // Map to existing PDFs based on title for fallback - COMPLETE PRECISE MAPPING
           const titleMappings: { [key: string]: string } = {
             "Toxic Thinking": "/uploads/pdfs/1754453468245-7a2lh9.pdf",
             "Self-Doubt": "/uploads/pdfs/1754453915874-oqutoa.pdf",
@@ -2615,10 +2615,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
             "Loneliness": "/uploads/pdfs/1754454138199-mlvw7.pdf",
             "Toxic Relationships": "/uploads/pdfs/1754454747556-ejj37p.pdf",
             "Spirit Of Shame": "/uploads/pdfs/1754454880444-jt4n8q.pdf",
-            "Frustration": "/uploads/pdfs/1755032613461-mx3sdv.pdf",
+            "Frustration": "/uploads/pdfs/1754455632785-zprlp.pdf",
             "Procrastination": "/uploads/pdfs/1754455757797-ta3v7.pdf",
             "Bitterness": "/uploads/pdfs/1754455921052-vkihvn.pdf",
-            "Prayerlessness": "/uploads/pdfs/1754456147817-aptmog.pdf"
+            "Prayerlessness": "/uploads/pdfs/1754456147817-aptmog.pdf",
+            "Depression": "/uploads/pdfs/1755032613461-mx3sdv.pdf",
+            "Family Conflicts": "/uploads/pdfs/1755032723387-t7i7kr.pdf",
+            "Captivity": "/uploads/pdfs/1755032794860-trf62e.pdf",
+            "Anxiety": "/uploads/pdfs/1755032859148-dzcss.pdf",
+            "Anger": "/uploads/pdfs/1755032916923-12h2z.pdf",
+            "Grief": "/uploads/pdfs/1755033008434-9z4dr.pdf",
+            "Spiritual Attacks": "/uploads/pdfs/1755033058744-ya9a2d.pdf",
+            "Bad Luck": "/uploads/pdfs/1755033229827-xw5q46.pdf",
+            "Fear Of Success": "/uploads/pdfs/1755033307515-jq1rb.pdf",
+            "Fear of Change": "/uploads/pdfs/1755033490687-xanquo.pdf",
+            "Fear Of The Unknown": "/uploads/pdfs/1755033573864-010ijp.pdf",
+            "Lack Of Purpose": "/uploads/pdfs/1755033707604-2481rb.pdf",
+            "Lack of Enthusiasm": "/uploads/pdfs/1755033820204-l9dsbf.pdf",
+            "Fear Of Rejection": "/uploads/pdfs/1755033878578-pznagr.pdf",
+            "Fear Of Old Age": "/uploads/pdfs/1755033939102-eug05.pdf",
+            "Fear Of Criticism": "/uploads/pdfs/1755033989306-jzskur.pdf",
+            "Lost Love": "/uploads/pdfs/1755034375478-63o49k.pdf",
+            "Fear Of Poverty": "/uploads/pdfs/1755034534343-zrroxp.pdf",
+            "Fear Of Failure": "/uploads/pdfs/1755032613461-mx3sdv.pdf", // Use Depression PDF as fallback
+            "Fear Of Ill Health": "/uploads/pdfs/1755034643988-hmcq07.pdf"
           };
           
           // Find fallback PDF
@@ -2822,7 +2842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // PDF file doesn't exist locally - provide fallback based on book title
           console.warn(`PDF file not found: ${filePath} for book: ${book.title}`);
           
-          // Map to existing PDFs based on title
+          // Map to existing PDFs based on title - COMPLETE PRECISE MAPPING
           const titleMappings: { [key: string]: string } = {
             "Toxic Thinking": "1754453468245-7a2lh9.pdf",
             "Self-Doubt": "1754453915874-oqutoa.pdf",
@@ -2830,10 +2850,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
             "Loneliness": "1754454138199-mlvw7.pdf",
             "Toxic Relationships": "1754454747556-ejj37p.pdf",
             "Spirit Of Shame": "1754454880444-jt4n8q.pdf",
-            "Frustration": "1755032613461-mx3sdv.pdf",
+            "Frustration": "1754455632785-zprlp.pdf",
             "Procrastination": "1754455757797-ta3v7.pdf",
             "Bitterness": "1754455921052-vkihvn.pdf",
-            "Prayerlessness": "1754456147817-aptmog.pdf"
+            "Prayerlessness": "1754456147817-aptmog.pdf",
+            "Depression": "1755032613461-mx3sdv.pdf",
+            "Family Conflicts": "1755032723387-t7i7kr.pdf",
+            "Captivity": "1755032794860-trf62e.pdf",
+            "Anxiety": "1755032859148-dzcss.pdf",
+            "Anger": "1755032916923-12h2z.pdf",
+            "Grief": "1755033008434-9z4dr.pdf",
+            "Spiritual Attacks": "1755033058744-ya9a2d.pdf",
+            "Bad Luck": "1755033229827-xw5q46.pdf",
+            "Fear Of Success": "1755033307515-jq1rb.pdf",
+            "Fear of Change": "1755033490687-xanquo.pdf",
+            "Fear Of The Unknown": "1755033573864-010ijp.pdf",
+            "Lack Of Purpose": "1755033707604-2481rb.pdf",
+            "Lack of Enthusiasm": "1755033820204-l9dsbf.pdf",
+            "Fear Of Rejection": "1755033878578-pznagr.pdf",
+            "Fear Of Old Age": "1755033939102-eug05.pdf",
+            "Fear Of Criticism": "1755033989306-jzskur.pdf",
+            "Lost Love": "1755034375478-63o49k.pdf",
+            "Fear Of Poverty": "1755034534343-zrroxp.pdf",
+            "Fear Of Failure": "1755032613461-mx3sdv.pdf", // Use Depression PDF as fallback
+            "Fear Of Ill Health": "1755034643988-hmcq07.pdf"
           };
           
           // Find matching PDF by title keywords
