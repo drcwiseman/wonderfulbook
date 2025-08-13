@@ -62,13 +62,22 @@ export function PremiumPDFReader({
     
     const getPdfToken = async () => {
       try {
+        console.log("🔥 PRODUCTION PDF DEBUG: Starting PDF token request for book:", bookId);
         const response = await apiRequest('POST', `/api/pdf-token/${bookId}`);
         if (isCancelled) return;
         
-        const { token } = await response.json();
+        console.log("🔥 PRODUCTION PDF DEBUG: Token response received:", response);
+        const responseData = await response.json();
+        console.log("🔥 PRODUCTION PDF DEBUG: Token response data:", responseData);
+        
         if (isCancelled) return;
         
-        setPdfUrl(`/api/stream-token/${token}/${bookId}`);
+        const { token } = responseData;
+        console.log("🔥 PRODUCTION PDF DEBUG: Extracted token:", token);
+        
+        const streamUrl = `/api/stream-token/${token}/${bookId}`;
+        console.log("🔥 PRODUCTION PDF DEBUG: Setting PDF URL to:", streamUrl);
+        setPdfUrl(streamUrl);
       } catch (error: any) {
         if (isCancelled) return;
         
@@ -78,10 +87,11 @@ export function PremiumPDFReader({
           return;
         }
         
-        console.error('Error getting PDF token:', error);
-        
-        console.log('Full error object:', error);
-        console.log('Error response:', error.response);
+        console.error('🔥 PRODUCTION PDF DEBUG: Error getting PDF token:', error);
+        console.error('🔥 PRODUCTION PDF DEBUG: Full error object:', error);
+        console.error('🔥 PRODUCTION PDF DEBUG: Error response:', error.response);
+        console.error('🔥 PRODUCTION PDF DEBUG: Error status:', error.response?.status);
+        console.error('🔥 PRODUCTION PDF DEBUG: Error message:', error.message);
         
         // Check if it's an authentication error  
         if (error.message?.includes('401') || error.message?.includes('Unauthorized') || 
@@ -97,7 +107,7 @@ export function PremiumPDFReader({
         } else {
           toast({
             title: "Access Error",
-            description: "Failed to get book access. Please try refreshing the page.",
+            description: `Failed to get book access: ${error.message || 'Unknown error'}. Please try refreshing the page.`,
             variant: "destructive",
           });
         }
@@ -276,7 +286,12 @@ export function PremiumPDFReader({
   }
 
   function onDocumentLoadError(error: Error) {
-    console.error('Error loading PDF:', error);
+    console.error('🔥 PRODUCTION PDF DEBUG: Error loading PDF document:', error);
+    console.error('🔥 PRODUCTION PDF DEBUG: Error name:', error.name);
+    console.error('🔥 PRODUCTION PDF DEBUG: Error message:', error.message);
+    console.error('🔥 PRODUCTION PDF DEBUG: Current PDF URL:', pdfUrl);
+    console.error('🔥 PRODUCTION PDF DEBUG: Book ID:', bookId);
+    
     setIsLoading(false);
     
     // Don't show error if component is unmounting or signal aborted
@@ -305,8 +320,8 @@ export function PremiumPDFReader({
       });
     } else {
       toast({
-        title: "Error loading book",
-        description: "Connection issue. Please try refreshing the page.",
+        title: "Failed to load PDF file",
+        description: `PDF loading error: ${error.message}. Check console for details. URL: ${pdfUrl}`,
         variant: "destructive",
       });
     }

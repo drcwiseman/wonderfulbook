@@ -2562,14 +2562,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/pdf-token/:bookId", isAuthenticated, async (req: any, res) => {
     try {
       const { bookId } = req.params;
-      const userId = req.user?.claims?.sub || req.user?.id;
+      // Fix user ID extraction for session-based authentication
+      const userId = req.session?.user?.id || req.user?.claims?.sub || req.user?.id;
       
-      console.log('PDF token request - User object:', req.user);
-      console.log('PDF token request - Session:', req.session?.user);
-      console.log('PDF token request - User ID:', userId, 'Book:', bookId);
+      console.log('🔥 PRODUCTION PDF DEBUG: PDF token request - User object:', req.user);
+      console.log('🔥 PRODUCTION PDF DEBUG: PDF token request - Session:', req.session?.user);
+      console.log('🔥 PRODUCTION PDF DEBUG: PDF token request - User ID:', userId, 'Book:', bookId);
       
       if (!userId) {
-        console.log('No user ID found in request');
+        console.log('🔥 PRODUCTION PDF DEBUG: No user ID found in request');
+        console.log('🔥 PRODUCTION PDF DEBUG: req.user:', req.user);
+        console.log('🔥 PRODUCTION PDF DEBUG: req.session:', req.session);
         return res.status(401).json({ message: "User ID not found" });
       }
 
@@ -2606,7 +2609,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expiryTime = Date.now() + 5 * 60 * 1000;
       (global as any).pdfTokens.set(tokenKey, { userId, bookId, expires: expiryTime });
       
-      console.log(`Generated PDF token ${tokenKey} for book ${bookId}, expires: ${new Date(expiryTime)}`);
+      console.log(`🔥 PRODUCTION PDF DEBUG: Generated PDF token ${tokenKey} for book ${bookId}, expires: ${new Date(expiryTime)}`);
+      console.log(`🔥 PRODUCTION PDF DEBUG: Book PDF URL: ${book.pdfUrl}`);
       res.json({ token });
     } catch (error: any) {
       console.error("Error generating PDF token:", error);
@@ -2704,34 +2708,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { token, bookId } = req.params;
       const tokenKey = `pdf_token_${token}`;
 
+      console.log(`🔥 PRODUCTION PDF DEBUG: Stream token request - Token: ${token}, Book: ${bookId}`);
+
       // Check if token exists and is valid
       if (!(global as any).pdfTokens) (global as any).pdfTokens = new Map();
       const tokenData = (global as any).pdfTokens.get(tokenKey);
       
+      console.log(`🔥 PRODUCTION PDF DEBUG: Token data:`, tokenData);
+      console.log(`🔥 PRODUCTION PDF DEBUG: Available tokens:`, Array.from((global as any).pdfTokens.keys()));
+      
       if (!tokenData) {
-        console.log(`Token not found: ${tokenKey}`);
+        console.log(`🔥 PRODUCTION PDF DEBUG: Token not found: ${tokenKey}`);
         return res.status(401).json({ message: "Token not found" });
       }
       
       if (tokenData.expires < Date.now()) {
-        console.log(`Token expired: ${tokenKey}, expired ${new Date(tokenData.expires)}`);
+        console.log(`🔥 PRODUCTION PDF DEBUG: Token expired: ${tokenKey}, expired ${new Date(tokenData.expires)}`);
         (global as any).pdfTokens.delete(tokenKey);
         return res.status(401).json({ message: "Token expired" });
       }
       
       if (tokenData.bookId !== bookId) {
-        console.log(`Token book mismatch: expected ${bookId}, got ${tokenData.bookId}`);
+        console.log(`🔥 PRODUCTION PDF DEBUG: Token book mismatch: expected ${bookId}, got ${tokenData.bookId}`);
         return res.status(401).json({ message: "Token book mismatch" });
       }
 
       // Get book details
       const book = await storage.getBook(bookId);
       if (!book) {
+        console.log(`🔥 PRODUCTION PDF DEBUG: Book not found: ${bookId}`);
         return res.status(404).json({ message: "Book not found" });
       }
 
+      console.log(`🔥 PRODUCTION PDF DEBUG: Book found:`, { id: book.id, title: book.title, pdfUrl: book.pdfUrl });
+
       // Stream the actual PDF file from the book's pdfUrl
       if (!book.pdfUrl) {
+        console.log(`🔥 PRODUCTION PDF DEBUG: PDF file not available for book: ${bookId}`);
         return res.status(404).json({ message: "PDF file not available for this book" });
       }
 
@@ -2739,9 +2752,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (book.pdfUrl.startsWith('/uploads/')) {
         const filePath = path.join(process.cwd(), book.pdfUrl.substring(1)); // Remove leading slash
         
+        console.log(`🔥 PRODUCTION PDF DEBUG: Attempting to serve PDF from: ${filePath}`);
+        console.log(`🔥 PRODUCTION PDF DEBUG: File exists:`, fs.existsSync(filePath));
+        
         if (!fs.existsSync(filePath)) {
-          console.error('PDF file not found:', filePath);
-          return res.status(404).json({ message: "PDF file not found" });
+          // Try alternative paths for production
+          const altPaths = [
+            path.join(process.cwd(), 'server', book.pdfUrl.substring(1)),
+            path.join(process.cwd(), 'uploads', book.pdfUrl.split('/uploads/')[1]),
+            path.join(process.cwd(), 'server', 'uploads', book.pdfUrl.split('/uploads/')[1])
+          ];
+          
+          let foundPath = null;
+          for (const altPath of altPaths) {
+            console.log(`🔥 PRODUCTION PDF DEBUG: Trying alternative path: ${altPath}, exists: ${fs.existsSync(altPath)}`);
+            if (fs.existsSync(altPath)) {
+              foundPath = altPath;
+              break;
+            }
+          }
+          
+          if (!foundPath) {
+            console.error('🔥 PRODUCTION PDF DEBUG: PDF file not found in any location:', filePath, 'alternatives:', altPaths);
+            return res.status(404).json({ message: "PDF file not found" });
+          }
+          
+          // Use the found path
+          console.log(`🔥 PRODUCTION PDF DEBUG: Using alternative path: ${foundPath}`);
+          
+          // Set proper PDF headers with CORS
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Cache-Control', 'private, max-age=3600');
+          res.setHeader('Content-Disposition', 'inline');
+          res.setHeader('X-Content-Type-Options', 'nosniff');
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+          
+          console.log(`🔥 PRODUCTION PDF DEBUG: PDF token ${tokenKey} used successfully for book ${bookId} from ${foundPath}`);
+          
+          // Stream the actual PDF file
+          const fileStream = fs.createReadStream(foundPath);
+          fileStream.pipe(res);
+          return;
         }
 
         // Set proper PDF headers with CORS
@@ -2753,7 +2806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.setHeader('Access-Control-Allow-Methods', 'GET');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
         
-        console.log(`PDF token ${tokenKey} used successfully for book ${bookId}`);
+        console.log(`🔥 PRODUCTION PDF DEBUG: PDF token ${tokenKey} used successfully for book ${bookId}`);
         
         // Stream the actual PDF file
         const fileStream = fs.createReadStream(filePath);
