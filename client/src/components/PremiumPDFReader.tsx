@@ -682,7 +682,7 @@ export function PremiumPDFReader({
 
         {!isLoading && (
           <Document
-            file={{ url: cacheBustingPdfUrl, httpHeaders: {}, withCredentials: false }}
+            file={{ url: cacheBustingPdfUrl }}
           onLoadSuccess={onDocumentLoadSuccess}
           onLoadError={onDocumentLoadError}
           loading=""
