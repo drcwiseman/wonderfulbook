@@ -1,49 +1,26 @@
-#!/usr/bin/env node
+// Emergency fix to map the 175504xxx books to available PDFs
+const fs = require('fs');
 
-/**
- * Emergency PDF Fix - Direct book access bypass
- * Creates a simple direct PDF serving route for immediate access
- */
+console.log("=== EMERGENCY PDF MAPPING FIX ===");
+console.log("Problem: 175504xxx series books have no PDFs");
+console.log("Solution: Map them to existing PDF files temporarily");
 
-import { Client } from 'pg';
+// The 175504xxx books appear to be duplicates of the Dr C Wiseman books
+// They need to be mapped to the existing PDF files
 
-async function createEmergencyFix() {
-  console.log('🚨 Creating emergency PDF access fix...');
-  
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL
-  });
+const mappings = {
+  // Map each 175504xxx image to the corresponding PDF
+  "1755046325625": "1754453468245-7a2lh9.pdf", // 30 Days To Overcome Toxic Thinking
+  "1755046416169": "1754453915874-oqutoa.pdf", // 30 Days to Overcome Self-Doubt
+  "1755046482586": "1754454019850-f4821w.pdf", // 30 Days To Overcome Insecurity
+  "1755046536649": "1754454138199-mlvw7.pdf", // 30 Days to Overcome Loneliness
+  "1755046596479": "1754454747556-ejj37p.pdf", // 30 Days To Overcome Toxic Relationships
+  "1755046657778": "1754454880444-jt4n8q.pdf", // 30 Days To Overcome The Spirit Of Shame
+  "1755046713938": "1754455632785-zprlp.pdf", // 30 Days To Overcome Frustration
+  "1755046771457": "1754455757797-ta3v7.pdf", // 30 Days to Overcome Procrastination
+  "1755046914794": "1754455921052-vkihvn.pdf", // 30 Days To Overcome Bitterness
+  "1755046954281": "1754456147817-aptmog.pdf", // 30 Days To Overcome Prayerlessness
+};
 
-  try {
-    await client.connect();
-    
-    // Get all working books
-    const books = await client.query(`
-      SELECT id, title, pdf_url 
-      FROM books 
-      WHERE pdf_url LIKE '/uploads/pdfs/1755%'
-      ORDER BY title 
-      LIMIT 10
-    `);
-
-    console.log('\n📚 Emergency PDF Access Links:');
-    console.log('Copy any of these direct links to test PDF access:');
-    
-    books.rows.forEach((book, index) => {
-      const directUrl = `https://mywonderfulbooks.com/uploads/pdfs/${book.pdf_url.split('/').pop()}`;
-      console.log(`${index + 1}. ${book.title.substring(0, 50)}...`);
-      console.log(`   Direct PDF: ${directUrl}`);
-      console.log(`   Book ID: ${book.id}\n`);
-    });
-
-    console.log('🎯 Quick Test: Try opening any direct PDF URL above');
-    console.log('📌 These URLs should work immediately without tokens');
-    
-  } catch (error) {
-    console.error('Error:', error);
-  } finally {
-    await client.end();
-  }
-}
-
-createEmergencyFix();
+console.log("\nMappings to apply:", mappings);
+console.log("\nThese need to be updated in the production database");

@@ -2569,7 +2569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  // PDF token endpoint - returns direct PDF URL from database
+  // PDF token endpoint - returns direct PDF URL with fallback handling
   app.post("/api/pdf-token/:bookId", isAuthenticated, async (req: any, res) => {
     try {
       const { bookId } = req.params;
@@ -2599,8 +2599,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Return the actual PDF URL from the book record
-      if (!book.pdfUrl) {
+      // Check if PDF exists, provide fallback if needed
+      let pdfUrl = book.pdfUrl;
+      
+      if (pdfUrl && pdfUrl.startsWith('/uploads/')) {
+        const filePath = path.join(process.cwd(), pdfUrl.substring(1));
+        if (!fs.existsSync(filePath)) {
+          console.warn(`PDF missing for book: ${book.title}, original URL: ${pdfUrl}`);
+          
+          // Map to existing PDFs based on title for fallback
+          const titleMappings: { [key: string]: string } = {
+            "Toxic Thinking": "/uploads/pdfs/1754453468245-7a2lh9.pdf",
+            "Self-Doubt": "/uploads/pdfs/1754453915874-oqutoa.pdf",
+            "Insecurity": "/uploads/pdfs/1754454019850-f4821w.pdf",
+            "Loneliness": "/uploads/pdfs/1754454138199-mlvw7.pdf",
+            "Toxic Relationships": "/uploads/pdfs/1754454747556-ejj37p.pdf",
+            "Spirit Of Shame": "/uploads/pdfs/1754454880444-jt4n8q.pdf",
+            "Frustration": "/uploads/pdfs/1755032613461-mx3sdv.pdf",
+            "Procrastination": "/uploads/pdfs/1754455757797-ta3v7.pdf",
+            "Bitterness": "/uploads/pdfs/1754455921052-vkihvn.pdf",
+            "Prayerlessness": "/uploads/pdfs/1754456147817-aptmog.pdf"
+          };
+          
+          // Find fallback PDF
+          for (const [keyword, fallbackUrl] of Object.entries(titleMappings)) {
+            if (book.title && book.title.includes(keyword)) {
+              const fallbackPath = path.join(process.cwd(), fallbackUrl.substring(1));
+              if (fs.existsSync(fallbackPath)) {
+                pdfUrl = fallbackUrl;
+                console.log(`Using fallback PDF: ${fallbackUrl} for book: ${book.title}`);
+                break;
+              }
+            }
+          }
+        }
+      }
+      
+      if (!pdfUrl) {
         return res.status(404).json({ message: "PDF not available for this book" });
       }
       
@@ -2610,7 +2645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         token: token,
         bookId: bookId,
         expiresAt: new Date(Date.now() + 3600000).toISOString(),
-        streamUrl: book.pdfUrl // Return the actual PDF URL from database
+        streamUrl: pdfUrl // Return the PDF URL (original or fallback)
       });
     } catch (error) {
       console.error('Error generating PDF token:', error);
@@ -2756,7 +2791,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Stream PDF via token - serves the actual PDF file for the book
+  // Stream PDF via token - serves the actual PDF file for the book with fallback
   app.get("/api/stream-token/:token/:bookId", async (req, res) => {
     try {
       const { bookId, token } = req.params;
@@ -2764,10 +2799,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get book from database to find its PDF
       const book = await storage.getBook(bookId);
       if (!book || !book.pdfUrl) {
+        console.error(`PDF not found for book ${bookId}`);
         return res.status(404).json({ message: "PDF not found" });
       }
       
-      // Serve the actual PDF file for this specific book
+      // Try to serve the actual PDF file for this specific book
       if (book.pdfUrl.startsWith('/uploads/')) {
         const filePath = path.join(process.cwd(), book.pdfUrl.substring(1));
         
@@ -2782,10 +2818,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const fileStream = fs.createReadStream(filePath);
           fileStream.pipe(res);
           return;
+        } else {
+          // PDF file doesn't exist locally - provide fallback based on book title
+          console.warn(`PDF file not found: ${filePath} for book: ${book.title}`);
+          
+          // Map to existing PDFs based on title
+          const titleMappings: { [key: string]: string } = {
+            "Toxic Thinking": "1754453468245-7a2lh9.pdf",
+            "Self-Doubt": "1754453915874-oqutoa.pdf",
+            "Insecurity": "1754454019850-f4821w.pdf",
+            "Loneliness": "1754454138199-mlvw7.pdf",
+            "Toxic Relationships": "1754454747556-ejj37p.pdf",
+            "Spirit Of Shame": "1754454880444-jt4n8q.pdf",
+            "Frustration": "1755032613461-mx3sdv.pdf",
+            "Procrastination": "1754455757797-ta3v7.pdf",
+            "Bitterness": "1754455921052-vkihvn.pdf",
+            "Prayerlessness": "1754456147817-aptmog.pdf"
+          };
+          
+          // Find matching PDF by title keywords
+          let fallbackPdf = null;
+          for (const [keyword, pdfFile] of Object.entries(titleMappings)) {
+            if (book.title && book.title.includes(keyword)) {
+              fallbackPdf = pdfFile;
+              break;
+            }
+          }
+          
+          if (fallbackPdf) {
+            const fallbackPath = path.join(process.cwd(), 'uploads/pdfs', fallbackPdf);
+            if (fs.existsSync(fallbackPath)) {
+              console.log(`Using fallback PDF: ${fallbackPdf} for book: ${book.title}`);
+              const stat = fs.statSync(fallbackPath);
+              
+              res.setHeader('Content-Type', 'application/pdf');
+              res.setHeader('Content-Length', stat.size);
+              res.setHeader('Content-Disposition', 'inline');
+              res.setHeader('Cache-Control', 'public, max-age=3600');
+              
+              const fileStream = fs.createReadStream(fallbackPath);
+              fileStream.pipe(res);
+              return;
+            }
+          }
         }
       }
       
-      return res.status(404).json({ message: "PDF file not found" });
+      return res.status(404).json({ message: "PDF file not found and no fallback available" });
     } catch (error) {
       console.error('Error streaming PDF:', error);
       res.status(500).json({ message: "Failed to stream PDF" });
