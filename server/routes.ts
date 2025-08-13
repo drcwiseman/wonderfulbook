@@ -2562,24 +2562,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/pdf-token/:bookId", isAuthenticated, async (req: any, res) => {
     try {
       const { bookId } = req.params;
-      // Fix user ID extraction for session-based authentication
-      const userId = req.session?.user?.id || req.user?.claims?.sub || req.user?.id;
+      // CRITICAL FIX: Support both session-based and OAuth-based authentication
+      const userId = req.session?.user?.id || req.user?.claims?.sub || req.user?.id || req.user?.sub;
       
-      console.log('🔥 PRODUCTION PDF DEBUG: PDF token request - User object:', req.user);
-      console.log('🔥 PRODUCTION PDF DEBUG: PDF token request - Session:', req.session?.user);
-      console.log('🔥 PRODUCTION PDF DEBUG: PDF token request - User ID:', userId, 'Book:', bookId);
+      console.log('🔥 PRODUCTION PDF DEBUG: PDF token request details:');
+      console.log('🔥 PRODUCTION PDF DEBUG: - Book ID:', bookId);
+      console.log('🔥 PRODUCTION PDF DEBUG: - Session user:', req.session?.user?.id);
+      console.log('🔥 PRODUCTION PDF DEBUG: - OAuth user:', req.user?.claims?.sub);
+      console.log('🔥 PRODUCTION PDF DEBUG: - Direct user ID:', req.user?.id);
+      console.log('🔥 PRODUCTION PDF DEBUG: - Final user ID:', userId);
       
       if (!userId) {
-        console.log('🔥 PRODUCTION PDF DEBUG: No user ID found in request');
-        console.log('🔥 PRODUCTION PDF DEBUG: req.user:', req.user);
-        console.log('🔥 PRODUCTION PDF DEBUG: req.session:', req.session);
-        return res.status(401).json({ message: "User ID not found" });
+        console.log('🔥 PRODUCTION PDF DEBUG: AUTHENTICATION FAILED - No user ID found');
+        console.log('🔥 PRODUCTION PDF DEBUG: req.user structure:', JSON.stringify(req.user, null, 2));
+        console.log('🔥 PRODUCTION PDF DEBUG: req.session structure:', JSON.stringify(req.session, null, 2));
+        return res.status(401).json({ message: "Authentication required - user ID not found" });
       }
 
       // Get book details to verify access
       const book = await storage.getBook(bookId);
       if (!book) {
-        return res.status(404).json({ message: "Book not found" });
+        console.log('🔥 PRODUCTION PDF DEBUG: BOOK NOT FOUND:', bookId);
+        // Provide helpful error with available books for debugging
+        try {
+          const allBooks = await storage.getAllBooks();
+          const availableIds = allBooks.slice(0, 5).map(b => b.id);
+          console.log('🔥 PRODUCTION PDF DEBUG: Available book IDs (first 5):', availableIds);
+          return res.status(404).json({ 
+            message: "Book not found", 
+            requestedId: bookId,
+            availableBooks: availableIds.length > 0 ? availableIds : "No books available"
+          });
+        } catch (listError) {
+          return res.status(404).json({ message: "Book not found", requestedId: bookId });
+        }
       }
 
       // Get user details
@@ -2609,9 +2625,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expiryTime = Date.now() + 5 * 60 * 1000;
       (global as any).pdfTokens.set(tokenKey, { userId, bookId, expires: expiryTime });
       
-      console.log(`🔥 PRODUCTION PDF DEBUG: Generated PDF token ${tokenKey} for book ${bookId}, expires: ${new Date(expiryTime)}`);
-      console.log(`🔥 PRODUCTION PDF DEBUG: Book PDF URL: ${book.pdfUrl}`);
-      res.json({ token });
+      console.log(`🔥 PRODUCTION PDF DEBUG: ✅ Generated PDF token ${tokenKey} for book ${bookId}`);
+      console.log(`🔥 PRODUCTION PDF DEBUG: ✅ Token expires: ${new Date(expiryTime)}`);
+      console.log(`🔥 PRODUCTION PDF DEBUG: ✅ Book PDF URL: ${book.pdfUrl}`);
+      console.log(`🔥 PRODUCTION PDF DEBUG: ✅ User ${userId} can access ${book.requiredTier} book with ${userTier} subscription`);
+      
+      res.json({ 
+        token,
+        bookId,
+        expiresAt: new Date(expiryTime).toISOString(),
+        streamUrl: `/api/stream-token/${token}/${bookId}`
+      });
     } catch (error: any) {
       console.error("Error generating PDF token:", error);
       res.status(500).json({ message: "Failed to generate access token" });
