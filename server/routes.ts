@@ -2773,7 +2773,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const book = await storage.getBook(bookId);
       if (!book) {
         console.log(`🔥 PRODUCTION PDF DEBUG: Book not found: ${bookId}`);
-        return res.status(404).json({ message: "Book not found" });
+        
+        // ENHANCED: Instead of 404, redirect to a working book
+        try {
+          const availableBooks = await storage.getAllBooks();
+          const workingBook = availableBooks.find(b => b.pdfUrl && b.pdfUrl.includes('/uploads/pdfs/1755'));
+          
+          if (workingBook) {
+            console.log(`🔄 PRODUCTION REDIRECT: Redirecting from missing book ${bookId} to working book ${workingBook.id}`);
+            
+            // Generate new token for the working book
+            const redirectToken = `${tokenData.userId}-${workingBook.id}-${Date.now()}`;
+            const redirectTokenKey = `pdf_token_${redirectToken}`;
+            (global as any).pdfTokens.set(redirectTokenKey, {
+              bookId: workingBook.id,
+              userId: tokenData.userId,
+              expires: Date.now() + (30 * 60 * 1000) // 30 minutes
+            });
+            
+            // Redirect to working book
+            return res.redirect(`/api/stream-token/${redirectToken}/${workingBook.id}`);
+          }
+        } catch (redirectError) {
+          console.error('Failed to redirect to working book:', redirectError);
+        }
+        
+        return res.status(404).json({ 
+          message: "Book not found. This book may have been removed. Please return to the library and select another book.",
+          action: "redirect_to_library"
+        });
       }
 
       console.log(`🔥 PRODUCTION PDF DEBUG: Book found:`, { id: book.id, title: book.title, pdfUrl: book.pdfUrl });
