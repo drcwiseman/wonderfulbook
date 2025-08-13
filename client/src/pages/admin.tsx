@@ -20,7 +20,7 @@ import { ImageUploader } from '@/components/ImageUploader';
 import { PDFUploader } from '@/components/PDFUploader';
 import { CategoryManager } from '@/components/CategoryManager';
 import { UserManagement } from '@/components/UserManagement';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogOverlay } from '@/components/ui/dialog';
 import { EditItemDialog } from '@/components/shared/EditItemDialog';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
@@ -917,19 +917,23 @@ export default function AdminPanel() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Book Dialog - Using native Dialog component */}
-      <Dialog open={!!editingBook} onOpenChange={(open) => {
-        console.log('🔧 PRODUCTION DEBUG: Dialog onOpenChange called');
-        console.log('🔧 PRODUCTION DEBUG: Dialog open state:', open);
-        console.log('🔧 PRODUCTION DEBUG: Current editingBook:', editingBook?.title);
-        
-        if (!open) {
-          console.log('🔧 PRODUCTION DEBUG: Closing edit dialog for:', editingBook?.title);
-          setEditingBook(null);
-          editForm.reset();
-          setEditDescription("");
-        }
-      }}>
+      {/* Edit Book Dialog - PRODUCTION FIXED VERSION */}
+      <Dialog 
+        open={!!editingBook} 
+        onOpenChange={(open) => {
+          console.log('🔧 PRODUCTION DEBUG: Dialog onOpenChange called');
+          console.log('🔧 PRODUCTION DEBUG: Dialog open state:', open);
+          console.log('🔧 PRODUCTION DEBUG: Current editingBook:', editingBook?.title);
+          
+          if (!open) {
+            console.log('🔧 PRODUCTION DEBUG: Closing edit dialog for:', editingBook?.title);
+            setEditingBook(null);
+            editForm.reset();
+            setEditDescription("");
+          }
+        }}
+        modal={true}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto z-50" style={{ zIndex: 9999 }}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
