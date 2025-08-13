@@ -60,18 +60,18 @@ export function setupProductionServing(app: Express) {
 
   console.log(`Serving static files from: ${publicPath}`);
   
-  // CRITICAL FIX: Serve uploads directory with debug logging and proper headers
+  // CRITICAL FIX: Serve uploads directory with proper headers and fallback
   app.use('/uploads', (req, res, next) => {
-    console.log(`🔥 PRODUCTION UPLOADS DEBUG: Request for ${req.path}`);
-    console.log(`🔥 PRODUCTION UPLOADS DEBUG: Uploads path: ${uploadsPath}`);
-    
+    // Remove excessive debug logging in production
     const requestedFile = path.join(uploadsPath, req.path);
-    console.log(`🔥 PRODUCTION UPLOADS DEBUG: Looking for file: ${requestedFile}`);
-    console.log(`🔥 PRODUCTION UPLOADS DEBUG: File exists: ${fs.existsSync(requestedFile)}`);
     
-    if (fs.existsSync(requestedFile)) {
-      const stats = fs.statSync(requestedFile);
-      console.log(`🔥 PRODUCTION UPLOADS DEBUG: File size: ${stats.size} bytes`);
+    // Check if file exists, if not and it's in /images/, try parent directory
+    if (!fs.existsSync(requestedFile) && req.path.startsWith('/images/')) {
+      const fallbackFile = path.join(uploadsPath, req.path.substring('/images/'.length));
+      if (fs.existsSync(fallbackFile)) {
+        console.log(`📷 Image fallback: ${req.path} → ${fallbackFile}`);
+        req.url = req.path.substring('/images/'.length);
+      }
     }
     
     next();
