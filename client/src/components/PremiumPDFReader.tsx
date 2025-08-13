@@ -93,7 +93,7 @@ export function PremiumPDFReader({
         console.error('🔥 PRODUCTION PDF DEBUG: Error status:', error.response?.status);
         console.error('🔥 PRODUCTION PDF DEBUG: Error message:', error.message);
         
-        // Check if it's an authentication error  
+        // Handle different types of errors
         if (error.message?.includes('401') || error.message?.includes('Unauthorized') || 
             error.response?.status === 401) {
           toast({
@@ -104,6 +104,16 @@ export function PremiumPDFReader({
           setTimeout(() => {
             window.location.href = '/auth/login';
           }, 1500);
+        } else if (error.message?.includes('404') || error.response?.status === 404) {
+          // Book not found - redirect to library
+          toast({
+            title: "Book Not Available",
+            description: "This book is no longer available. Redirecting to library...",
+            variant: "destructive",
+          });
+          setTimeout(() => {
+            setLocation('/library');
+          }, 2000);
         } else {
           toast({
             title: "Access Error",

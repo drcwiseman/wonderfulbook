@@ -1029,7 +1029,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const book = await storage.getBook(req.params.id);
       if (!book) {
-        return res.status(404).json({ message: "Book not found" });
+        console.log('🔥 PRODUCTION DEBUG: Book not found:', req.params.id);
+        // Get available books to help with debugging
+        try {
+          const allBooks = await storage.getAllBooks();
+          const availableIds = allBooks.slice(0, 3).map(b => ({ id: b.id, title: b.title }));
+          console.log('🔥 PRODUCTION DEBUG: Sample available books:', availableIds);
+        } catch (listError) {
+          console.log('🔥 PRODUCTION DEBUG: Could not list available books');
+        }
+        return res.status(404).json({ 
+          message: "Book not found",
+          requestedId: req.params.id
+        });
       }
       
       // PRODUCTION FIX: Ensure coverImageUrl is properly accessible for individual book details

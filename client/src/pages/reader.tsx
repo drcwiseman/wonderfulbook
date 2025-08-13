@@ -17,10 +17,17 @@ export default function ReaderPage() {
   const { toast } = useToast();
   const { isLoading: authLoading, isAuthenticated, user } = useAuth();
 
-  // Fetch book details
-  const { data: book, isLoading: bookLoading } = useQuery({
+  // Fetch book details with enhanced error handling
+  const { data: book, isLoading: bookLoading, error: bookError } = useQuery({
     queryKey: ['/api/books', bookId],
     enabled: !!bookId,
+    retry: (failureCount, error: any) => {
+      // Don't retry if book is not found (404)
+      if (error?.response?.status === 404) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 
   // Fetch bookmarks
@@ -50,13 +57,51 @@ export default function ReaderPage() {
     }
   }, [authLoading, isAuthenticated, setLocation, toast]);
 
-  // Handle loading state
+  // Handle missing book ID
   if (!bookId) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 safe-area-top safe-area-bottom">
-        <div className="text-center px-4">
+        <div className="text-center px-4 max-w-md">
+          <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h1 className="text-responsive-xl font-semibold text-gray-900 dark:text-white">Book not found</h1>
-          <p className="text-responsive-base text-gray-600 dark:text-gray-400 mt-2">The requested book could not be loaded.</p>
+          <p className="text-responsive-base text-gray-600 dark:text-gray-400 mt-2 mb-6">The requested book could not be loaded.</p>
+          <Button onClick={() => setLocation('/library')} className="mr-3">
+            <BookOpen className="h-4 w-4 mr-2" />
+            Go to Library
+          </Button>
+          <Button variant="outline" onClick={() => setLocation('/dashboard')}>
+            <Home className="h-4 w-4 mr-2" />
+            Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle book not found error (404)
+  if (bookError && (bookError as any)?.response?.status === 404) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 safe-area-top safe-area-bottom">
+        <UserNavigationHelper currentPage="Reader" />
+        <div className="text-center px-4 max-w-md">
+          <BookOpen className="h-16 w-16 text-orange-400 mx-auto mb-4" />
+          <h1 className="text-responsive-xl font-semibold text-gray-900 dark:text-white">Book No Longer Available</h1>
+          <p className="text-responsive-base text-gray-600 dark:text-gray-400 mt-2 mb-2">
+            This book may have been moved or is no longer available in our library.
+          </p>
+          <p className="text-responsive-sm text-gray-500 dark:text-gray-500 mb-6">
+            Book ID: {bookId}
+          </p>
+          <div className="space-y-3">
+            <Button onClick={() => setLocation('/library')} className="w-full">
+              <BookOpen className="h-4 w-4 mr-2" />
+              Browse Available Books
+            </Button>
+            <Button variant="outline" onClick={() => setLocation('/dashboard')} className="w-full">
+              <Home className="h-4 w-4 mr-2" />
+              Return to Dashboard
+            </Button>
+          </div>
         </div>
       </div>
     );
