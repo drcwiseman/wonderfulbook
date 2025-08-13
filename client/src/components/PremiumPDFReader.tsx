@@ -147,7 +147,7 @@ export function PremiumPDFReader({
     return () => {
       isCancelled = true;
     };
-  }, [bookId, toast]);
+  }, [bookId, toast, setPdfUrl, setIsLoading]);
 
   // Memoize PDF options and file config to prevent unnecessary reloads
   const pdfOptions = useMemo(() => ({
