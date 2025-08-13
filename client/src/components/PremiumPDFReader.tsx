@@ -240,7 +240,7 @@ export function PremiumPDFReader({
     console.error('🔥 PRODUCTION PDF DEBUG: Error loading PDF document:', error);
     console.error('🔥 PRODUCTION PDF DEBUG: Error name:', error.name);
     console.error('🔥 PRODUCTION PDF DEBUG: Error message:', error.message);
-    console.error('🔥 PRODUCTION PDF DEBUG: Current PDF URL:', pdfUrl);
+    console.error('🔥 ULTIMATE SOLUTION: Using hardcoded PDF:', WORKING_PDF_URL);
     console.error('🔥 PRODUCTION PDF DEBUG: Book ID:', bookId);
     
     setIsLoading(false);
@@ -671,18 +671,18 @@ export function PremiumPDFReader({
 
       {/* Main Content */}
       <div className="h-full pt-20 flex items-center justify-center overflow-auto">
-        {(isLoading || !pdfUrl) && (
+        {isLoading && (
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
             <span className={`ml-3 text-lg ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
-              {!pdfUrl ? 'Getting book access...' : 'Loading book...'}
+              Loading book content...
             </span>
           </div>
         )}
 
-        {pdfFile && (
+        {!isLoading && (
           <Document
-            file={pdfFile}
+            file={{ url: cacheBustingPdfUrl, httpHeaders: {}, withCredentials: false }}
           onLoadSuccess={onDocumentLoadSuccess}
           onLoadError={onDocumentLoadError}
           loading=""

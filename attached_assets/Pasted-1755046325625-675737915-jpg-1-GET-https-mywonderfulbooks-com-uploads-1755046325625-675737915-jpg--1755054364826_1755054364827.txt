@@ -1,0 +1,82 @@
+1755046325625-675737915.jpg:1  GET https://mywonderfulbooks.com/uploads/1755046325625-675737915.jpg 404 (Not Found)
+Image
+E0 @ index-rKlnWwWo.js:33
+dT @ index-rKlnWwWo.js:33
+dT @ index-rKlnWwWo.js:33
+cO @ index-rKlnWwWo.js:33
+hO @ index-rKlnWwWo.js:33
+gi @ index-rKlnWwWo.js:33
+N0 @ index-rKlnWwWo.js:33
+oi @ index-rKlnWwWo.js:31
+(anonymous) @ index-rKlnWwWo.js:33
+setTimeout
+fL @ index-rKlnWwWo.js:41
+o @ index-rKlnWwWo.js:41
+batch @ index-rKlnWwWo.js:41
+jr @ index-rKlnWwWo.js:41
+setData @ index-rKlnWwWo.js:41
+onSuccess @ index-rKlnWwWo.js:41
+f @ index-rKlnWwWo.js:41
+Promise.then
+b @ index-rKlnWwWo.js:41
+start @ index-rKlnWwWo.js:41
+fetch @ index-rKlnWwWo.js:41
+nl @ index-rKlnWwWo.js:41
+onSubscribe @ index-rKlnWwWo.js:41
+subscribe @ index-rKlnWwWo.js:41
+(anonymous) @ index-rKlnWwWo.js:49
+MN @ index-rKlnWwWo.js:31
+tf @ index-rKlnWwWo.js:33
+Vo @ index-rKlnWwWo.js:33
+(anonymous) @ index-rKlnWwWo.js:33
+S @ index-rKlnWwWo.js:18
+V @ index-rKlnWwWo.js:18Understand this error
+reader-CLe2oDo1.js:53 🔥 PRODUCTION PDF DEBUG: Starting PDF token request for book: 5aba1384-eab9-4124-a810-a9b5048f2eb7
+reader-CLe2oDo1.js:53 🔥 PRODUCTION PDF DEBUG: Token response received: Response {type: 'basic', url: 'https://mywonderfulbooks.com/api/pdf-token/5aba1384-eab9-4124-a810-a9b5048f2eb7', redirected: false, status: 200, ok: true, …}
+reader-CLe2oDo1.js:53 🔥 PRODUCTION PDF DEBUG: Token response data: {token: 'manual_1754457852879_osie0x-5aba1384-eab9-4124-a810-a9b5048f2eb7-1755054341859', bookId: '5aba1384-eab9-4124-a810-a9b5048f2eb7', expiresAt: '2025-08-13T03:10:41.859Z', streamUrl: '/api/stream-token/manual_1754457852879_osie0x-5aba…755054341859/5aba1384-eab9-4124-a810-a9b5048f2eb7'}
+reader-CLe2oDo1.js:53 🔥 PRODUCTION PDF DEBUG: Extracted token: manual_1754457852879_osie0x-5aba1384-eab9-4124-a810-a9b5048f2eb7-1755054341859
+reader-CLe2oDo1.js:53 🔥 PRODUCTION PDF DEBUG: Setting PDF URL to: /api/stream-token/manual_1754457852879_osie0x-5aba1384-eab9-4124-a810-a9b5048f2eb7-1755054341859/5aba1384-eab9-4124-a810-a9b5048f2eb7
+reader-CLe2oDo1.js:48  GET https://mywonderfulbooks.com/api/stream-token/manual_1754457852879_osie0x-5aba1384-eab9-4124-a810-a9b5048f2eb7-1755054341859/5aba1384-eab9-4124-a810-a9b5048f2eb7 404 (Not Found)
+S @ reader-CLe2oDo1.js:48
+getFullReader @ reader-CLe2oDo1.js:48
+(anonymous) @ reader-CLe2oDo1.js:46
+(anonymous) @ reader-CLe2oDo1.js:48
+Tn @ reader-CLe2oDo1.js:48
+_onComObjOnMessage @ reader-CLe2oDo1.js:48Understand this error
+reader-CLe2oDo1.js:53 🔥 PRODUCTION PDF DEBUG: Error loading PDF document: I {message: 'Missing PDF "https://mywonderfulbooks.com/api/stre…5054341859/5aba1384-eab9-4124-a810-a9b5048f2eb7".', name: 'MissingPDFException', stack: 'Error\n    at https://mywonderfulbooks.com/assets/r…erfulbooks.com/assets/reader-CLe2oDo1.js:53:61490'}
+be @ reader-CLe2oDo1.js:53
+D @ reader-CLe2oDo1.js:53
+(anonymous) @ reader-CLe2oDo1.js:53
+tf @ index-rKlnWwWo.js:33
+Vo @ index-rKlnWwWo.js:33
+(anonymous) @ index-rKlnWwWo.js:33
+S @ index-rKlnWwWo.js:18
+V @ index-rKlnWwWo.js:18Understand this error
+reader-CLe2oDo1.js:53 🔥 PRODUCTION PDF DEBUG: Error name: MissingPDFException
+be @ reader-CLe2oDo1.js:53
+D @ reader-CLe2oDo1.js:53
+(anonymous) @ reader-CLe2oDo1.js:53
+tf @ index-rKlnWwWo.js:33
+Vo @ index-rKlnWwWo.js:33
+(anonymous) @ index-rKlnWwWo.js:33
+S @ index-rKlnWwWo.js:18
+V @ index-rKlnWwWo.js:18Understand this error
+reader-CLe2oDo1.js:53 🔥 PRODUCTION PDF DEBUG: Error message: Missing PDF "https://mywonderfulbooks.com/api/stream-token/manual_1754457852879_osie0x-5aba1384-eab9-4124-a810-a9b5048f2eb7-1755054341859/5aba1384-eab9-4124-a810-a9b5048f2eb7".
+be @ reader-CLe2oDo1.js:53
+D @ reader-CLe2oDo1.js:53
+(anonymous) @ reader-CLe2oDo1.js:53
+tf @ index-rKlnWwWo.js:33
+Vo @ index-rKlnWwWo.js:33
+(anonymous) @ index-rKlnWwWo.js:33
+S @ index-rKlnWwWo.js:18
+V @ index-rKlnWwWo.js:18Understand this error
+reader-CLe2oDo1.js:53 🔥 PRODUCTION PDF DEBUG: Current PDF URL: /api/stream-token/manual_1754457852879_osie0x-5aba1384-eab9-4124-a810-a9b5048f2eb7-1755054341859/5aba1384-eab9-4124-a810-a9b5048f2eb7
+be @ reader-CLe2oDo1.js:53
+D @ reader-CLe2oDo1.js:53
+(anonymous) @ reader-CLe2oDo1.js:53
+tf @ index-rKlnWwWo.js:33
+Vo @ index-rKlnWwWo.js:33
+(anonymous) @ index-rKlnWwWo.js:33
+S @ index-rKlnWwWo.js:18
+V @ index-rKlnWwWo.js:18Understand this error
+reader-CLe2oDo1.js:53 🔥 PRODUCTION PDF DEBUG: Book ID: 5aba1384-eab9-4124-a810-a9b5048f2eb7
