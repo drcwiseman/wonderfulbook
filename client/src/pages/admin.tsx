@@ -149,18 +149,29 @@ export default function AdminPanel() {
   // Create book mutation
   const createBookMutation = useMutation({
     mutationFn: async (data: UploadForm) => {
+      console.log("🔥 PRODUCTION DEBUG: Starting book creation...");
+      console.log("🔥 PRODUCTION DEBUG: Form data received:", data);
+      console.log("🔥 PRODUCTION DEBUG: Description:", description);
+      console.log("🔥 PRODUCTION DEBUG: PDF file:", pdfFile);
+      
       // Validate that both description and PDF are provided
       if (!description || description.length < 10) {
-        throw new Error("Description must be at least 10 characters long");
+        const error = "Description must be at least 10 characters long";
+        console.log("🔥 PRODUCTION DEBUG: Validation failed:", error);
+        throw new Error(error);
       }
       if (description.length > 5000) {
-        throw new Error("Description cannot exceed 5000 characters");
+        const error = "Description cannot exceed 5000 characters";
+        console.log("🔥 PRODUCTION DEBUG: Validation failed:", error);
+        throw new Error(error);
       }
       if (!pdfFile) {
-        throw new Error("PDF file is required");
+        const error = "PDF file is required";
+        console.log("🔥 PRODUCTION DEBUG: Validation failed:", error);
+        throw new Error(error);
       }
 
-      return apiRequest("POST", "/api/admin/books", {
+      const requestData = {
         title: data.title,
         author: data.author,
         description: description,
@@ -170,9 +181,22 @@ export default function AdminPanel() {
         coverImage: data.coverImage || "",
         fileUrl: pdfFile,
         isFeatured: data.isFeatured || false,
-      });
+      };
+      
+      console.log("🔥 PRODUCTION DEBUG: API request data:", requestData);
+      console.log("🔥 PRODUCTION DEBUG: Making POST request to /api/admin/books");
+      
+      try {
+        const result = await apiRequest("POST", "/api/admin/books", requestData);
+        console.log("🔥 PRODUCTION DEBUG: API request successful:", result);
+        return result;
+      } catch (error) {
+        console.error("🔥 PRODUCTION DEBUG: API request failed:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log("🔥 PRODUCTION DEBUG: Book creation successful:", result);
       toast({
         title: "Success",
         description: "Book created and published successfully!",
@@ -187,9 +211,12 @@ export default function AdminPanel() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
     },
     onError: (error: any) => {
+      console.error("🔥 PRODUCTION DEBUG: Book creation error:", error);
+      console.error("🔥 PRODUCTION DEBUG: Error message:", error.message);
+      console.error("🔥 PRODUCTION DEBUG: Error response:", error.response);
       toast({
         title: "Creation Failed",
-        description: error.message,
+        description: error.message || "Failed to create book - check console for details",
         variant: "destructive",
       });
     },
@@ -337,6 +364,12 @@ export default function AdminPanel() {
   }, [editingBook, editForm]);
 
   const onSubmit = (data: UploadForm) => {
+    console.log("🔥 PRODUCTION DEBUG: Form submitted with data:", data);
+    console.log("🔥 PRODUCTION DEBUG: Form validation errors:", form.formState.errors);
+    console.log("🔥 PRODUCTION DEBUG: Current description:", description);
+    console.log("🔥 PRODUCTION DEBUG: Current pdfFile:", pdfFile);
+    console.log("🔥 PRODUCTION DEBUG: Mutation pending?", createBookMutation.isPending);
+    
     createBookMutation.mutate(data);
   };
 
