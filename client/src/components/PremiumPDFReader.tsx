@@ -56,6 +56,9 @@ export function PremiumPDFReader({
 
   // FORCE WORKING PDF: Skip all token logic, use verified working PDF immediately
   const pdfUrl = "/uploads/pdfs/1755032613461-mx3sdv.pdf";
+  
+  // Force cache refresh by adding timestamp
+  const cacheBustingPdfUrl = `${pdfUrl}?v=${Date.now()}`;
 
   // Show success message on mount
   useEffect(() => {
@@ -82,15 +85,12 @@ export function PremiumPDFReader({
   }), []);
 
   const pdfFile = useMemo(() => {
-    if (!pdfUrl) return null;
     return {
-      url: pdfUrl,
-      httpHeaders: {
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      withCredentials: false // No credentials needed for token-based access
+      url: cacheBustingPdfUrl,
+      httpHeaders: {},
+      withCredentials: false
     };
-  }, [pdfUrl]);
+  }, [cacheBustingPdfUrl]);
 
   // Check if current page is bookmarked
   useEffect(() => {
